@@ -18,7 +18,7 @@ A full-stack web application that provides personalized book recommendations usi
 ### Backend
 - **FastAPI**: Modern Python web framework
 - **SQLAlchemy**: ORM with async support
-- **SQLite**: Lightweight database
+- **SQLite**: Lightweight database (no migrations needed)
 - **DeepSeek AI**: AI-powered book recommendations
 - **Open Library API**: Book metadata and search
 - **Pydantic**: Data validation and serialization
@@ -54,7 +54,7 @@ A full-stack web application that provides personalized book recommendations usi
    - Install Python dependencies in a virtual environment
    - Install Node.js dependencies
    - Create environment configuration files
-   - Set up the database with sample data
+   - Set up the database (tables created automatically on startup)
    - Create run scripts
 
 3. **Start the application**
@@ -112,16 +112,14 @@ Once the backend is running, visit:
 - `POST /recommendations/generate` - Generate new recommendations
 - `GET /dashboard/{user_id}` - Get dashboard statistics
 
-## Demo Data
+## Getting Started
 
-The application comes with sample data including:
-- 8 popular books with covers and metadata
-- Demo user with reading history
-- Sample reading progress and ratings
-
-**Demo User Credentials:**
-- Email: demo@bookshelf-ai.com
-- Name: Demo User
+The application starts with an empty database. You can:
+- Create an account using Google OAuth
+- Search for books using the Open Library integration
+- Add books to your reading list
+- Start tracking your reading progress
+- Get AI-powered recommendations based on your reading history
 
 ## Optional Setup
 
@@ -149,8 +147,9 @@ bookshelf-ai/
 │   ├── models.py           # Database models
 │   ├── schemas.py          # Pydantic schemas
 │   ├── database.py         # Database configuration
+│   ├── utils.py           # Utility functions & logging
 │   ├── main.py            # FastAPI application
-│   ├── seed_data.py       # Sample data script
+│   ├── bookshelf.db       # SQLite database
 │   └── requirements.txt   # Python dependencies
 ├── frontend/               # Next.js frontend
 │   ├── app/               # App router pages
@@ -179,10 +178,13 @@ npm run dev
 ```
 
 ### Database Management
+The database uses SQLAlchemy with automatic table creation. Tables are created automatically when the backend starts up. No manual migration commands are needed.
+
 ```powershell
+# To reset the database, simply delete the file:
 cd backend
-& ".\venv\Scripts\Activate.ps1"
-python seed_data.py  # Reset with sample data
+del bookshelf.db
+# Tables will be recreated on next startup
 ```
 
 ## Troubleshooting
@@ -214,6 +216,10 @@ python seed_data.py  # Reset with sample data
    - Backend (8000): `netstat -ano | findstr :8000`
    - Frontend (3000): `netstat -ano | findstr :3000`
    - Kill processes or use different ports
+
+7. **Too much terminal output**
+   - The backend now only shows warnings and errors in the terminal
+   - Full logs are available in `backend/app.log` if needed
 
 ### Getting Help
 
@@ -258,10 +264,12 @@ This project is for educational and demonstration purposes.
 This is a demo application. For production use, consider:
 - Implementing proper error handling
 - Adding comprehensive testing
-- Setting up proper authentication
-- Using a production database
+- Setting up proper authentication with secure secrets
+- Using a production database (PostgreSQL, MySQL)
+- Adding database migrations with Alembic
 - Adding rate limiting and security measures
 - Implementing proper logging and monitoring
+- Using environment-specific configuration
 
 ---
 

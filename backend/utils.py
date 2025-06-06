@@ -8,13 +8,23 @@ from datetime import datetime
 # Configure logging
 def setup_logging():
     """Configure application logging"""
+    # Create formatters
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
+    # File handler - logs everything at INFO level
+    file_handler = logging.FileHandler('app.log', mode='a')
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(formatter)
+    
+    # Console handler - only shows warnings and errors
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.WARNING)
+    console_handler.setFormatter(formatter)
+    
+    # Configure root logger
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler(sys.stdout),
-            logging.FileHandler('app.log', mode='a')
-        ]
+        handlers=[console_handler, file_handler]
     )
     
     # Set specific loggers
