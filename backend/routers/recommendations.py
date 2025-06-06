@@ -17,8 +17,13 @@ from utils import parse_user_id, log_api_error, log_external_api_call, logger
 router = APIRouter()
 
 # DeepSeek API configuration
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1"
+
+def get_deepseek_api_key():
+    """Get DeepSeek API key, ensuring environment variables are loaded"""
+    from dotenv import load_dotenv
+    load_dotenv()
+    return os.getenv("DEEPSEEK_API_KEY")
 
 async def analyze_user_reading_history(user_id: int, db: AsyncSession) -> dict:
     """Analyze user's reading history to understand preferences"""
@@ -84,6 +89,8 @@ async def analyze_user_reading_history(user_id: int, db: AsyncSession) -> dict:
 async def get_ai_recommendations(user_reading_history: List[dict], num_recommendations: int = 5) -> List[dict]:
     """Get AI-powered book recommendations using DeepSeek API"""
     
+    DEEPSEEK_API_KEY = get_deepseek_api_key()
+    
     if not DEEPSEEK_API_KEY:
         logger.warning("DeepSeek API key not configured, using fallback recommendations")
         return get_fallback_recommendations()
@@ -93,7 +100,7 @@ async def get_ai_recommendations(user_reading_history: List[dict], num_recommend
         return get_fallback_recommendations()
     
     # Analyze user preferences from reading history
-    high_rated_books = [r for r in user_reading_history if r.get('rating', 0) >= 4]
+    high_rated_books = [r for r in user_reading_history if r.get('rating') and r.get('rating', 0) >= 4]
     favorite_genres = {}
     favorite_authors = {}
     
@@ -101,11 +108,11 @@ async def get_ai_recommendations(user_reading_history: List[dict], num_recommend
         book = reading.get('book', {})
         genre = book.get('genre')
         author = book.get('author')
-        rating = reading.get('rating', 0)
+        rating = reading.get('rating')
         
-        if genre and rating >= 4:
+        if genre and rating and rating >= 4:
             favorite_genres[genre] = favorite_genres.get(genre, 0) + 1
-        if author and rating >= 4:
+        if author and rating and rating >= 4:
             favorite_authors[author] = favorite_authors.get(author, 0) + 1
     
     # Create detailed reading profile
@@ -346,7 +353,7 @@ async def generate_recommendations(
     for reading in readings:
         reading_history.append({
             'status': reading.status,
-            'rating': reading.rating,
+            'rating': reading.rating if reading.rating is not None else 0,
             'book': {
                 'title': reading.book.title,
                 'author': reading.book.author,
