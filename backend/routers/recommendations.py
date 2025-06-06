@@ -86,7 +86,7 @@ async def analyze_user_reading_history(user_id: int, db: AsyncSession) -> dict:
         ]
     }
 
-async def get_ai_recommendations(user_reading_history: List[dict], num_recommendations: int = 5) -> List[dict]:
+async def get_ai_recommendations(user_reading_history: List[dict], user_books: List[dict] = None, num_recommendations: int = 5) -> List[dict]:
     """Get AI-powered book recommendations using DeepSeek API"""
     
     DEEPSEEK_API_KEY = get_deepseek_api_key()
@@ -132,6 +132,12 @@ async def get_ai_recommendations(user_reading_history: List[dict], num_recommend
         top_authors = sorted(favorite_authors.items(), key=lambda x: x[1], reverse=True)[:3]
         reading_profile += f"FAVORITE AUTHORS: {', '.join([a[0] for a in top_authors])}\n"
     
+    # Add complete list of books in user's library to avoid recommending them
+    if user_books:
+        reading_profile += f"\nBOOKS ALREADY IN LIBRARY (DO NOT RECOMMEND):\n"
+        for book in user_books:
+            reading_profile += f"• {book.get('title', 'Unknown')} by {book.get('author', 'Unknown')}\n"
+    
     # Create comprehensive prompt
     prompt = f"""You are a professional book recommendation AI. Analyze this reader's profile and recommend {num_recommendations} books they would love.
 
@@ -142,9 +148,11 @@ INSTRUCTIONS:
 1. Recommend books that match their demonstrated preferences
 2. Consider their favorite genres and authors
 3. Look for similar themes, writing styles, or subject matter
-4. Avoid books they've already read
-5. Provide specific, personalized reasons for each recommendation
-6. Rate your confidence (0.0-1.0) based on how well the book matches their taste
+4. NEVER recommend books from the "BOOKS ALREADY IN LIBRARY" list above
+5. NEVER recommend books they've already read or rated
+6. Only recommend completely new books not in their library
+7. Provide specific, personalized reasons for each recommendation
+8. Rate your confidence (0.0-1.0) based on how well the book matches their taste
 
 RESPONSE FORMAT (JSON):
 {{
@@ -215,10 +223,33 @@ Respond ONLY with valid JSON. Make recommendations thoughtful and personalized."
                             })
                     
                     if valid_recommendations:
-                        logger.info(f"Successfully parsed {len(valid_recommendations)} AI recommendations")
-                        return valid_recommendations[:num_recommendations]
-                    else:
-                        logger.warning("No valid recommendations found in AI response")
+                        # Filter out books that are already in the user's library (same title + author)
+                        if user_books:
+                            user_book_combos = set()
+                            for book in user_books:
+                                # Only match title + author combination (not title alone)
+                                title = book.get('title', '').lower().strip()
+                                author = book.get('author', '').lower().strip()
+                                user_book_combos.add(f"{title}|{author}")
+                        
+                            filtered_recommendations = []
+                            for rec in valid_recommendations:
+                                rec_title = rec['title'].lower().strip()
+                                rec_author = rec['author'].lower().strip()
+                                rec_combo = f"{rec_title}|{rec_author}"
+                                
+                                if rec_combo not in user_book_combos:
+                                    filtered_recommendations.append(rec)
+                                else:
+                                    logger.info(f"Filtered out book already in library: {rec['title']} by {rec['author']}")
+                            
+                            valid_recommendations = filtered_recommendations
+                        
+                        if valid_recommendations:
+                            logger.info(f"Successfully parsed {len(valid_recommendations)} AI recommendations after filtering")
+                            return valid_recommendations[:num_recommendations]
+                        else:
+                            logger.warning("No valid recommendations found after filtering existing books")
                         
                 except json.JSONDecodeError as e:
                     logger.error(f"Failed to parse AI response as JSON: {e}")
@@ -235,7 +266,29 @@ Respond ONLY with valid JSON. Make recommendations thoughtful and personalized."
     
     # Return fallback recommendations if all else fails
     logger.warning("Using fallback recommendations due to API issues")
-    return get_fallback_recommendations()
+    fallback_recs = get_fallback_recommendations()
+    
+    # Filter fallback recommendations too (only by title + author combination)
+    if user_books:
+        user_book_combos = set()
+        for book in user_books:
+            title = book.get('title', '').lower().strip()
+            author = book.get('author', '').lower().strip()
+            user_book_combos.add(f"{title}|{author}")
+        
+        filtered_fallback = []
+        for rec in fallback_recs:
+            rec_title = rec['title'].lower().strip()
+            rec_author = rec['author'].lower().strip()
+            rec_combo = f"{rec_title}|{rec_author}"
+            
+            if rec_combo not in user_book_combos:
+                filtered_fallback.append(rec)
+        
+        if filtered_fallback:
+            return filtered_fallback
+    
+    return fallback_recs
 
 def parse_text_recommendations(ai_response: str, num_recommendations: int) -> List[dict]:
     """Fallback parser for non-JSON AI responses"""
@@ -361,8 +414,17 @@ async def generate_recommendations(
             }
         })
     
-    # Get AI recommendations
-    ai_recommendations = await get_ai_recommendations(reading_history)
+    # Get ALL books in user's library (not just readings) to avoid recommending them
+    user_books = []
+    for reading in readings:
+        user_books.append({
+            'title': reading.book.title,
+            'author': reading.book.author,
+            'genre': reading.book.genre
+        })
+    
+    # Get AI recommendations, passing the user's books to avoid duplicates
+    ai_recommendations = await get_ai_recommendations(reading_history, user_books)
     
     # Clear existing recommendations
     existing_recs = (await db.execute(
@@ -375,19 +437,33 @@ async def generate_recommendations(
     # Create new recommendations
     created_recommendations = []
     for ai_rec in ai_recommendations:
+        # Final check: make sure this book isn't already in the user's library
+        is_already_in_library = False
+        for user_book in user_books:
+            if (user_book['title'].lower().strip() == ai_rec['title'].lower().strip() and 
+                user_book['author'].lower().strip() == ai_rec['author'].lower().strip()):
+                is_already_in_library = True
+                logger.info(f"Skipping recommendation for book already in library: {ai_rec['title']}")
+                break
+        
+        if is_already_in_library:
+            continue
+            
         # Try to find existing book or create a placeholder
         book_result = await db.execute(
-            select(Book).where(Book.title == ai_rec['title'])
+            select(Book)
+            .where(Book.title == ai_rec['title'])
+            .where(Book.author == ai_rec['author'])  # Also match by author to be more specific
         )
-        book = book_result.scalar_one_or_none()
+        book = book_result.scalars().first()  # Use first() instead of scalar_one_or_none()
         
         if not book:
-            # Create a new book entry
+            # Create a new book entry (no description for AI recommendations)
             book = Book(
                 title=ai_rec['title'],
                 author=ai_rec['author'],
-                description=ai_rec['reason'],
-                genre="Recommended"
+                description=None,  # Don't set description for AI recommendations
+                genre=ai_rec.get('genre', 'Recommended')
             )
             db.add(book)
             await db.flush()

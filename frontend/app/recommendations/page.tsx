@@ -3,11 +3,11 @@
 import { useSession } from 'next-auth/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Layout from '@/components/Layout'
-import { recommendationApi, Recommendation } from '@/lib/api'
+import { recommendationApi, Recommendation, bookApi, readingApi } from '@/lib/api'
 import { Star, RefreshCw, X, BookOpen, Brain } from 'lucide-react'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
-import Link from 'next/link'
+
 
 export default function RecommendationsPage() {
   const { data: session } = useSession()
@@ -23,17 +23,23 @@ export default function RecommendationsPage() {
   )
 
   const refreshMutation = useMutation(
-    () => recommendationApi.get(parseInt(session?.user?.id || '1'), true),
+    (options?: { silent?: boolean }) => recommendationApi.get(parseInt(session?.user?.id || '1'), true),
     {
-      onSuccess: (data) => {
+      onSuccess: (data, variables) => {
         queryClient.setQueryData(['recommendations', session?.user?.id], data)
-        toast.success('Generated new recommendations!')
+        // Only show toast if not silent (manual refresh)
+        if (!variables?.silent) {
+          toast.success('Generated new recommendations!')
+        }
       },
-      onError: (error: any) => {
-        if (error.response?.status === 400) {
-          toast.error('Add and rate some books first to get recommendations')
-        } else {
-          toast.error('Failed to generate recommendations')
+      onError: (error: any, variables) => {
+        // Only show error toast if not silent (manual refresh)
+        if (!variables?.silent) {
+          if (error.response?.status === 400) {
+            toast.error('Add and rate some books first to get recommendations')
+          } else {
+            toast.error('Failed to generate recommendations')
+          }
         }
       },
     }
@@ -52,12 +58,71 @@ export default function RecommendationsPage() {
     }
   )
 
+  const addToLibraryMutation = useMutation(
+    async (recommendation: Recommendation) => {
+      const userId = parseInt(session?.user?.id || '1')
+      
+      // First, ensure the book exists in our database
+      const book = await bookApi.add({
+        title: recommendation.book.title,
+        author: recommendation.book.author,
+        isbn: recommendation.book.isbn,
+        cover_url: recommendation.book.cover_url,
+        description: recommendation.book.description || recommendation.reason,
+        genre: recommendation.book.genre,
+        publication_year: recommendation.book.publication_year,
+        total_pages: recommendation.book.total_pages,
+      })
+      
+      // Then create a reading entry with "want_to_read" status
+      const reading = await readingApi.create(userId, {
+        book_id: book.id,
+        status: 'want_to_read'
+      })
+      
+      // Dismiss the recommendation since it's now in the library
+      await recommendationApi.dismiss(recommendation.id)
+      
+      return { book, reading, recommendationId: recommendation.id }
+    },
+    {
+      onSuccess: (data) => {
+        // Remove the recommendation from the current list
+        queryClient.setQueryData<Recommendation[]>(
+          ['recommendations', session?.user?.id],
+          (oldData) => oldData?.filter(rec => rec.id !== data.recommendationId) || []
+        )
+        
+        // Invalidate other queries to refresh the UI
+        queryClient.invalidateQueries(['readings'])
+        queryClient.invalidateQueries(['dashboard'])
+        
+        toast.success('Book added to your library!')
+        
+        // Note: Auto-refresh disabled to prevent API issues
+        // Users can manually refresh if they want more recommendations
+      },
+      onError: (error: any) => {
+        console.error('Add to library error:', error)
+        if (error.response?.status === 409) {
+          toast.error('Book is already in your library')
+        } else {
+          toast.error('Failed to add book to library')
+        }
+      },
+    }
+  )
+
   const handleRefresh = () => {
-    refreshMutation.mutate()
+    refreshMutation.mutate({ silent: false })
   }
 
   const handleDismiss = (recommendationId: number) => {
     dismissMutation.mutate(recommendationId)
+  }
+
+  const handleAddToLibrary = (recommendation: Recommendation) => {
+    addToLibraryMutation.mutate(recommendation)
   }
 
   if (isLoading) {
@@ -168,10 +233,11 @@ export default function RecommendationsPage() {
                       </div>
                     </div>
 
-                    {/* Book Description */}
-                    {recommendation.book.description && (
+                    {/* Book Description - Only show if different from AI reason */}
+                    {recommendation.book.description && 
+                     recommendation.book.description !== recommendation.reason && (
                       <div className="mb-4">
-                        <h4 className="font-medium text-gray-900 mb-2">Description:</h4>
+                        <h4 className="font-medium text-gray-900 mb-2">About this book:</h4>
                         <p className="text-gray-600 text-sm leading-relaxed line-clamp-4">
                           {recommendation.book.description}
                         </p>
@@ -180,17 +246,19 @@ export default function RecommendationsPage() {
 
                     {/* Action Buttons */}
                     <div className="flex gap-2 flex-wrap">
-                      <Link
-                        href={`/search?q=${encodeURIComponent(recommendation.book.title)}`}
-                        className="btn-primary text-sm"
+                      <button
+                        onClick={() => handleAddToLibrary(recommendation)}
+                        disabled={addToLibraryMutation.isLoading}
+                        className="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Add to Library
-                      </Link>
+                        {addToLibraryMutation.isLoading ? 'Adding...' : 'Add to Library'}
+                      </button>
                       <button
                         onClick={() => handleDismiss(recommendation.id)}
-                        className="btn-secondary text-sm"
+                        disabled={dismissMutation.isLoading}
+                        className="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Not Interested
+                        {dismissMutation.isLoading ? 'Dismissing...' : 'Not Interested'}
                       </button>
                     </div>
                   </div>
