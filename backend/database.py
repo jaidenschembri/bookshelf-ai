@@ -8,11 +8,25 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./bookshelf.db")
 
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=True,
-    future=True
-)
+# Database configuration based on the database type
+if DATABASE_URL.startswith("postgresql"):
+    # PostgreSQL configuration for production
+    engine = create_async_engine(
+        DATABASE_URL,
+        echo=False,  # Set to False in production
+        future=True,
+        pool_size=20,
+        max_overflow=0,
+        pool_pre_ping=True,
+        pool_recycle=300,
+    )
+else:
+    # SQLite configuration for development
+    engine = create_async_engine(
+        DATABASE_URL,
+        echo=True,
+        future=True
+    )
 
 AsyncSessionLocal = async_sessionmaker(
     engine,
@@ -27,4 +41,4 @@ async def get_db():
         try:
             yield session
         finally:
-            await session.close() 
+            await session.close()
