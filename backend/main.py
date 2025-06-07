@@ -16,11 +16,16 @@ logger = setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create tables
-    logger.info("Starting application - creating database tables")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database tables created successfully")
+    # Only create tables in development (SQLite)
+    # Production should use proper migrations
+    database_url = os.getenv("DATABASE_URL", "")
+    if "sqlite" in database_url.lower():
+        logger.info("Development environment - creating database tables")
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables created successfully")
+    else:
+        logger.info("Production environment - skipping table creation (use migrations)")
     yield
     logger.info("Application shutdown")
 
