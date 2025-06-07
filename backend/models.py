@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, BigInteger, String, Float, DateTime, Text, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, BigInteger, String, Float, DateTime, Text, ForeignKey, Boolean, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
@@ -10,8 +10,14 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=False)
     google_id = Column(String, unique=True, index=True)
+    profile_picture_url = Column(String)  # From Google profile
     reading_goal = Column(Integer, default=12)  # books per year
+    timezone = Column(String, default="UTC")
+    email_verified = Column(Boolean, default=False)
+    last_login = Column(DateTime(timezone=True))
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     # Relationships
     readings = relationship("Reading", back_populates="user")

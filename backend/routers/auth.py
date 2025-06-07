@@ -67,17 +67,14 @@ async def get_or_create_user(google_user_info: dict, db: AsyncSession) -> User:
     log_auth_event("new_user_creation_start", user_email=email, details=f"google_id={google_id}")
     
     try:
-        # Get the next available ID for SQLite
-        result = await db.execute(select(func.max(User.id)))
-        max_id = result.scalar()
-        next_id = (max_id or 0) + 1
-        
-        # Create new user with explicit ID
+        # Create new user (PostgreSQL will auto-generate ID)
         user = User(
-            id=next_id,
             google_id=str(google_id),
             email=email,
             name=name,
+            profile_picture_url=google_user_info.get("picture"),
+            email_verified=google_user_info.get("verified_email", False),
+            last_login=datetime.utcnow(),
             reading_goal=12  # Default reading goal
         )
         db.add(user)

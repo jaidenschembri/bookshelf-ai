@@ -19,7 +19,13 @@ class UserCreate(UserBase):
 
 class UserResponse(UserBase):
     id: int
+    profile_picture_url: Optional[str] = None
+    timezone: str = "UTC"
+    email_verified: bool = False
+    last_login: Optional[datetime] = None
+    is_active: bool = True
     created_at: datetime
+    updated_at: datetime
     
     class Config:
         from_attributes = True
