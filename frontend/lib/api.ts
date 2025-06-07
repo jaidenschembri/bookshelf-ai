@@ -3,14 +3,19 @@ import axios from 'axios'
 // Get the API URL and ensure it's HTTPS in production
 let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-// Force HTTPS if we're in production (not localhost)
-if (API_BASE_URL.includes('railway.app') && API_BASE_URL.startsWith('http://')) {
-  API_BASE_URL = API_BASE_URL.replace('http://', 'https://')
+// Force HTTPS for any Railway URLs - multiple safety checks
+if (API_BASE_URL.includes('railway.app')) {
+  // Remove any existing protocol
+  API_BASE_URL = API_BASE_URL.replace(/^https?:\/\//, '')
+  // Add HTTPS protocol
+  API_BASE_URL = 'https://' + API_BASE_URL
 }
 
 // Debug logging - only log the final URL, not process.env in client
 if (typeof window !== 'undefined') {
   console.log('🌐 API_BASE_URL:', API_BASE_URL)
+  console.log('🔒 Using HTTPS:', API_BASE_URL.startsWith('https://'))
+  console.log('🌐 Original env var:', process.env.NEXT_PUBLIC_API_URL)
 }
 
 export const api = axios.create({
@@ -20,15 +25,28 @@ export const api = axios.create({
   },
 })
 
-// Add request interceptor to force HTTPS for Railway URLs
+// Add request interceptor to force HTTPS for Railway URLs and log requests
 api.interceptors.request.use((config) => {
-  if (config.url && config.baseURL) {
-    const fullUrl = config.baseURL + config.url
-    if (fullUrl.includes('railway.app') && fullUrl.startsWith('http://')) {
-      config.baseURL = config.baseURL.replace('http://', 'https://')
-      console.log('🔒 Forced HTTPS for:', config.baseURL + config.url)
+  // Force HTTPS for any Railway URLs - additional safety check
+  if (config.baseURL && config.baseURL.includes('railway.app')) {
+    // Remove any existing protocol and force HTTPS
+    config.baseURL = config.baseURL.replace(/^https?:\/\//, '')
+    config.baseURL = 'https://' + config.baseURL
+  }
+  
+  // Log the final request URL for debugging
+  const fullUrl = (config.baseURL || '') + (config.url || '')
+  if (typeof window !== 'undefined') {
+    console.log('🌐 Making request to:', fullUrl)
+    if (fullUrl.includes('railway.app') && !fullUrl.startsWith('https://')) {
+      console.error('❌ Railway URL not using HTTPS:', fullUrl)
+      // Force fix the URL
+      if (config.baseURL) {
+        config.baseURL = config.baseURL.replace(/^http:\/\//, 'https://')
+      }
     }
   }
+  
   return config
 })
 

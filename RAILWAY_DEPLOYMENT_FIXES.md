@@ -30,6 +30,14 @@ async headers() {
 - Removed: `console.log('🌐 NEXT_PUBLIC_API_URL env var:', process.env.NEXT_PUBLIC_API_URL)`
 - Only `NEXT_PUBLIC_*` variables are available in the browser, but `process.env` object itself is not
 
+### 3. Mixed Content Error (HTTP/HTTPS)
+**Error**: `Mixed Content: The page at 'https://...' was loaded over HTTPS, but requested an insecure XMLHttpRequest endpoint 'http://...'`
+
+**Fix**: Enhanced HTTPS enforcement in `frontend/lib/api.ts`:
+- Improved Railway URL detection and HTTPS forcing
+- Added multiple safety checks to ensure all Railway URLs use HTTPS
+- Added request interceptor to catch and fix any remaining HTTP requests
+
 ## Railway Deployment Setup
 
 ### 1. Backend Service Configuration
