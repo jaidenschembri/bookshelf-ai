@@ -145,7 +145,7 @@ export const bookApi = {
     api.get(`/books/search?q=${encodeURIComponent(query)}&limit=${limit}`).then(res => res.data),
   
   add: (book: Partial<Book>): Promise<Book> =>
-    api.post('/books', book).then(res => res.data),
+    api.post('/books/', book).then(res => res.data),
   
   getUserBooks: (userId: number): Promise<Book[]> =>
     api.get(`/books/user/${userId}`).then(res => res.data),
