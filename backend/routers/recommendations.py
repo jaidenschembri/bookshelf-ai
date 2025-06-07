@@ -139,35 +139,51 @@ async def get_ai_recommendations(user_reading_history: List[dict], user_books: L
             reading_profile += f"• {book.get('title', 'Unknown')} by {book.get('author', 'Unknown')}\n"
     
     # Create comprehensive prompt
-    prompt = f"""You are a professional book recommendation AI. Analyze this reader's profile and recommend {num_recommendations} books they would love.
+    prompt = f"""You are an expert literary curator and book recommendation specialist. Your task is to analyze this reader's unique profile and recommend {num_recommendations} exceptional books they will genuinely love.
 
 READER PROFILE:
 {reading_profile}
 
-INSTRUCTIONS:
-1. Recommend books that match their demonstrated preferences
-2. Consider their favorite genres and authors
-3. Look for similar themes, writing styles, or subject matter
-4. NEVER recommend books from the "BOOKS ALREADY IN LIBRARY" list above
-5. NEVER recommend books they've already read or rated
-6. Only recommend completely new books not in their library
-7. Provide specific, personalized reasons for each recommendation
-8. Rate your confidence (0.0-1.0) based on how well the book matches their taste
+CRITICAL REQUIREMENTS:
+• ABSOLUTELY NEVER recommend any book from the "BOOKS ALREADY IN LIBRARY" section above
+• Only suggest books that are NOT in their current collection
+• Each recommendation must be a real, published book with accurate title and author
+• Focus on books published within the last 20 years for relevance and availability
 
-RESPONSE FORMAT (JSON):
+RECOMMENDATION STRATEGY:
+1. PATTERN ANALYSIS: Identify specific themes, writing styles, and narrative elements from their highly-rated books
+2. GENRE EXPANSION: If they love one genre, suggest acclaimed books from adjacent genres they might enjoy
+3. AUTHOR DISCOVERY: Recommend books by authors similar to their favorites, or newer works by authors they haven't discovered
+4. THEMATIC CONNECTIONS: Look for books that share emotional resonance, character types, or subject matter with their favorites
+5. QUALITY FOCUS: Prioritize critically acclaimed, award-winning, or widely beloved books that match their taste profile
+
+PERSONALIZATION DEPTH:
+• Reference specific books they've rated highly in your reasoning
+• Explain WHY each book connects to their demonstrated preferences
+• Consider their reading level and complexity preferences based on their history
+• Account for both popular and literary fiction preferences if evident
+
+CONFIDENCE SCORING:
+• 0.9-1.0: Perfect match based on multiple preference indicators
+• 0.8-0.89: Strong match with clear preference alignment
+• 0.7-0.79: Good match with some preference overlap
+• 0.6-0.69: Moderate match worth trying
+• Below 0.6: Don't recommend
+
+RESPONSE FORMAT (JSON only):
 {{
   "recommendations": [
     {{
-      "title": "Book Title",
-      "author": "Author Name", 
-      "reason": "Detailed explanation of why this book matches their preferences based on their reading history",
+      "title": "Exact Book Title",
+      "author": "Full Author Name",
+      "reason": "Compelling, specific explanation connecting this book to their reading history and preferences, mentioning specific books they've enjoyed",
       "confidence": 0.85,
-      "genre": "Book Genre"
+      "genre": "Primary Genre"
     }}
   ]
 }}
 
-Respond ONLY with valid JSON. Make recommendations thoughtful and personalized."""
+Return ONLY valid JSON. No markdown, no explanations, just the JSON object."""
 
     try:
         logger.info(f"Calling DeepSeek API for {len(user_reading_history)} books in reading history")

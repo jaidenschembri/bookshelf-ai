@@ -6,6 +6,7 @@ import Layout from '@/components/Layout'
 import { recommendationApi, Recommendation, bookApi, readingApi } from '@/lib/api'
 import { Star, RefreshCw, X, BookOpen, Brain } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import toast from 'react-hot-toast'
 
 
