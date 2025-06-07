@@ -21,6 +21,18 @@ export const api = axios.create({
   },
 })
 
+// Add request interceptor to force HTTPS for Railway URLs
+api.interceptors.request.use((config) => {
+  if (config.url && config.baseURL) {
+    const fullUrl = config.baseURL + config.url
+    if (fullUrl.includes('railway.app') && fullUrl.startsWith('http://')) {
+      config.baseURL = config.baseURL.replace('http://', 'https://')
+      console.log('🔒 Forced HTTPS for:', config.baseURL + config.url)
+    }
+  }
+  return config
+})
+
 // Types
 export interface Book {
   id: number
