@@ -3,7 +3,7 @@
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { BookOpen, Home, Search, Star, TrendingUp, LogOut, User, Menu, X } from 'lucide-react'
+import { BookOpen, Home, Search, Star, TrendingUp, LogOut, User, Menu, X, Users } from 'lucide-react'
 import { useState } from 'react'
 
 interface LayoutProps {
@@ -21,6 +21,7 @@ export default function Layout({ children }: LayoutProps) {
     { name: 'My Books', href: '/books', icon: BookOpen },
     { name: 'Search Books', href: '/search', icon: Search },
     { name: 'Recommendations', href: '/recommendations', icon: Star },
+    { name: 'Social', href: '/social', icon: Users },
   ]
 
   const handleSignOut = async () => {

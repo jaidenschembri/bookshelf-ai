@@ -123,6 +123,7 @@ export interface Reading {
   status: 'want_to_read' | 'currently_reading' | 'finished'
   rating?: number
   review?: string
+  is_review_public?: boolean
   progress_pages: number
   total_pages?: number
   started_at?: string
@@ -158,8 +159,60 @@ export interface User {
   id: number
   email: string
   name: string
+  username?: string
+  bio?: string
+  location?: string
+  profile_picture_url?: string
   reading_goal: number
+  is_private?: boolean
   created_at: string
+}
+
+export interface UserPublicProfile extends User {
+  follower_count: number
+  following_count: number
+  is_following: boolean
+}
+
+export interface UserFollow {
+  id: number
+  follower_id: number
+  following_id: number
+  created_at: string
+  follower: User
+  following: User
+}
+
+export interface ReviewComment {
+  id: number
+  reading_id: number
+  user_id: number
+  content: string
+  created_at: string
+  updated_at: string
+  user: User
+}
+
+export interface ReviewLike {
+  id: number
+  reading_id: number
+  user_id: number
+  created_at: string
+  user: User
+}
+
+export interface UserActivity {
+  id: number
+  user_id: number
+  activity_type: string
+  activity_data: any
+  created_at: string
+  user: User
+}
+
+export interface SocialFeed {
+  activities: UserActivity[]
+  recent_reviews: Reading[]
 }
 
 export interface Dashboard {
@@ -224,4 +277,57 @@ export const dashboardApi = {
   
   getStats: (userId: number): Promise<ReadingStats> =>
     api.get(`/dashboard/${userId}/stats`).then(res => res.data),
+}
+
+export const socialApi = {
+  // User Following
+  followUser: (userId: number): Promise<UserFollow> =>
+    api.post('/social/follow', { following_id: userId }).then(res => res.data),
+  
+  unfollowUser: (userId: number): Promise<void> =>
+    api.delete(`/social/unfollow/${userId}`).then(res => res.data),
+  
+  getFollowers: (userId: number): Promise<UserPublicProfile[]> =>
+    api.get(`/social/followers/${userId}`).then(res => res.data),
+  
+  getFollowing: (userId: number): Promise<UserPublicProfile[]> =>
+    api.get(`/social/following/${userId}`).then(res => res.data),
+  
+  // Review Interactions
+  likeReview: (readingId: number): Promise<ReviewLike> =>
+    api.post(`/social/reviews/${readingId}/like`).then(res => res.data),
+  
+  unlikeReview: (readingId: number): Promise<void> =>
+    api.delete(`/social/reviews/${readingId}/unlike`).then(res => res.data),
+  
+  // Review Comments
+  addComment: (readingId: number, content: string): Promise<ReviewComment> =>
+    api.post(`/social/reviews/${readingId}/comments`, { content }).then(res => res.data),
+  
+  getComments: (readingId: number): Promise<ReviewComment[]> =>
+    api.get(`/social/reviews/${readingId}/comments`).then(res => res.data),
+  
+  updateComment: (commentId: number, content: string): Promise<ReviewComment> =>
+    api.put(`/social/reviews/comments/${commentId}`, { content }).then(res => res.data),
+  
+  deleteComment: (commentId: number): Promise<void> =>
+    api.delete(`/social/reviews/comments/${commentId}`).then(res => res.data),
+  
+  // Social Feed
+  getFeed: (limit = 20): Promise<SocialFeed> =>
+    api.get(`/social/feed?limit=${limit}`).then(res => res.data),
+}
+
+export const userApi = {
+  getProfile: (userId: number): Promise<UserPublicProfile> =>
+    api.get(`/users/${userId}`).then(res => res.data),
+  
+  searchUsers: (query: string): Promise<UserPublicProfile[]> =>
+    api.get(`/users/search?q=${encodeURIComponent(query)}`).then(res => res.data),
+  
+  updateProfile: (updates: Partial<User>): Promise<User> =>
+    api.put('/users/me', updates).then(res => res.data),
+  
+  getCurrentUser: (): Promise<User> =>
+    api.get('/auth/me').then(res => res.data),
 } 

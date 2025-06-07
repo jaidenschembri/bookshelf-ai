@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Layout from '@/components/Layout'
 import { readingApi, Reading } from '@/lib/api'
-import { BookOpen, Star, Clock, CheckCircle, Edit3, Trash2 } from 'lucide-react'
+import { BookOpen, Star, Clock, CheckCircle, Edit3, Trash2, MessageSquare, Eye, EyeOff } from 'lucide-react'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
 
@@ -285,10 +285,46 @@ export default function BooksPage() {
                     </div>
 
                     {/* Review */}
-                    {reading.review && (
-                      <div className="bg-gray-50 rounded-lg p-3">
+                    {reading.review ? (
+                      <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-medium text-gray-900">My Review</h4>
+                          <div className="flex items-center space-x-2">
+                            <span className={`text-xs px-2 py-1 rounded ${
+                              reading.is_review_public 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {reading.is_review_public ? (
+                                <>
+                                  <Eye className="h-3 w-3 inline mr-1" />
+                                  Public
+                                </>
+                              ) : (
+                                <>
+                                  <EyeOff className="h-3 w-3 inline mr-1" />
+                                  Private
+                                </>
+                              )}
+                            </span>
+                            <button
+                              onClick={() => setEditingReading(reading)}
+                              className="text-gray-400 hover:text-gray-600"
+                            >
+                              <Edit3 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
                         <p className="text-sm text-gray-700">{reading.review}</p>
                       </div>
+                    ) : (
+                      <button
+                        onClick={() => setEditingReading(reading)}
+                        className="flex items-center space-x-2 text-sm text-gray-500 hover:text-gray-700 mb-4"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        <span>Add a review</span>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -310,6 +346,163 @@ export default function BooksPage() {
           </div>
         )}
       </div>
+
+      {/* Review Edit Modal */}
+      {editingReading && (
+        <ReviewEditModal
+          reading={editingReading}
+          onClose={() => setEditingReading(null)}
+          onSave={(updates) => {
+            updateReadingMutation.mutate({
+              readingId: editingReading.id,
+              updates
+            })
+          }}
+        />
+      )}
     </Layout>
+  )
+}
+
+// Review Edit Modal Component
+function ReviewEditModal({ 
+  reading, 
+  onClose, 
+  onSave 
+}: { 
+  reading: Reading
+  onClose: () => void
+  onSave: (updates: Partial<Reading>) => void
+}) {
+  const [review, setReview] = useState(reading.review || '')
+  const [rating, setRating] = useState(reading.rating || 0)
+  const [isPublic, setIsPublic] = useState(reading.is_review_public || false)
+
+  const handleSave = () => {
+    onSave({
+      review: review.trim() || undefined,
+      rating: rating || undefined,
+      is_review_public: isPublic
+    })
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold">
+              {reading.review ? 'Edit Review' : 'Add Review'}
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            {/* Book Info */}
+            <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+              {reading.book.cover_url ? (
+                <Image
+                  src={reading.book.cover_url}
+                  alt={reading.book.title}
+                  width={60}
+                  height={80}
+                  className="rounded object-cover"
+                />
+              ) : (
+                <div className="w-15 h-20 bg-gray-200 rounded flex items-center justify-center">
+                  <BookOpen className="h-6 w-6 text-gray-400" />
+                </div>
+              )}
+              <div>
+                <h4 className="font-medium">{reading.book.title}</h4>
+                <p className="text-sm text-gray-600">by {reading.book.author}</p>
+              </div>
+            </div>
+
+            {/* Rating */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rating
+              </label>
+              <div className="flex space-x-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setRating(star)}
+                    className={`${
+                      star <= rating
+                        ? 'text-yellow-400'
+                        : 'text-gray-300'
+                    } hover:text-yellow-400 transition-colors`}
+                  >
+                    <Star className="h-6 w-6 fill-current" />
+                  </button>
+                ))}
+              </div>
+              {rating > 0 && (
+                <p className="text-sm text-gray-600 mt-1">{rating} out of 5 stars</p>
+              )}
+            </div>
+
+            {/* Review Text */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Review
+              </label>
+              <textarea
+                value={review}
+                onChange={(e) => setReview(e.target.value)}
+                placeholder="Share your thoughts about this book..."
+                rows={6}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Privacy Setting */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <h4 className="font-medium text-gray-900">Make review public</h4>
+                <p className="text-sm text-gray-600">
+                  Other users will be able to see your review and rating
+                </p>
+              </div>
+              <button
+                onClick={() => setIsPublic(!isPublic)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  isPublic ? 'bg-blue-600' : 'bg-gray-200'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    isPublic ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end space-x-3 mt-6 pt-6 border-t">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              {reading.review ? 'Update Review' : 'Save Review'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 } 
