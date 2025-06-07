@@ -1,15 +1,22 @@
 import axios from 'axios'
 
-// Get the API URL and ensure it's HTTPS in production
-let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-
-// Force HTTPS for any Railway URLs - multiple safety checks
-if (API_BASE_URL.includes('railway.app')) {
-  // Remove any existing protocol
-  API_BASE_URL = API_BASE_URL.replace(/^https?:\/\//, '')
-  // Add HTTPS protocol
-  API_BASE_URL = 'https://' + API_BASE_URL
+// Function to get the correct API URL with HTTPS enforcement
+function getApiBaseUrl(): string {
+  let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+  
+  // Force HTTPS for any Railway URLs - multiple safety checks
+  if (apiUrl.includes('railway.app')) {
+    // Remove any existing protocol
+    apiUrl = apiUrl.replace(/^https?:\/\//, '')
+    // Add HTTPS protocol
+    apiUrl = 'https://' + apiUrl
+  }
+  
+  return apiUrl
 }
+
+// Get the API URL and ensure it's HTTPS in production
+const API_BASE_URL = getApiBaseUrl()
 
 // Debug logging - only log the final URL, not process.env in client
 if (typeof window !== 'undefined') {
@@ -21,6 +28,7 @@ if (typeof window !== 'undefined') {
   })
 }
 
+// Create axios instance with dynamic URL checking
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -30,11 +38,10 @@ export const api = axios.create({
 
 // Add request interceptor to force HTTPS for Railway URLs and log requests
 api.interceptors.request.use((config) => {
-  // Force HTTPS for any Railway URLs - additional safety check
-  if (config.baseURL && config.baseURL.includes('railway.app')) {
-    // Remove any existing protocol and force HTTPS
-    config.baseURL = config.baseURL.replace(/^https?:\/\//, '')
-    config.baseURL = 'https://' + config.baseURL
+  // Always get fresh URL and force HTTPS for Railway URLs
+  const freshUrl = getApiBaseUrl()
+  if (freshUrl.includes('railway.app')) {
+    config.baseURL = freshUrl
   }
   
   // Temporary debugging to catch the HTTP request
@@ -45,7 +52,8 @@ api.interceptors.request.use((config) => {
       console.error('❌ FOUND THE HTTP REQUEST!', {
         originalBaseURL: config.baseURL,
         url: config.url,
-        fullUrl: fullUrl
+        fullUrl: fullUrl,
+        freshUrl: freshUrl
       })
     }
   }
