@@ -14,6 +14,11 @@ if (API_BASE_URL.includes('railway.app')) {
 // Debug logging - only log the final URL, not process.env in client
 if (typeof window !== 'undefined') {
   console.log('🌐 API_BASE_URL:', API_BASE_URL)
+  console.log('🔍 Environment check:', {
+    hasRailway: API_BASE_URL.includes('railway.app'),
+    startsWithHttps: API_BASE_URL.startsWith('https://'),
+    originalEnvVar: process.env.NEXT_PUBLIC_API_URL
+  })
 }
 
 export const api = axios.create({
@@ -30,6 +35,19 @@ api.interceptors.request.use((config) => {
     // Remove any existing protocol and force HTTPS
     config.baseURL = config.baseURL.replace(/^https?:\/\//, '')
     config.baseURL = 'https://' + config.baseURL
+  }
+  
+  // Temporary debugging to catch the HTTP request
+  const fullUrl = (config.baseURL || '') + (config.url || '')
+  if (typeof window !== 'undefined') {
+    console.log('🚀 Making request to:', fullUrl)
+    if (fullUrl.includes('railway.app') && fullUrl.startsWith('http://')) {
+      console.error('❌ FOUND THE HTTP REQUEST!', {
+        originalBaseURL: config.baseURL,
+        url: config.url,
+        fullUrl: fullUrl
+      })
+    }
   }
   
   return config
