@@ -1,6 +1,18 @@
 import axios from 'axios'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+// Get the API URL and ensure it's HTTPS in production
+let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
+// Force HTTPS if we're in production (not localhost)
+if (API_BASE_URL.includes('railway.app') && API_BASE_URL.startsWith('http://')) {
+  API_BASE_URL = API_BASE_URL.replace('http://', 'https://')
+}
+
+// Debug logging
+if (typeof window !== 'undefined') {
+  console.log('🌐 API_BASE_URL:', API_BASE_URL)
+  console.log('🌐 NEXT_PUBLIC_API_URL env var:', process.env.NEXT_PUBLIC_API_URL)
+}
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
