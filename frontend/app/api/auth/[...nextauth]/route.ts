@@ -57,7 +57,13 @@ const authOptions: NextAuthOptions = {
             console.log('🔄 Calling backend to create/update user...')
           }
           
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+          let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+          
+          // Force HTTPS for Railway URLs
+          if (apiUrl.includes('railway.app') && apiUrl.startsWith('http://')) {
+            apiUrl = apiUrl.replace('http://', 'https://')
+          }
+          
           if (isDevelopment) {
             console.log('🌐 Using API URL:', apiUrl)
           }
