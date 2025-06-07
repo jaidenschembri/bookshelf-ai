@@ -65,11 +65,12 @@ const authOptions: NextAuthOptions = {
           if (response.ok) {
             const data = await response.json()
             
-            // Store the database user ID - this is the critical part!
+            // Store the database user ID and JWT token - this is the critical part!
             user.id = data.user.id.toString()
             user.email = data.user.email
             user.name = data.user.name
             user.databaseUserId = data.user.id.toString()
+            user.accessToken = data.access_token // Store the JWT token
             
             return true
           } else {
@@ -93,6 +94,7 @@ const authOptions: NextAuthOptions = {
       // Use the database user ID from the token
       if (token.databaseUserId && session.user) {
         session.user.id = token.databaseUserId
+        session.accessToken = token.accessToken // Include JWT token in session
       } else if (token.sub && session.user) {
         // Fallback to token.sub if databaseUserId is not available
         session.user.id = token.sub
@@ -101,10 +103,11 @@ const authOptions: NextAuthOptions = {
       return session
     },
     async jwt({ token, user, account }) {
-      // Store the database user ID in the token when user signs in
+      // Store the database user ID and JWT token in the token when user signs in
       if (user) {
         token.databaseUserId = user.databaseUserId || user.id
         token.sub = user.databaseUserId || user.id
+        token.accessToken = user.accessToken // Store JWT token
       }
       
       return token

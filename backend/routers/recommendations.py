@@ -95,6 +95,8 @@ async def get_ai_recommendations(user_reading_history: List[dict], user_books: L
         logger.warning("DeepSeek API key not configured, using fallback recommendations")
         return get_fallback_recommendations()
     
+    logger.info(f"DeepSeek API key found, proceeding with AI recommendations")
+    
     if not user_reading_history:
         logger.warning("No reading history provided for recommendations")
         return get_fallback_recommendations()
@@ -440,7 +442,9 @@ async def generate_recommendations(
         })
     
     # Get AI recommendations, passing the user's books to avoid duplicates
+    logger.info(f"Generating AI recommendations for user {safe_user_id} with {len(reading_history)} books in history")
     ai_recommendations = await get_ai_recommendations(reading_history, user_books)
+    logger.info(f"AI returned {len(ai_recommendations)} recommendations")
     
     # Clear existing recommendations
     existing_recs = (await db.execute(

@@ -30,7 +30,7 @@ export default function SearchPage() {
       })
 
       // Then create a reading entry
-      await readingApi.create(parseInt(session?.user?.id || '1'), {
+      await readingApi.create({
         book_id: addedBook.id,
         status,
       })

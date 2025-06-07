@@ -76,7 +76,7 @@ export default function RecommendationsPage() {
       })
       
       // Then create a reading entry with "want_to_read" status
-      const reading = await readingApi.create(userId, {
+      const reading = await readingApi.create({
         book_id: book.id,
         status: 'want_to_read'
       })

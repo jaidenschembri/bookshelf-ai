@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import os
 
 from database import engine, Base
-from routers import auth, books, readings, recommendations, dashboard
+from routers import auth, books, readings, recommendations, dashboard, social, users
 from utils import setup_logging
 
 load_dotenv()
@@ -26,8 +26,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Bookshelf AI API",
-    description="Smart book recommendation system with AI-powered suggestions",
-    version="1.0.0",
+    description="Social book recommendation platform with AI-powered suggestions - like Letterboxd for books",
+    version="2.0.0",
     lifespan=lifespan
 )
 
@@ -50,10 +50,12 @@ app.include_router(books.router, prefix="/books", tags=["books"])
 app.include_router(readings.router, prefix="/readings", tags=["readings"])
 app.include_router(recommendations.router, prefix="/recommendations", tags=["recommendations"])
 app.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
+app.include_router(social.router, tags=["social"])
+app.include_router(users.router, tags=["users"])
 
 @app.get("/")
 async def root():
-    return {"message": "Bookshelf AI API is running!"}
+    return {"message": "Bookshelf AI - Social Book Platform API is running!"}
 
 @app.get("/health")
 async def health_check():

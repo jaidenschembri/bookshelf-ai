@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { getSession } from 'next-auth/react'
 
 // Function to get the correct API URL with HTTPS enforcement
 function getApiBaseUrl(): string {
@@ -36,12 +37,27 @@ export const api = axios.create({
   },
 })
 
-// Add request interceptor to force HTTPS for Railway URLs and log requests
-api.interceptors.request.use((config) => {
+// Add request interceptor to force HTTPS for Railway URLs, log requests, and add auth headers
+api.interceptors.request.use(async (config) => {
   // Always get fresh URL and force HTTPS for Railway URLs
   const freshUrl = getApiBaseUrl()
   if (freshUrl.includes('railway.app')) {
     config.baseURL = freshUrl
+  }
+  
+  // Add authentication header if user is logged in
+  if (typeof window !== 'undefined') {
+    try {
+      const session = await getSession()
+      if (session?.accessToken) {
+        config.headers.Authorization = `Bearer ${session.accessToken}`
+      } else if (session?.user) {
+        // User is logged in but doesn't have JWT token - they need to sign in again
+        console.warn('User session exists but no JWT token found. User needs to sign in again.')
+      }
+    } catch (error) {
+      console.warn('Failed to get session for API request:', error)
+    }
   }
   
   // Temporary debugging to catch the HTTP request
@@ -60,6 +76,21 @@ api.interceptors.request.use((config) => {
   
   return config
 })
+
+// Add response interceptor to handle authentication errors
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 403 || error.response?.status === 401) {
+      // Authentication error - the user needs to sign in again
+      if (typeof window !== 'undefined') {
+        console.warn('Authentication error detected. User may need to sign in again.')
+        // You could redirect to sign in page or show a message here
+      }
+    }
+    return Promise.reject(error)
+  }
+)
 
 // Types
 export interface Book {
@@ -155,8 +186,8 @@ export const bookApi = {
 }
 
 export const readingApi = {
-  create: (userId: number, reading: { book_id: number; status: string; rating?: number; review?: string }): Promise<Reading> =>
-    api.post(`/readings/?user_id=${userId}`, reading).then(res => res.data),
+  create: (reading: { book_id: number; status: string; rating?: number; review?: string }): Promise<Reading> =>
+    api.post('/readings/', reading).then(res => res.data),
   
   update: (readingId: number, updates: Partial<Reading>): Promise<Reading> =>
     api.put(`/readings/${readingId}`, updates).then(res => res.data),

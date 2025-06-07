@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 import os
@@ -13,6 +14,7 @@ from schemas import GoogleAuthRequest, AuthResponse, UserCreate, UserResponse
 from utils import parse_user_id, convert_user_id, log_auth_event, log_api_error, log_external_api_call, logger
 
 router = APIRouter()
+security = HTTPBearer()
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-here")
 ALGORITHM = "HS256"
@@ -67,15 +69,30 @@ async def get_or_create_user(google_user_info: dict, db: AsyncSession) -> User:
     log_auth_event("new_user_creation_start", user_email=email, details=f"google_id={google_id}")
     
     try:
+        # Generate a unique username from name and email
+        base_username = name.lower().replace(" ", "").replace(".", "")[:15]
+        username = base_username
+        counter = 1
+        
+        # Check if username exists and make it unique
+        while True:
+            result = await db.execute(select(User).where(User.username == username))
+            if not result.scalar_one_or_none():
+                break
+            username = f"{base_username}{counter}"
+            counter += 1
+        
         # Create new user (PostgreSQL will auto-generate ID)
         user = User(
             google_id=str(google_id),
             email=email,
             name=name,
+            username=username,
             profile_picture_url=google_user_info.get("picture"),
             email_verified=google_user_info.get("verified_email", False),
             last_login=datetime.utcnow(),
-            reading_goal=12  # Default reading goal
+            reading_goal=12,  # Default reading goal
+            is_private=False  # Default to public profile
         )
         db.add(user)
         await db.commit()
@@ -174,19 +191,26 @@ async def google_auth(
             detail=f"Authentication failed: {str(e)}"
         )
 
-@router.get("/me", response_model=UserResponse)
 async def get_current_user(
-    token: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db)
-):
-    """Get current user from token"""
+) -> User:
+    """Dependency to get current user from JWT token"""
+    token = credentials.credentials
+    
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
     except jwt.PyJWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
     
     # Convert user_id to SQLite-compatible integer using utility function
     safe_user_id = parse_user_id(user_id)
@@ -194,6 +218,16 @@ async def get_current_user(
     user = result.scalar_one_or_none()
     
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
     
-    return UserResponse.from_orm(user) 
+    return user
+
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user)
+):
+    """Get current user information"""
+    return UserResponse.from_orm(current_user) 
