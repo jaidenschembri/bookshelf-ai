@@ -156,7 +156,7 @@ export const bookApi = {
 
 export const readingApi = {
   create: (userId: number, reading: { book_id: number; status: string; rating?: number; review?: string }): Promise<Reading> =>
-    api.post(`/readings?user_id=${userId}`, reading).then(res => res.data),
+    api.post(`/readings/?user_id=${userId}`, reading).then(res => res.data),
   
   update: (readingId: number, updates: Partial<Reading>): Promise<Reading> =>
     api.put(`/readings/${readingId}`, updates).then(res => res.data),
