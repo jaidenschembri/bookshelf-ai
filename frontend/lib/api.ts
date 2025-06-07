@@ -85,7 +85,21 @@ api.interceptors.response.use(
       // Authentication error - the user needs to sign in again
       if (typeof window !== 'undefined') {
         console.warn('Authentication error detected. User may need to sign in again.')
-        // You could redirect to sign in page or show a message here
+        
+        // Show a more helpful message to the user
+        const errorMessage = error.response?.status === 401 
+          ? 'Your session has expired. Please sign in again.' 
+          : 'Authentication failed. Please sign in again.'
+        
+        // You could show a toast notification here if you have a toast library
+        console.error(errorMessage)
+        
+        // Optionally redirect to sign in page after a short delay
+        setTimeout(() => {
+          if (window.location.pathname !== '/') {
+            window.location.href = '/'
+          }
+        }, 2000)
       }
     }
     return Promise.reject(error)
