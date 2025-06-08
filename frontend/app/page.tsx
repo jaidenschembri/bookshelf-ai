@@ -2,18 +2,26 @@
 
 import { useSession, signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { BookOpen, Brain, Star, TrendingUp, ArrowRight, Zap, Target, Users } from 'lucide-react'
+import AuthModal from '@/components/AuthModal'
 
 export default function HomePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
 
   useEffect(() => {
     if (session) {
       router.push('/dashboard')
     }
   }, [session, router])
+
+  const openAuthModal = (mode: 'signin' | 'signup') => {
+    setAuthMode(mode)
+    setAuthModalOpen(true)
+  }
 
   if (status === 'loading') {
     return (
@@ -44,12 +52,10 @@ export default function HomePage() {
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => {
-                  signIn('google', { callbackUrl: '/dashboard' })
-                }}
+                onClick={() => openAuthModal('signin')}
                 className="btn-primary flex items-center space-x-2"
               >
-                <span>Sign in with Google</span>
+                <span>Sign In</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -85,9 +91,7 @@ export default function HomePage() {
               
               <div className="flex justify-center mb-20">
                 <button
-                  onClick={() => {
-                    signIn('google', { callbackUrl: '/dashboard' })
-                  }}
+                  onClick={() => openAuthModal('signup')}
                   className="btn-primary text-lg px-12 py-6 flex items-center justify-center space-x-3"
                 >
                   <span>Get Started Free</span>
@@ -208,9 +212,7 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-6">
               <button
-                onClick={() => {
-                  signIn('google', { callbackUrl: '/dashboard' })
-                }}
+                onClick={() => openAuthModal('signup')}
                 className="bg-white text-black font-bold py-6 px-12 border-4 border-white hover:bg-black hover:text-white transition-all duration-200 transform hover:translate-x-1 hover:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-none uppercase tracking-wider text-lg flex items-center justify-center space-x-3"
               >
                 <span>Start Reading Smarter</span>
@@ -238,6 +240,13 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Authentication Modal */}
+      <AuthModal 
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        defaultMode={authMode}
+      />
     </div>
   )
 } 

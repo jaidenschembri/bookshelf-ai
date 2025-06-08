@@ -1,4 +1,3 @@
-import hashlib
 import secrets
 from typing import Optional
 import logging
@@ -35,14 +34,6 @@ def setup_logging():
 
 # Initialize logger
 logger = setup_logging()
-
-def generate_secure_token() -> str:
-    """Generate a secure random token"""
-    return secrets.token_urlsafe(32)
-
-def hash_password(password: str) -> str:
-    """Hash a password using SHA-256"""
-    return hashlib.sha256(password.encode()).hexdigest()
 
 def convert_user_id(user_id: int) -> int:
     """

@@ -19,16 +19,6 @@ function getApiBaseUrl(): string {
 // Get the API URL and ensure it's HTTPS in production
 const API_BASE_URL = getApiBaseUrl()
 
-// Debug logging - only log the final URL, not process.env in client
-if (typeof window !== 'undefined') {
-  console.log('🌐 API_BASE_URL:', API_BASE_URL)
-  console.log('🔍 Environment check:', {
-    hasRailway: API_BASE_URL.includes('railway.app'),
-    startsWithHttps: API_BASE_URL.startsWith('https://'),
-    originalEnvVar: process.env.NEXT_PUBLIC_API_URL
-  })
-}
-
 // Create axios instance with dynamic URL checking
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -37,7 +27,7 @@ export const api = axios.create({
   },
 })
 
-// Add request interceptor to force HTTPS for Railway URLs, log requests, and add auth headers
+// Add request interceptor to force HTTPS for Railway URLs and add auth headers
 api.interceptors.request.use(async (config) => {
   // Always get fresh URL and force HTTPS for Railway URLs
   const freshUrl = getApiBaseUrl()
@@ -60,20 +50,6 @@ api.interceptors.request.use(async (config) => {
     }
   }
   
-  // Temporary debugging to catch the HTTP request
-  const fullUrl = (config.baseURL || '') + (config.url || '')
-  if (typeof window !== 'undefined') {
-    console.log('🚀 Making request to:', fullUrl)
-    if (fullUrl.includes('railway.app') && fullUrl.startsWith('http://')) {
-      console.error('❌ FOUND THE HTTP REQUEST!', {
-        originalBaseURL: config.baseURL,
-        url: config.url,
-        fullUrl: fullUrl,
-        freshUrl: freshUrl
-      })
-    }
-  }
-  
   return config
 })
 
@@ -91,7 +67,6 @@ api.interceptors.response.use(
           ? 'Your session has expired. Please sign in again.' 
           : 'Authentication failed. Please sign in again.'
         
-        // You could show a toast notification here if you have a toast library
         console.error(errorMessage)
         
         // Optionally redirect to sign in page after a short delay

@@ -75,15 +75,11 @@ const authOptions: NextAuthOptions = {
             return true
           } else {
             const errorText = await response.text()
-            if (isDevelopment) {
-              console.error('❌ Backend auth failed:', response.status, errorText)
-            }
+            console.error('Backend auth failed:', response.status, errorText)
             return false
           }
         } catch (error) {
-          if (isDevelopment) {
-            console.error('❌ Error during sign in:', error)
-          }
+          console.error('Error during sign in:', error)
           return false
         }
       }

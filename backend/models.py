@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, BigInteger, String, Float, DateTime, Text, ForeignKey, Boolean, JSON
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey, Boolean, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
@@ -12,11 +12,19 @@ class User(Base):
     username = Column(String, unique=True, index=True)  # New: unique username for social features
     bio = Column(Text)  # New: user bio
     location = Column(String)  # New: user location
-    google_id = Column(String, unique=True, index=True)
-    profile_picture_url = Column(String)  # From Google profile
+    
+    # Authentication fields
+    password_hash = Column(String)  # For email/password auth
+    google_id = Column(String, unique=True, index=True)  # For Google OAuth (optional)
+    auth_provider = Column(String, default="email")  # "email" or "google"
+    
+    profile_picture_url = Column(String)  # From Google profile or uploaded
     reading_goal = Column(Integer, default=12)  # books per year
     timezone = Column(String, default="UTC")
     email_verified = Column(Boolean, default=False)
+    email_verification_token = Column(String)  # For email verification
+    password_reset_token = Column(String)  # For password resets
+    password_reset_expires = Column(DateTime(timezone=True))  # Reset token expiry
     is_private = Column(Boolean, default=False)  # New: private profile option
     last_login = Column(DateTime(timezone=True))
     is_active = Column(Boolean, default=True)

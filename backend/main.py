@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import os
 
 from database import engine, Base
-from routers import auth, books, readings, recommendations, dashboard, social, users
+from routers import auth, books, readings, recommendations, dashboard, social, users, email_auth
 from utils import setup_logging
 
 load_dotenv()
@@ -48,6 +48,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
+app.include_router(email_auth.router, tags=["email-authentication"])  # New email auth
 app.include_router(books.router, prefix="/books", tags=["books"])
 app.include_router(readings.router, prefix="/readings", tags=["readings"])
 app.include_router(recommendations.router, prefix="/recommendations", tags=["recommendations"])
