@@ -16,23 +16,15 @@ logger = setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Database initialization - SAFE for local dev, MIGRATIONS for production
+    # Database initialization - same for both dev and prod
     logger.info("Starting application - checking database tables")
     
-    # Check if we're in production (Railway sets this)
-    is_production = os.getenv("RAILWAY_ENVIRONMENT") == "production"
+    # Always use create_all with checkfirst=True - safe for both environments
+    async with engine.begin() as conn:
+        # Only create tables that don't exist, never modify existing ones
+        await conn.run_sync(Base.metadata.create_all, checkfirst=True)
     
-    if is_production:
-        logger.info("🔴 PRODUCTION MODE: Using migrations only - NO create_all()")
-        # In production, migrations should have already been applied
-        # during the deployment process via railway_deploy.py
-    else:
-        logger.info("🟡 DEVELOPMENT MODE: Safe to use create_all() with checkfirst=True")
-        async with engine.begin() as conn:
-            # Only create tables that don't exist, never modify existing ones
-            await conn.run_sync(Base.metadata.create_all, checkfirst=True)
-    
-    logger.info("Database initialization completed")
+    logger.info("Database tables ready")
     yield
     logger.info("Application shutdown")
 
