@@ -1,11 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import uvicorn
 from dotenv import load_dotenv
 import os
+from sqlalchemy import text
 
-from database import engine, Base
+from database import engine, Base, AsyncSessionLocal
 from routers import auth, books, readings, recommendations, dashboard, social, users, email_auth
 from utils import setup_logging
 
@@ -16,15 +17,24 @@ logger = setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Database initialization - same for both dev and prod
-    logger.info("Starting application - checking database tables")
+    # Database initialization - environment-aware
+    is_production = os.getenv("RAILWAY_ENVIRONMENT") == "production" or os.getenv("PORT") is not None
+    db_type = "PostgreSQL" if is_production else "SQLite"
     
-    # Always use create_all with checkfirst=True - safe for both environments
-    async with engine.begin() as conn:
-        # Only create tables that don't exist, never modify existing ones
-        await conn.run_sync(Base.metadata.create_all, checkfirst=True)
+    logger.info(f"Starting Bookshelf AI backend ({db_type})")
+    logger.info("Initializing database tables...")
     
-    logger.info("Database tables ready")
+    try:
+        # Always use create_all with checkfirst=True - safe for both environments
+        async with engine.begin() as conn:
+            # Only create tables that don't exist, never modify existing ones
+            await conn.run_sync(Base.metadata.create_all, checkfirst=True)
+        
+        logger.info(f"Database tables ready ({db_type})")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        raise
+    
     yield
     logger.info("Application shutdown")
 
@@ -48,6 +58,41 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Railway deployment"""
+    is_production = os.getenv("RAILWAY_ENVIRONMENT") == "production" or os.getenv("PORT") is not None
+    db_type = "PostgreSQL" if is_production else "SQLite"
+    environment = "production" if is_production else "development"
+    
+    try:
+        # Test database connectivity
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(text("SELECT 1"))
+            result.scalar()
+        
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "database_type": db_type,
+            "environment": environment,
+            "message": f"Bookshelf AI backend running normally ({db_type})"
+        }
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "status": "unhealthy",
+                "database": "disconnected",
+                "database_type": db_type,
+                "environment": environment,
+                "error": str(e),
+                "message": "Service is experiencing issues"
+            }
+        )
+
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
 app.include_router(email_auth.router, tags=["email-authentication"])  # New email auth
@@ -61,10 +106,6 @@ app.include_router(users.router, tags=["users"])
 @app.get("/")
 async def root():
     return {"message": "Bookshelf AI - Social Book Platform API is running!"}
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"}
 
 if __name__ == "__main__":
     uvicorn.run(

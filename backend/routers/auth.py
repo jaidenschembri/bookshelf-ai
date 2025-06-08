@@ -202,28 +202,45 @@ async def get_current_user(
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         if user_id is None:
+            log_auth_event("invalid_token", details="missing_user_id_in_token")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token"
             )
-    except jwt.PyJWTError:
+    except jwt.PyJWTError as e:
+        log_auth_event("jwt_decode_failed", details=str(e))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
         )
     
-    # Convert user_id to SQLite-compatible integer using utility function
-    safe_user_id = parse_user_id(user_id)
-    result = await db.execute(select(User).where(User.id == safe_user_id))
-    user = result.scalar_one_or_none()
-    
-    if user is None:
+    try:
+        # Convert user_id to SQLite-compatible integer using utility function
+        safe_user_id = parse_user_id(user_id)
+        log_auth_event("user_lookup_attempt", details=f"user_id={safe_user_id}")
+        
+        result = await db.execute(select(User).where(User.id == safe_user_id))
+        user = result.scalar_one_or_none()
+        
+        if user is None:
+            log_auth_event("user_not_found", details=f"user_id={safe_user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        log_auth_event("user_lookup_success", user_email=user.email, user_id=user.id)
+        return user
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        log_api_error("get_current_user", e, user_id=safe_user_id if 'safe_user_id' in locals() else None)
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Authentication error: {str(e)}"
         )
-    
-    return user
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(

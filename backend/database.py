@@ -2,34 +2,61 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.ext.declarative import declarative_base
 import os
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
 
-# Railway provides DATABASE_URL, but we need to handle both Railway and local development
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./bookshelf.db")
+# Initialize logger
+logger = logging.getLogger(__name__)
 
-# Railway uses postgres:// but we need postgresql+asyncpg://
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+# Determine environment
+is_production = os.getenv("RAILWAY_ENVIRONMENT") == "production" or os.getenv("PORT") is not None
 
-# Configure engine based on database type
-if DATABASE_URL.startswith("postgresql"):
-    # For PostgreSQL, use asyncpg driver
-    if not DATABASE_URL.startswith("postgresql+asyncpg://"):
-        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+if is_production:
+    # Production: Use PostgreSQL from Railway environment
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    if not DATABASE_URL:
+        raise ValueError("DATABASE_URL environment variable is required for production")
+    
+    logger.info("Production environment detected - using PostgreSQL")
+    
+    # Handle different PostgreSQL URL formats and ensure asyncpg driver
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif DATABASE_URL.startswith("postgresql://"):
+        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+    
+    # Production PostgreSQL configuration
+    engine = create_async_engine(
+        DATABASE_URL,
+        echo=False,  # Disable SQL logging in production
+        future=True,
+        pool_size=10,
+        max_overflow=20,
+        pool_timeout=30,
+        pool_recycle=3600,
+        pool_pre_ping=True,
+        # pgbouncer compatibility settings
+        connect_args={
+            "statement_cache_size": 0,
+            "prepared_statement_cache_size": 0,
+            "command_timeout": 60,
+            "server_settings": {
+                "application_name": "bookshelf-ai-backend",
+            },
+        },
+        execution_options={
+            "compiled_cache": {},
+        }
+    )
+else:
+    # Development: Use SQLite
+    DATABASE_URL = "sqlite+aiosqlite:///./bookshelf.db"
+    logger.info("Development environment detected - using SQLite")
     
     engine = create_async_engine(
         DATABASE_URL,
-        echo=True,
-        future=True,
-        pool_size=20,
-        max_overflow=0,
-    )
-else:
-    # For SQLite, use aiosqlite driver
-    engine = create_async_engine(
-        DATABASE_URL,
-        echo=True,
+        echo=True,  # Enable SQL logging for development
         future=True,
         connect_args={"check_same_thread": False}
     )
@@ -46,5 +73,9 @@ async def get_db():
     async with AsyncSessionLocal() as session:
         try:
             yield session
+        except Exception as e:
+            logger.error(f"Database session error: {e}")
+            await session.rollback()
+            raise
         finally:
             await session.close() 

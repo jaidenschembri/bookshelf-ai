@@ -2,10 +2,10 @@
 """
 Database Management Script for Bookshelf AI
 
-This script helps manage database operations including:
+This script helps manage database operations with Supabase:
 - Creating tables
-- Running migrations
-- Switching between SQLite (dev) and PostgreSQL (prod)
+- Checking database connection
+- Resetting database (development only)
 """
 
 import asyncio
@@ -13,10 +13,6 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-from sqlalchemy.ext.asyncio import create_async_engine
-from alembic.config import Config
-from alembic import command
-import subprocess
 
 # Add current directory to path
 sys.path.append(str(Path(__file__).parent))
@@ -30,7 +26,7 @@ async def create_tables():
     """Create all tables in the database"""
     print("Creating database tables...")
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(Base.metadata.create_all, checkfirst=True)
     print("✅ Tables created successfully!")
 
 async def drop_tables():
@@ -39,30 +35,6 @@ async def drop_tables():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
     print("✅ Tables dropped successfully!")
-
-def run_migrations():
-    """Run Alembic migrations"""
-    print("Running database migrations...")
-    alembic_cfg = Config("alembic.ini")
-    command.upgrade(alembic_cfg, "head")
-    print("✅ Migrations completed successfully!")
-
-def create_migration(message: str):
-    """Create a new migration"""
-    print(f"Creating migration: {message}")
-    alembic_cfg = Config("alembic.ini")
-    command.revision(alembic_cfg, autogenerate=True, message=message)
-    print("✅ Migration created successfully!")
-
-def show_current_revision():
-    """Show current database revision"""
-    alembic_cfg = Config("alembic.ini")
-    command.current(alembic_cfg)
-
-def show_migration_history():
-    """Show migration history"""
-    alembic_cfg = Config("alembic.ini")
-    command.history(alembic_cfg)
 
 async def check_database_connection():
     """Check if database connection is working"""
@@ -77,50 +49,42 @@ async def check_database_connection():
         print(f"❌ Database connection failed: {e}")
         return False
 
-def setup_postgresql():
-    """Instructions for setting up PostgreSQL"""
+def setup_supabase():
+    """Instructions for setting up Supabase"""
     print("""
-🐘 PostgreSQL Setup Instructions:
+🚀 Supabase Setup Instructions:
 
-1. Install PostgreSQL:
-   - Windows: Download from https://www.postgresql.org/download/windows/
-   - macOS: brew install postgresql
-   - Linux: sudo apt-get install postgresql postgresql-contrib
+1. Go to https://supabase.com and create an account
+2. Create a new project
+3. Get your connection string from Settings > Database
+4. Update your .env file with:
+   DATABASE_URL=postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
 
-2. Create a database:
-   createdb bookshelf_ai
+5. Add the same DATABASE_URL to Railway environment variables
 
-3. Update your .env file with:
-   DATABASE_URL=postgresql+asyncpg://username:password@localhost/bookshelf_ai
-
-4. Run migrations:
-   python db_manager.py migrate
-
-For production (like Railway, Heroku, etc.), use the provided DATABASE_URL.
+For schema changes:
+- Use Supabase dashboard SQL editor or Table editor
+- Update your models.py to match
+- Deploy - create_all() will handle the rest safely
     """)
 
 async def main():
     if len(sys.argv) < 2:
         print("""
-📚 Bookshelf AI Database Manager
+📚 Bookshelf AI Database Manager (Supabase Edition)
 
 Usage: python db_manager.py <command>
 
 Commands:
   create-tables    - Create all database tables
   drop-tables      - Drop all database tables  
-  migrate          - Run database migrations
-  create-migration - Create a new migration (requires message)
-  current          - Show current database revision
-  history          - Show migration history
   check            - Check database connection
-  setup-postgres   - Show PostgreSQL setup instructions
+  setup-supabase   - Show Supabase setup instructions
   reset            - Drop tables and recreate (DESTRUCTIVE!)
 
 Examples:
-  python db_manager.py migrate
-  python db_manager.py create-migration "Add user preferences"
   python db_manager.py check
+  python db_manager.py create-tables
         """)
         return
 
@@ -130,23 +94,10 @@ Examples:
         await create_tables()
     elif command == "drop-tables":
         await drop_tables()
-    elif command == "migrate":
-        run_migrations()
-    elif command == "create-migration":
-        if len(sys.argv) < 3:
-            print("❌ Please provide a migration message")
-            print("Example: python db_manager.py create-migration 'Add user preferences'")
-            return
-        message = sys.argv[2]
-        create_migration(message)
-    elif command == "current":
-        show_current_revision()
-    elif command == "history":
-        show_migration_history()
     elif command == "check":
         await check_database_connection()
-    elif command == "setup-postgres":
-        setup_postgresql()
+    elif command == "setup-supabase":
+        setup_supabase()
     elif command == "reset":
         print("⚠️  This will delete all data! Are you sure? (y/N)")
         response = input().lower()
