@@ -185,7 +185,7 @@ export default function RecommendationsPage() {
                         alt={recommendation.book.title}
                         width={120}
                         height={160}
-                        className="rounded-lg object-cover shadow-sm"
+                                                    className="rounded-lg object-cover shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                         style={{ width: '120px', height: 'auto' }}
                         sizes="120px"
                       />

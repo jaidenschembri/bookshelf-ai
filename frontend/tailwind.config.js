@@ -61,10 +61,10 @@ module.exports = {
         '128': '32rem',
       },
       boxShadow: {
-        'brutal': '8px 8px 0px 0px rgba(0,0,0,1)',
-        'brutal-sm': '4px 4px 0px 0px rgba(0,0,0,1)',
-        'brutal-lg': '12px 12px 0px 0px rgba(0,0,0,1)',
-        'brutal-xl': '16px 16px 0px 0px rgba(0,0,0,1)',
+        'brutal': '2px 2px 0px 0px rgba(0,0,0,1)',
+        'brutal-sm': '2px 2px 0px 0px rgba(0,0,0,1)',
+        'brutal-lg': '2px 2px 0px 0px rgba(0,0,0,1)',
+        'brutal-xl': '2px 2px 0px 0px rgba(0,0,0,1)',
       },
       borderWidth: {
         '3': '3px',

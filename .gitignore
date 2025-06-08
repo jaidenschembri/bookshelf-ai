@@ -69,6 +69,7 @@ backend/__pycache__/
 backend/.coverage
 backend/htmlcov/
 backend/app.log
+backend/*.log
 backend/alembic/__pycache__/
 backend/alembic/versions/__pycache__/
 

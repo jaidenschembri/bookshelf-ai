@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Environment variable checker for Railway deployment
-Run this to diagnose configuration issues
+Environment variable checker for development and deployment
+Quick utility to verify configuration
 """
 
 import os

@@ -37,8 +37,8 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <div className="flex items-center">
-              <Link href="/dashboard" className="flex items-center group focus:outline-none">
-                <div className="p-2 border-4 border-black bg-black text-white group-hover:bg-white group-hover:text-black transition-all duration-200">
+              <Link href="/dashboard" className="flex items-center focus:outline-none">
+                <div className="p-2 border-4 border-black bg-black text-white">
                   <BookOpen className="h-8 w-8" />
                 </div>
                 <div className="ml-4">

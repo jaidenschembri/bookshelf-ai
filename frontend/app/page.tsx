@@ -113,8 +113,8 @@ export default function HomePage() {
             </div>
             
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="card group">
-                <div className="flex items-center justify-center w-16 h-16 bg-black text-white mb-6 group-hover:bg-white group-hover:text-black group-hover:border-4 group-hover:border-black transition-all duration-200">
+              <div className="card">
+                <div className="flex items-center justify-center w-16 h-16 bg-black text-white mb-6">
                   <Brain className="h-8 w-8" />
                 </div>
                 <h3 className="heading-sm mb-4">AI-POWERED RECOMMENDATIONS</h3>
@@ -124,8 +124,8 @@ export default function HomePage() {
                 </p>
               </div>
               
-              <div className="card group">
-                <div className="flex items-center justify-center w-16 h-16 bg-black text-white mb-6 group-hover:bg-white group-hover:text-black group-hover:border-4 group-hover:border-black transition-all duration-200">
+              <div className="card">
+                <div className="flex items-center justify-center w-16 h-16 bg-black text-white mb-6">
                   <TrendingUp className="h-8 w-8" />
                 </div>
                 <h3 className="heading-sm mb-4">READING PROGRESS TRACKING</h3>
@@ -135,8 +135,8 @@ export default function HomePage() {
                 </p>
               </div>
               
-              <div className="card group">
-                <div className="flex items-center justify-center w-16 h-16 bg-black text-white mb-6 group-hover:bg-white group-hover:text-black group-hover:border-4 group-hover:border-black transition-all duration-200">
+              <div className="card">
+                <div className="flex items-center justify-center w-16 h-16 bg-black text-white mb-6">
                   <Star className="h-8 w-8" />
                 </div>
                 <h3 className="heading-sm mb-4">RATE & REVIEW SYSTEM</h3>
@@ -160,8 +160,8 @@ export default function HomePage() {
             </div>
             
             <div className="grid md:grid-cols-4 gap-8">
-              <div className="text-center group">
-                <div className="w-20 h-20 bg-black text-white flex items-center justify-center mx-auto mb-6 text-2xl font-black font-serif group-hover:bg-white group-hover:text-black group-hover:border-4 group-hover:border-black transition-all duration-200 shadow-brutal-hover">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-black text-white flex items-center justify-center mx-auto mb-6 text-2xl font-black font-serif shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                   01
                 </div>
                 <h4 className="heading-sm mb-3">SIGN IN</h4>
@@ -170,8 +170,8 @@ export default function HomePage() {
                 </p>
               </div>
               
-              <div className="text-center group">
-                <div className="w-20 h-20 bg-black text-white flex items-center justify-center mx-auto mb-6 text-2xl font-black font-serif group-hover:bg-white group-hover:text-black group-hover:border-4 group-hover:border-black transition-all duration-200 shadow-brutal-hover">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-black text-white flex items-center justify-center mx-auto mb-6 text-2xl font-black font-serif shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                   02
                 </div>
                 <h4 className="heading-sm mb-3">ADD BOOKS</h4>
@@ -180,8 +180,8 @@ export default function HomePage() {
                 </p>
               </div>
               
-              <div className="text-center group">
-                <div className="w-20 h-20 bg-black text-white flex items-center justify-center mx-auto mb-6 text-2xl font-black font-serif group-hover:bg-white group-hover:text-black group-hover:border-4 group-hover:border-black transition-all duration-200 shadow-brutal-hover">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-black text-white flex items-center justify-center mx-auto mb-6 text-2xl font-black font-serif shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                   03
                 </div>
                 <h4 className="heading-sm mb-3">RATE & REVIEW</h4>
@@ -190,8 +190,8 @@ export default function HomePage() {
                 </p>
               </div>
               
-              <div className="text-center group">
-                <div className="w-20 h-20 bg-black text-white flex items-center justify-center mx-auto mb-6 text-2xl font-black font-serif group-hover:bg-white group-hover:text-black group-hover:border-4 group-hover:border-black transition-all duration-200 shadow-brutal-hover">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-black text-white flex items-center justify-center mx-auto mb-6 text-2xl font-black font-serif shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                   04
                 </div>
                 <h4 className="heading-sm mb-3">GET RECOMMENDATIONS</h4>
@@ -213,7 +213,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row justify-center gap-6">
               <button
                 onClick={() => openAuthModal('signup')}
-                className="bg-white text-black font-bold py-6 px-12 border-4 border-white hover:bg-black hover:text-white transition-all duration-200 transform hover:translate-x-1 hover:translate-y-1 shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-none uppercase tracking-wider text-lg flex items-center justify-center space-x-3"
+                className="bg-white text-black font-bold py-6 px-12 border-4 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] uppercase tracking-wider text-lg flex items-center justify-center space-x-3"
               >
                 <span>Start Reading Smarter</span>
                 <Users className="h-5 w-5" />

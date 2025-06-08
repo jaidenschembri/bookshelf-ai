@@ -76,9 +76,9 @@ export default function DashboardPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <div className="card-flat group">
+          <div className="card-flat">
             <div className="flex items-center">
-              <div className="w-16 h-16 bg-black text-white flex items-center justify-center group-hover:bg-white group-hover:text-black group-hover:border-4 group-hover:border-black transition-all duration-200">
+              <div className="w-16 h-16 bg-black text-white flex items-center justify-center">
                 <BookOpen className="h-8 w-8" />
               </div>
               <div className="ml-6">
@@ -88,9 +88,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="card-flat group">
+          <div className="card-flat">
             <div className="flex items-center">
-              <div className="w-16 h-16 bg-black text-white flex items-center justify-center group-hover:bg-white group-hover:text-black group-hover:border-4 group-hover:border-black transition-all duration-200">
+              <div className="w-16 h-16 bg-black text-white flex items-center justify-center">
                 <Target className="h-8 w-8" />
               </div>
               <div className="ml-6">
@@ -101,9 +101,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="card-flat group">
+          <div className="card-flat">
             <div className="flex items-center">
-              <div className="w-16 h-16 bg-black text-white flex items-center justify-center group-hover:bg-white group-hover:text-black group-hover:border-4 group-hover:border-black transition-all duration-200">
+              <div className="w-16 h-16 bg-black text-white flex items-center justify-center">
                 <Clock className="h-8 w-8" />
               </div>
               <div className="ml-6">
@@ -113,9 +113,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="card-flat group">
+          <div className="card-flat">
             <div className="flex items-center">
-              <div className="w-16 h-16 bg-black text-white flex items-center justify-center group-hover:bg-white group-hover:text-black group-hover:border-4 group-hover:border-black transition-all duration-200">
+              <div className="w-16 h-16 bg-black text-white flex items-center justify-center">
                 <Star className="h-8 w-8" />
               </div>
               <div className="ml-6">
@@ -221,7 +221,7 @@ export default function DashboardPage() {
             {recent_recommendations.length > 0 ? (
               <div className="space-y-6">
                 {recent_recommendations.slice(0, 2).map((rec) => (
-                  <div key={rec.id} className="border-4 border-black p-6 shadow-brutal-hover">
+                  <div key={rec.id} className="border-4 border-black p-6 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                     <div className="flex items-start space-x-4">
                       <div className="flex-shrink-0">
                         {rec.book.cover_url ? (
