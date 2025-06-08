@@ -16,11 +16,13 @@ logger = setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create tables
-    logger.info("Starting application - creating database tables")
+    # SAFE database initialization - only create tables if they don't exist
+    # This will NOT destroy existing data
+    logger.info("Starting application - checking database tables")
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database tables created successfully")
+        # Only create tables that don't exist, never modify existing ones
+        await conn.run_sync(Base.metadata.create_all, checkfirst=True)
+    logger.info("Database tables checked/created successfully")
     yield
     logger.info("Application shutdown")
 
