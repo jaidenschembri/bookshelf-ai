@@ -34,9 +34,9 @@ export function useAuthRefresh() {
   }, [session, status, isRefreshing, hasAttemptedRefresh])
 
   return {
-    needsAuth: session?.user && !session?.accessToken,
+    needsAuth: !!(session?.user && !session?.accessToken),
     isRefreshing,
-    hasValidAuth: session?.user && session?.accessToken,
+    hasValidAuth: !!(session?.user && session?.accessToken),
     session,
     status
   }
