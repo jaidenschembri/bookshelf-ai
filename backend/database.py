@@ -26,6 +26,12 @@ if is_production:
     elif DATABASE_URL.startswith("postgresql://"):
         DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
     
+    # For Supabase: Try to use direct connection instead of pooler to avoid pgbouncer issues
+    if "supabase.com:6543" in DATABASE_URL:
+        # Switch from pooler (6543) to direct connection (5432)
+        DATABASE_URL = DATABASE_URL.replace(":6543/", ":5432/")
+        logger.info("Switched from Supabase pooler to direct connection to avoid pgbouncer issues")
+    
     # Production PostgreSQL configuration
     engine = create_async_engine(
         DATABASE_URL,
@@ -36,17 +42,12 @@ if is_production:
         pool_timeout=30,
         pool_recycle=3600,
         pool_pre_ping=True,
-        # pgbouncer compatibility settings
+        # Basic connection settings
         connect_args={
-            "statement_cache_size": 0,
-            "prepared_statement_cache_size": 0,
             "command_timeout": 60,
             "server_settings": {
                 "application_name": "bookshelf-ai-backend",
             },
-        },
-        execution_options={
-            "compiled_cache": {},
         }
     )
 else:

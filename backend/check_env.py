@@ -84,9 +84,10 @@ def check_environment():
             if "pooler.supabase.com" in database_url:
                 print("  ✅ Connection pooling enabled")
             if ":6543/" in database_url:
-                print("  ✅ Using pooler port (6543)")
+                print("  ⚠️  Using pooler port (6543) - may cause pgbouncer issues in production")
+                print("      Production will automatically switch to direct connection (5432)")
             elif ":5432/" in database_url:
-                print("  ⚠️  Using direct connection port (5432) - pooler recommended")
+                print("  ✅ Using direct connection port (5432) - avoids pgbouncer issues")
         elif database_url.startswith("postgresql"):
             print("  ✅ Using PostgreSQL")
             if "railway" in database_url:
