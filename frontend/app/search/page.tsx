@@ -85,7 +85,7 @@ export default function SearchPage() {
 
         {/* Search Form */}
         <div className="card mb-8">
-          <form onSubmit={handleSearch} className="flex gap-4">
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -94,14 +94,14 @@ export default function SearchPage() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search for books by title, author, or ISBN..."
-                  className="input-field pl-10"
+                  className="input-field pl-10 w-full"
                 />
               </div>
             </div>
             <button
               type="submit"
               disabled={isSearching || !query.trim()}
-              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
             >
               {isSearching ? 'Searching...' : 'Search'}
             </button>
@@ -118,16 +118,16 @@ export default function SearchPage() {
             <div className="grid gap-6">
               {results.map((book, index) => (
                 <div key={`${book.title}-${index}`} className="card">
-                  <div className="flex gap-6">
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                     {/* Book Cover */}
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 mx-auto sm:mx-0">
                       {book.cover_url ? (
                         <Image
                           src={book.cover_url}
                           alt={book.title}
                           width={120}
                           height={160}
-                                                      className="rounded-lg object-cover shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                          className="rounded-lg object-cover shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                           style={{ width: '120px', height: 'auto' }}
                           sizes="120px"
                         />
@@ -164,7 +164,7 @@ export default function SearchPage() {
                       )}
 
                       {/* Action Buttons */}
-                      <div className="flex gap-2 flex-wrap">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         {addedBooks.has(book.title) ? (
                           <div className="flex items-center text-green-600 text-sm">
                             <Check className="h-4 w-4 mr-1" />

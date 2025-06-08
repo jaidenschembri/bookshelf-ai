@@ -41,6 +41,8 @@ api.interceptors.request.use(async (config) => {
       const session = await getSession()
       if (session?.accessToken) {
         config.headers.Authorization = `Bearer ${session.accessToken}`
+        // Clear auth error flag when we have a valid token
+        sessionStorage.removeItem('auth_error_logged')
       } else if (session?.user) {
         // User is logged in but doesn't have JWT token - they need to sign in again
         console.warn('User session exists but no JWT token found. User needs to sign in again.')
@@ -60,21 +62,19 @@ api.interceptors.response.use(
     if (error.response?.status === 403 || error.response?.status === 401) {
       // Authentication error - the user needs to sign in again
       if (typeof window !== 'undefined') {
-        console.warn('Authentication error detected. User may need to sign in again.')
-        
-        // Show a more helpful message to the user
-        const errorMessage = error.response?.status === 401 
-          ? 'Your session has expired. Please sign in again.' 
-          : 'Authentication failed. Please sign in again.'
-        
-        console.error(errorMessage)
-        
-        // Optionally redirect to sign in page after a short delay
-        setTimeout(() => {
-          if (window.location.pathname !== '/') {
-            window.location.href = '/'
-          }
-        }, 2000)
+        // Only log once per session to avoid spam
+        const authErrorKey = 'auth_error_logged'
+        if (!sessionStorage.getItem(authErrorKey)) {
+          console.warn('Authentication error detected. User may need to sign in again.')
+          
+          // Show a more helpful message to the user
+          const errorMessage = error.response?.status === 401 
+            ? 'Your session has expired. Please sign in again.' 
+            : 'Authentication failed. Please sign in again.'
+          
+          console.error(errorMessage)
+          sessionStorage.setItem(authErrorKey, 'true')
+        }
       }
     }
     return Promise.reject(error)

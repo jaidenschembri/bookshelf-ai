@@ -1,6 +1,5 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -9,9 +8,11 @@ import { socialApi, userApi, SocialFeed, UserPublicProfile, Reading, User } from
 import { Heart, MessageCircle, Users, Search, UserPlus, UserMinus, Star, BookOpen, Settings, Camera, Save } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { signIn } from 'next-auth/react'
+import { useAuthRefresh } from '@/lib/auth-utils'
 
 export default function SocialPage() {
-  const { data: session, status } = useSession()
+  const { needsAuth, isRefreshing, hasValidAuth, session, status } = useAuthRefresh()
   const router = useRouter()
   const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState('')
@@ -24,12 +25,13 @@ export default function SocialPage() {
   }, [status, router])
 
   // Get social feed
-  const { data: feed, isLoading: feedLoading } = useQuery<SocialFeed>(
+  const { data: feed, isLoading: feedLoading, error: feedError } = useQuery<SocialFeed>(
     ['social-feed'],
     () => socialApi.getFeed(),
     {
-      enabled: !!session?.user?.id && activeTab === 'feed',
+      enabled: hasValidAuth && activeTab === 'feed',
       refetchOnWindowFocus: false,
+      retry: false, // Don't retry on auth errors
     }
   )
 
@@ -38,8 +40,9 @@ export default function SocialPage() {
     ['user-search', searchQuery],
     () => userApi.searchUsers(searchQuery),
     {
-      enabled: searchQuery.length > 2 && activeTab === 'discover',
+      enabled: searchQuery.length > 2 && activeTab === 'discover' && hasValidAuth,
       refetchOnWindowFocus: false,
+      retry: false, // Don't retry on auth errors
     }
   )
 
@@ -75,6 +78,62 @@ export default function SocialPage() {
           <div className="loading-brutalist">
             <div className="w-32 h-32 border-8 border-black bg-white flex items-center justify-center">
               <Users className="h-16 w-16 text-black" />
+            </div>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
+  // Check if user needs to sign in again (missing JWT token)
+  if (needsAuth) {
+    if (isRefreshing) {
+      return (
+        <Layout>
+          <div className="text-center py-20">
+            <div className="max-w-md mx-auto">
+              <div className="w-24 h-24 bg-blue-500 flex items-center justify-center mx-auto mb-8">
+                <Users className="h-12 w-12 text-white animate-pulse" />
+              </div>
+              <h3 className="heading-sm mb-4">REFRESHING AUTHENTICATION</h3>
+              <p className="text-body text-gray-600 mb-8">
+                Please wait while we refresh your session...
+              </p>
+              <div className="loading-brutalist">
+                <div className="w-16 h-16 border-4 border-black bg-white flex items-center justify-center">
+                  <Users className="h-8 w-8 text-black" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      )
+    }
+
+    return (
+      <Layout>
+        <div className="text-center py-20">
+          <div className="max-w-md mx-auto">
+            <div className="w-24 h-24 bg-red-500 flex items-center justify-center mx-auto mb-8">
+              <Users className="h-12 w-12 text-white" />
+            </div>
+            <h3 className="heading-sm mb-4">AUTHENTICATION REQUIRED</h3>
+            <p className="text-body text-gray-600 mb-8">
+              Your session has expired. Please sign in again to access social features.
+            </p>
+            <div className="space-y-4">
+              <button
+                onClick={() => signIn('google')}
+                className="btn-primary w-full"
+              >
+                Sign In with Google
+              </button>
+              <button
+                onClick={() => router.push('/')}
+                className="btn-secondary w-full"
+              >
+                Go to Home
+              </button>
             </div>
           </div>
         </div>
@@ -128,7 +187,25 @@ export default function SocialPage() {
         {/* Feed Tab */}
         {activeTab === 'feed' && (
           <div>
-            {feedLoading ? (
+            {feedError ? (
+              <div className="text-center py-20">
+                <div className="max-w-md mx-auto">
+                  <div className="w-24 h-24 bg-red-500 flex items-center justify-center mx-auto mb-8">
+                    <Users className="h-12 w-12 text-white" />
+                  </div>
+                  <h3 className="heading-sm mb-4">UNABLE TO LOAD FEED</h3>
+                  <p className="text-body text-gray-600 mb-8">
+                    There was an error loading your social feed. Please try signing out and signing in again.
+                  </p>
+                  <button
+                    onClick={() => router.push('/')}
+                    className="btn-primary"
+                  >
+                    Go to Sign In
+                  </button>
+                </div>
+              </div>
+            ) : feedLoading ? (
               <div className="text-center py-12">
                 <div className="loading-brutalist">
                   <div className="w-16 h-16 border-4 border-black bg-white flex items-center justify-center">

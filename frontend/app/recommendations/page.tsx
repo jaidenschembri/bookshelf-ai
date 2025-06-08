@@ -141,20 +141,20 @@ export default function RecommendationsPage() {
       <div className="px-4 sm:px-0">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <Brain className="h-8 w-8 text-primary-600 mr-3" />
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+                <Brain className="h-6 w-6 sm:h-8 sm:w-8 text-primary-600 mr-2 sm:mr-3" />
                 AI Recommendations
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 mt-2 text-sm sm:text-base">
                 Personalized book suggestions based on your reading history
               </p>
             </div>
             <button
               onClick={handleRefresh}
               disabled={refreshMutation.isLoading}
-              className="btn-primary flex items-center space-x-2 disabled:opacity-50"
+              className="btn-primary flex items-center justify-center space-x-2 disabled:opacity-50 w-full sm:w-auto"
             >
               <RefreshCw className={`h-4 w-4 ${refreshMutation.isLoading ? 'animate-spin' : ''}`} />
               <span>{refreshMutation.isLoading ? 'Generating...' : 'Refresh'}</span>
@@ -170,22 +170,22 @@ export default function RecommendationsPage() {
                 {/* Dismiss Button */}
                 <button
                   onClick={() => handleDismiss(recommendation.id)}
-                  className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                  className="absolute top-2 right-2 sm:top-4 sm:right-4 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 z-10"
                   title="Dismiss recommendation"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
 
-                <div className="flex gap-6">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                   {/* Book Cover */}
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 mx-auto sm:mx-0">
                     {recommendation.book.cover_url ? (
                       <Image
                         src={recommendation.book.cover_url}
                         alt={recommendation.book.title}
                         width={120}
                         height={160}
-                                                    className="rounded-lg object-cover shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                        className="rounded-lg object-cover shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                         style={{ width: '120px', height: 'auto' }}
                         sizes="120px"
                       />
@@ -197,15 +197,15 @@ export default function RecommendationsPage() {
                   </div>
 
                   {/* Book Details and Recommendation */}
-                  <div className="flex-1 min-w-0 pr-8">
+                  <div className="flex-1 min-w-0 sm:pr-8">
                     {/* Book Info */}
-                    <div className="mb-4">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    <div className="mb-4 text-center sm:text-left">
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
                         {recommendation.book.title}
                       </h3>
                       <p className="text-gray-600 mb-2">by {recommendation.book.author}</p>
                       
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-4 text-sm text-gray-500">
                         {recommendation.book.genre && (
                           <span className="bg-gray-100 px-2 py-1 rounded">
                             {recommendation.book.genre}
@@ -222,12 +222,12 @@ export default function RecommendationsPage() {
                     </div>
 
                     {/* AI Explanation */}
-                    <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-4">
-                      <div className="flex items-start space-x-2">
-                        <Brain className="h-5 w-5 text-primary-600 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <h4 className="font-medium text-primary-900 mb-2">Why we recommend this book:</h4>
-                          <p className="text-primary-800 text-sm leading-relaxed">
+                    <div className="bg-primary-50 border border-primary-200 rounded-lg p-3 sm:p-4 mb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start space-y-2 sm:space-y-0 sm:space-x-2">
+                        <Brain className="h-5 w-5 text-primary-600 flex-shrink-0 mx-auto sm:mx-0 sm:mt-0.5" />
+                        <div className="text-center sm:text-left">
+                          <h4 className="font-medium text-primary-900 mb-2 text-sm sm:text-base">Why we recommend this book:</h4>
+                          <p className="text-primary-800 text-xs sm:text-sm leading-relaxed">
                             {recommendation.reason}
                           </p>
                         </div>
@@ -246,18 +246,18 @@ export default function RecommendationsPage() {
                     )}
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <button
                         onClick={() => handleAddToLibrary(recommendation)}
                         disabled={addToLibraryMutation.isLoading}
-                        className="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                       >
                         {addToLibraryMutation.isLoading ? 'Adding...' : 'Add to Library'}
                       </button>
                       <button
                         onClick={() => handleDismiss(recommendation.id)}
                         disabled={dismissMutation.isLoading}
-                        className="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                       >
                         {dismissMutation.isLoading ? 'Dismissing...' : 'Not Interested'}
                       </button>
@@ -294,14 +294,14 @@ export default function RecommendationsPage() {
             <p className="text-gray-600 mb-6">
               Add and rate some books to get personalized AI recommendations!
             </p>
-            <div className="space-x-4">
-              <Link href="/search" className="btn-primary">
+            <div className="flex flex-col sm:flex-row gap-4 sm:space-x-4 justify-center">
+              <Link href="/search" className="btn-primary w-full sm:w-auto text-center">
                 Search for Books
               </Link>
               <button
                 onClick={handleRefresh}
                 disabled={refreshMutation.isLoading}
-                className="btn-secondary disabled:opacity-50"
+                className="btn-secondary disabled:opacity-50 w-full sm:w-auto"
               >
                 {refreshMutation.isLoading ? 'Generating...' : 'Generate Recommendations'}
               </button>
