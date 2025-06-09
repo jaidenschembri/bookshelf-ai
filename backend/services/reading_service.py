@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, extract
+from sqlalchemy import select, func, extract, case
 from sqlalchemy.orm import selectinload
 from datetime import datetime
 import logging
@@ -334,13 +334,13 @@ class ReadingService:
         try:
             current_year = datetime.now().year
             
-            # Get basic counts
+            # Get basic counts using proper case syntax
             result = await db.execute(
                 select(
                     func.count(Reading.id).label('total'),
-                    func.sum(func.case((Reading.status == 'finished', 1), else_=0)).label('finished'),
-                    func.sum(func.case((Reading.status == 'currently_reading', 1), else_=0)).label('current'),
-                    func.sum(func.case((Reading.status == 'want_to_read', 1), else_=0)).label('want_to_read'),
+                    func.sum(case((Reading.status == 'finished', 1), else_=0)).label('finished'),
+                    func.sum(case((Reading.status == 'currently_reading', 1), else_=0)).label('current'),
+                    func.sum(case((Reading.status == 'want_to_read', 1), else_=0)).label('want_to_read'),
                     func.avg(Reading.rating).label('avg_rating')
                 ).where(Reading.user_id == user_id)
             )
