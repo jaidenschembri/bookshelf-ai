@@ -16,6 +16,7 @@ from schemas import (
 )
 from routers.auth import get_current_user
 from utils import parse_user_id, log_api_error, logger
+from error_handlers import handle_storage_error, handle_validation_error, StorageError, ValidationError
 
 router = APIRouter()
 
@@ -32,10 +33,7 @@ async def upload_to_supabase_storage(file_content: bytes, filename: str) -> str:
     """Upload file to Supabase Storage and return public URL"""
     
     if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Supabase configuration missing"
-        )
+        raise StorageError("Supabase configuration missing")
     
     # Supabase Storage API endpoint
     upload_url = f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{filename}"
@@ -53,11 +51,8 @@ async def upload_to_supabase_storage(file_content: bytes, filename: str) -> str:
         )
         
         if response.status_code not in [200, 201]:
-            logger.error(f"Supabase upload failed: {response.status_code} - {response.text}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to upload to cloud storage"
-            )
+            error_details = f"{response.status_code} - {response.text}"
+            raise StorageError(f"Supabase upload failed: {error_details}")
     
     # Return public URL
     public_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/{filename}"
@@ -465,45 +460,25 @@ async def upload_profile_picture(
 ):
     """Upload a new profile picture for the current user"""
     
-    logger.info(f"=== PROFILE PICTURE UPLOAD STARTED for user {current_user.id} ===")
-    logger.info(f"File details: filename={file.filename}, content_type={file.content_type}")
-    logger.info(f"Current user: {current_user.id}, email={current_user.email}")
+
     
     # Validate file type
     file_extension = Path(file.filename).suffix.lower()
     if file_extension not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid file type. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
-        )
+        raise ValidationError(f"Invalid file type. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}")
     
     # Read file content to check size
     content = await file.read()
     if len(content) > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File too large. Maximum size: {MAX_FILE_SIZE // (1024*1024)}MB"
-        )
+        raise ValidationError(f"File too large. Maximum size: {MAX_FILE_SIZE // (1024*1024)}MB")
     
     try:
-        # Check Supabase configuration first
-        if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
-            logger.error(f"Supabase configuration missing: URL={bool(SUPABASE_URL)}, KEY={bool(SUPABASE_SERVICE_KEY)}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Storage service not configured"
-            )
-        
         # Generate unique filename
         file_id = str(uuid.uuid4())
         filename = f"user_{current_user.id}_{file_id}{file_extension}"
         
-        logger.info(f"Attempting to upload {filename} for user {current_user.id}")
-        
         # Upload to Supabase Storage
         public_url = await upload_to_supabase_storage(content, filename)
-        
-        logger.info(f"Upload successful, public URL: {public_url}")
         
         # Delete old profile picture if exists and it's from Supabase
         if current_user.profile_picture_url and "supabase" in current_user.profile_picture_url:
@@ -526,14 +501,11 @@ async def upload_profile_picture(
             "profile_picture_url": current_user.profile_picture_url
         }
         
-    except HTTPException:
-        raise
+    except ValidationError:
+        raise  # Re-raise validation errors as-is
     except Exception as e:
-        logger.error(f"Error uploading profile picture for user {current_user.id}: {str(e)}")
-        logger.error(f"Exception type: {type(e).__name__}")
-        import traceback
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upload profile picture: {str(e)}"
-        ) 
+        # Convert any storage-related exceptions to our custom error type
+        if "supabase" in str(e).lower() or "storage" in str(e).lower() or "upload" in str(e).lower():
+            raise handle_storage_error(e, "profile picture upload")
+        else:
+            raise handle_storage_error(e, "profile picture upload") 

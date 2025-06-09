@@ -73,9 +73,6 @@ async def get_db():
             yield session
         except Exception as e:
             logger.error(f"Database session error: {e}")
-            logger.error(f"Exception type: {type(e).__name__}")
-            import traceback
-            logger.error(f"Traceback: {traceback.format_exc()}")
             await session.rollback()
             raise
         finally:

@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import uvicorn
 from dotenv import load_dotenv
@@ -10,6 +11,10 @@ from datetime import datetime
 from database import engine, Base, AsyncSessionLocal
 from routers import auth, books, readings, recommendations, dashboard, social, users
 from utils import setup_logging
+from error_handlers import (
+    BookshelfError, StorageError, DatabaseError, AuthenticationError, 
+    ValidationError, ExternalAPIError
+)
 
 load_dotenv()
 
@@ -76,6 +81,49 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Global exception handlers for our custom error types
+@app.exception_handler(StorageError)
+async def storage_error_handler(request: Request, exc: StorageError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.message}
+    )
+
+@app.exception_handler(DatabaseError)
+async def database_error_handler(request: Request, exc: DatabaseError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.message}
+    )
+
+@app.exception_handler(AuthenticationError)
+async def auth_error_handler(request: Request, exc: AuthenticationError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.message}
+    )
+
+@app.exception_handler(ValidationError)
+async def validation_error_handler(request: Request, exc: ValidationError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.message}
+    )
+
+@app.exception_handler(ExternalAPIError)
+async def external_api_error_handler(request: Request, exc: ExternalAPIError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.message}
+    )
+
+@app.exception_handler(BookshelfError)
+async def bookshelf_error_handler(request: Request, exc: BookshelfError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.message}
+    )
 
 # Health check endpoint
 @app.get("/")
