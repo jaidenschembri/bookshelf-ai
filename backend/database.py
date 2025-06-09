@@ -40,10 +40,8 @@ if is_production:
         pool_timeout=60,  # Increased timeout
         pool_recycle=1800,  # Shorter recycle time
         pool_pre_ping=True,
-        # Extended connection settings for Railway/Supabase
+        # Minimal connection settings for Railway/Supabase compatibility
         connect_args={
-            "command_timeout": 120,  # Increased command timeout
-            "connect_timeout": 60,   # Added connection timeout
             "server_settings": {
                 "application_name": "bookshelf-ai-backend",
             },
