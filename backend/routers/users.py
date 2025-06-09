@@ -22,7 +22,7 @@ router = APIRouter()
 # Supabase Storage configuration
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").replace("/rest/v1", "")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")  # Use service key for backend operations
-SUPABASE_BUCKET = "profile-picture"  # Match the actual bucket name in Supabase
+SUPABASE_BUCKET = "profile-pictures"  # Match the actual bucket name in Supabase
 
 # Allowed image extensions
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
