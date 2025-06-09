@@ -5,6 +5,7 @@ import uvicorn
 from dotenv import load_dotenv
 import os
 from sqlalchemy import text
+from datetime import datetime
 
 from database import engine, Base, AsyncSessionLocal
 from routers import auth, books, readings, recommendations, dashboard, social, users
@@ -55,10 +56,16 @@ production_frontend = "https://libraria.up.railway.app"
 if production_frontend not in cors_origins:
     cors_origins.append(production_frontend)
 
-# For debugging: temporarily allow all origins if in production
+# Check if we're in production
 is_production = os.getenv("RAILWAY_ENVIRONMENT") == "production" or os.getenv("PORT") is not None
+
+# In production, use specific origins instead of wildcard to allow credentials
 if is_production:
-    cors_origins = ["*"]  # Temporarily allow all origins for debugging
+    # Use specific origins for production to allow credentials
+    cors_origins = [
+        "https://libraria.up.railway.app",
+        "http://localhost:3000",  # Keep for local testing
+    ]
 
 logger.info(f"CORS origins configured: {cors_origins}")
 
@@ -66,44 +73,40 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
 # Health check endpoint
+@app.get("/")
+async def root():
+    return {"message": "Bookshelf AI - Social Book Platform API is running!"}
+
 @app.get("/health")
 async def health_check():
-    """Health check endpoint for Railway deployment"""
-    is_production = os.getenv("RAILWAY_ENVIRONMENT") == "production" or os.getenv("PORT") is not None
-    db_type = "PostgreSQL" if is_production else "SQLite"
-    environment = "production" if is_production else "development"
-    
+    """Health check endpoint for monitoring"""
     try:
-        # Test database connectivity
-        async with AsyncSessionLocal() as session:
-            result = await session.execute(text("SELECT 1"))
-            result.scalar()
+        # Test database connection
+        async with AsyncSessionLocal() as db:
+            await db.execute(text("SELECT 1"))
         
         return {
             "status": "healthy",
-            "database": "connected",
-            "database_type": db_type,
-            "environment": environment,
-            "message": f"Bookshelf AI backend running normally ({db_type})"
+            "timestamp": datetime.utcnow().isoformat(),
+            "service": "bookshelf-ai-backend",
+            "version": "2.0.0",
+            "database": "connected"
         }
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        raise HTTPException(
-            status_code=503,
-            detail={
-                "status": "unhealthy",
-                "database": "disconnected",
-                "database_type": db_type,
-                "environment": environment,
-                "error": str(e),
-                "message": "Service is experiencing issues"
-            }
-        )
+        return {
+            "status": "unhealthy",
+            "timestamp": datetime.utcnow().isoformat(),
+            "service": "bookshelf-ai-backend",
+            "version": "2.0.0",
+            "database": "disconnected",
+            "error": str(e)
+        }
 
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
@@ -113,10 +116,6 @@ app.include_router(recommendations.router, prefix="/recommendations", tags=["rec
 app.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 app.include_router(social.router, tags=["social"])
 app.include_router(users.router, tags=["users"])
-
-@app.get("/")
-async def root():
-    return {"message": "Bookshelf AI - Social Book Platform API is running!"}
 
 if __name__ == "__main__":
     uvicorn.run(

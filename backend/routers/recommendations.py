@@ -380,34 +380,48 @@ async def get_user_recommendations(
 ):
     """Get recommendations for the current authenticated user"""
     
-    # Get existing recommendations for the current user
-    result = await db.execute(
-        select(Recommendation)
-        .options(selectinload(Recommendation.book))
-        .where(
-            Recommendation.user_id == current_user.id,
-            Recommendation.is_dismissed == False
+    try:
+        logger.info(f"Fetching recommendations for user {current_user.id} ({current_user.email})")
+        
+        # Get existing recommendations for the current user
+        result = await db.execute(
+            select(Recommendation)
+            .options(selectinload(Recommendation.book))
+            .where(
+                Recommendation.user_id == current_user.id,
+                Recommendation.is_dismissed == False
+            )
+            .order_by(Recommendation.confidence_score.desc(), Recommendation.created_at.desc())
+            .limit(limit)
         )
-        .order_by(Recommendation.confidence_score.desc(), Recommendation.created_at.desc())
-        .limit(limit)
-    )
-    recommendations = result.scalars().all()
-    
-    # Manually create response objects to avoid async issues
-    recommendations_response = []
-    for rec in recommendations:
-        recommendations_response.append(RecommendationResponse(
-            id=rec.id,
-            user_id=rec.user_id,
-            book_id=rec.book_id,
-            reason=rec.reason,
-            score=rec.confidence_score,
-            is_dismissed=rec.is_dismissed,
-            created_at=rec.created_at,
-            book=rec.book
-        ))
-    
-    return recommendations_response
+        recommendations = result.scalars().all()
+        logger.debug(f"Found {len(recommendations)} recommendations for user {current_user.id}")
+        
+        # Manually create response objects to avoid async issues
+        recommendations_response = []
+        for rec in recommendations:
+            try:
+                recommendations_response.append(RecommendationResponse(
+                    id=rec.id,
+                    user_id=rec.user_id,
+                    book_id=rec.book_id,
+                    reason=rec.reason,
+                    confidence_score=rec.confidence_score,
+                    is_dismissed=rec.is_dismissed,
+                    created_at=rec.created_at,
+                    book=rec.book
+                ))
+            except Exception as e:
+                logger.error(f"Error creating recommendation response for rec {rec.id}: {e}")
+                continue
+        
+        logger.info(f"Successfully created {len(recommendations_response)} recommendation responses for user {current_user.id}")
+        return recommendations_response
+        
+    except Exception as e:
+        logger.error(f"Error fetching recommendations for user {current_user.id}: {str(e)}", exc_info=True)
+        error_detail = f"Recommendations error: {type(e).__name__}: {str(e)}"
+        raise HTTPException(status_code=500, detail=error_detail)
 
 @router.post("/generate")
 async def generate_recommendations(
