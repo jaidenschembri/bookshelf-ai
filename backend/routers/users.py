@@ -465,6 +465,8 @@ async def upload_profile_picture(
 ):
     """Upload a new profile picture for the current user"""
     
+    logger.info(f"=== PROFILE PICTURE UPLOAD STARTED for user {current_user.id} ===")
+    
     # Validate file type
     file_extension = Path(file.filename).suffix.lower()
     if file_extension not in ALLOWED_EXTENSIONS:
