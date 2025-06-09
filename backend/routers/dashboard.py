@@ -120,8 +120,27 @@ async def get_dashboard(
     )
     recent_recommendations = result.scalars().all()
     
+    # Manually create UserResponse to avoid async issues
+    user_response = UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        name=current_user.name,
+        username=current_user.username,
+        bio=current_user.bio,
+        location=current_user.location,
+        profile_picture_url=current_user.profile_picture_url,
+        reading_goal=current_user.reading_goal,
+        timezone=current_user.timezone or "UTC",
+        email_verified=current_user.email_verified,
+        last_login=current_user.last_login,
+        is_active=current_user.is_active,
+        created_at=current_user.created_at,
+        updated_at=current_user.updated_at,
+        is_private=current_user.is_private or False
+    )
+    
     return DashboardResponse(
-        user=UserResponse.from_orm(current_user),
+        user=user_response,
         stats=stats,
         recent_readings=[ReadingResponse.from_orm(reading) for reading in recent_readings],
         current_books=[ReadingResponse.from_orm(reading) for reading in current_books],

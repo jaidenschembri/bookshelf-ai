@@ -253,8 +253,27 @@ async def google_auth(
             data={"sub": str(user.id)}, expires_delta=access_token_expires
         )
         
+        # Manually create UserResponse to avoid async issues
+        user_response = UserResponse(
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            username=user.username,
+            bio=user.bio,
+            location=user.location,
+            profile_picture_url=user.profile_picture_url,
+            reading_goal=user.reading_goal,
+            timezone=user.timezone or "UTC",
+            email_verified=user.email_verified,
+            last_login=user.last_login,
+            is_active=user.is_active,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+            is_private=user.is_private or False
+        )
+        
         response_data = AuthResponse(
-            user=UserResponse.from_orm(user),
+            user=user_response,
             access_token=access_token
         )
         log_auth_event("authentication_successful", user_email=user.email, user_id=user.id)
@@ -410,8 +429,27 @@ async def login(
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
     
+    # Manually create UserResponse to avoid async issues
+    user_response = UserResponse(
+        id=user.id,
+        email=user.email,
+        name=user.name,
+        username=user.username,
+        bio=user.bio,
+        location=user.location,
+        profile_picture_url=user.profile_picture_url,
+        reading_goal=user.reading_goal,
+        timezone=user.timezone or "UTC",
+        email_verified=user.email_verified,
+        last_login=user.last_login,
+        is_active=user.is_active,
+        created_at=user.created_at,
+        updated_at=user.updated_at,
+        is_private=user.is_private or False
+    )
+    
     return AuthResponse(
-        user=UserResponse.from_orm(user),
+        user=user_response,
         access_token=access_token
     )
 
@@ -421,4 +459,21 @@ async def get_current_user_info(
     current_user: User = Depends(get_current_user)
 ):
     """Get current user information - works for both auth methods"""
-    return UserResponse.from_orm(current_user) 
+    # Manually create UserResponse to avoid async issues
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        name=current_user.name,
+        username=current_user.username,
+        bio=current_user.bio,
+        location=current_user.location,
+        profile_picture_url=current_user.profile_picture_url,
+        reading_goal=current_user.reading_goal,
+        timezone=current_user.timezone or "UTC",
+        email_verified=current_user.email_verified,
+        last_login=current_user.last_login,
+        is_active=current_user.is_active,
+        created_at=current_user.created_at,
+        updated_at=current_user.updated_at,
+        is_private=current_user.is_private or False
+    ) 
