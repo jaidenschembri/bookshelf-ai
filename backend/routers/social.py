@@ -13,6 +13,7 @@ from schemas import (
     ReviewLikeResponse, UserActivityResponse, SocialFeedResponse,
     ReadingResponse
 )
+from services import user_service
 from routers.auth import get_current_user
 
 router = APIRouter(prefix="/social", tags=["social"])
@@ -26,57 +27,8 @@ async def follow_user(
     db: AsyncSession = Depends(get_db)
 ):
     """Follow a user"""
-    if follow_data.following_id == current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot follow yourself"
-        )
-    
-    # Check if user exists
-    result = await db.execute(select(User).where(User.id == follow_data.following_id))
-    user_to_follow = result.scalar_one_or_none()
-    if not user_to_follow:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    # Check if already following
-    result = await db.execute(
-        select(UserFollow).where(
-            and_(
-                UserFollow.follower_id == current_user.id,
-                UserFollow.following_id == follow_data.following_id
-            )
-        )
-    )
-    existing_follow = result.scalar_one_or_none()
-    if existing_follow:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Already following this user"
-        )
-    
-    # Create follow relationship
-    new_follow = UserFollow(
-        follower_id=current_user.id,
-        following_id=follow_data.following_id
-    )
-    db.add(new_follow)
-    
-    # Create activity
-    activity = UserActivity(
-        user_id=current_user.id,
-        activity_type="followed_user",
-        activity_data={
-            "followed_user_id": follow_data.following_id,
-            "followed_user_name": user_to_follow.name
-        }
-    )
-    db.add(activity)
-    
-    await db.commit()
-    await db.refresh(new_follow)
+    # Use user service to create follow relationship
+    new_follow = await user_service.follow_user(current_user.id, follow_data.following_id, db)
     
     # Load relationships for response
     result = await db.execute(
@@ -95,24 +47,7 @@ async def unfollow_user(
     db: AsyncSession = Depends(get_db)
 ):
     """Unfollow a user"""
-    result = await db.execute(
-        select(UserFollow).where(
-            and_(
-                UserFollow.follower_id == current_user.id,
-                UserFollow.following_id == user_id
-            )
-        )
-    )
-    follow = result.scalar_one_or_none()
-    if not follow:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Not following this user"
-        )
-    
-    await db.delete(follow)
-    await db.commit()
-    
+    await user_service.unfollow_user(current_user.id, user_id, db)
     return {"message": "Successfully unfollowed user"}
 
 @router.get("/followers/{user_id}", response_model=List[UserPublicProfile])
@@ -122,55 +57,7 @@ async def get_user_followers(
     db: AsyncSession = Depends(get_db)
 ):
     """Get a user's followers"""
-    result = await db.execute(
-        select(UserFollow)
-        .options(selectinload(UserFollow.follower))
-        .where(UserFollow.following_id == user_id)
-    )
-    follows = result.scalars().all()
-    
-    followers = []
-    for follow in follows:
-        follower = follow.follower
-        # Check if current user is following this follower
-        is_following_result = await db.execute(
-            select(UserFollow).where(
-                and_(
-                    UserFollow.follower_id == current_user.id,
-                    UserFollow.following_id == follower.id
-                )
-            )
-        )
-        is_following = is_following_result.scalar_one_or_none() is not None
-        
-        # Get follower counts
-        follower_count_result = await db.execute(
-            select(func.count(UserFollow.id)).where(UserFollow.following_id == follower.id)
-        )
-        follower_count = follower_count_result.scalar() or 0
-        
-        following_count_result = await db.execute(
-            select(func.count(UserFollow.id)).where(UserFollow.follower_id == follower.id)
-        )
-        following_count = following_count_result.scalar() or 0
-        
-        profile = UserPublicProfile(
-            id=follower.id,
-            name=follower.name,
-            username=follower.username,
-            bio=follower.bio,
-            location=follower.location,
-            profile_picture_url=follower.profile_picture_url,
-            reading_goal=follower.reading_goal,
-            is_private=follower.is_private,
-            created_at=follower.created_at,
-            follower_count=follower_count,
-            following_count=following_count,
-            is_following=is_following
-        )
-        followers.append(profile)
-    
-    return followers
+    return await user_service.get_followers(user_id, current_user.id, db)
 
 @router.get("/following/{user_id}", response_model=List[UserPublicProfile])
 async def get_user_following(
@@ -179,55 +66,7 @@ async def get_user_following(
     db: AsyncSession = Depends(get_db)
 ):
     """Get users that a user is following"""
-    result = await db.execute(
-        select(UserFollow)
-        .options(selectinload(UserFollow.following))
-        .where(UserFollow.follower_id == user_id)
-    )
-    follows = result.scalars().all()
-    
-    following = []
-    for follow in follows:
-        followed_user = follow.following
-        # Check if current user is following this user
-        is_following_result = await db.execute(
-            select(UserFollow).where(
-                and_(
-                    UserFollow.follower_id == current_user.id,
-                    UserFollow.following_id == followed_user.id
-                )
-            )
-        )
-        is_following = is_following_result.scalar_one_or_none() is not None
-        
-        # Get follower counts
-        follower_count_result = await db.execute(
-            select(func.count(UserFollow.id)).where(UserFollow.following_id == followed_user.id)
-        )
-        follower_count = follower_count_result.scalar() or 0
-        
-        following_count_result = await db.execute(
-            select(func.count(UserFollow.id)).where(UserFollow.follower_id == followed_user.id)
-        )
-        following_count = following_count_result.scalar() or 0
-        
-        profile = UserPublicProfile(
-            id=followed_user.id,
-            name=followed_user.name,
-            username=followed_user.username,
-            bio=followed_user.bio,
-            location=followed_user.location,
-            profile_picture_url=followed_user.profile_picture_url,
-            reading_goal=followed_user.reading_goal,
-            is_private=followed_user.is_private,
-            created_at=followed_user.created_at,
-            follower_count=follower_count,
-            following_count=following_count,
-            is_following=is_following
-        )
-        following.append(profile)
-    
-    return following
+    return await user_service.get_following(user_id, current_user.id, db)
 
 # Review Interaction Endpoints
 

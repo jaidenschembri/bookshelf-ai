@@ -15,9 +15,15 @@ class StorageService:
     def __init__(self):
         self.supabase_url = os.getenv("SUPABASE_URL", "").replace("/rest/v1", "")
         self.service_key = os.getenv("SUPABASE_SERVICE_KEY", "")
+        self.is_configured = bool(self.supabase_url and self.service_key)
         
-        if not self.supabase_url or not self.service_key:
-            raise StorageError("Supabase storage configuration missing")
+        if not self.is_configured:
+            logger.warning("Supabase storage not configured - storage operations will be disabled")
+    
+    def _check_configuration(self):
+        """Check if storage is properly configured"""
+        if not self.is_configured:
+            raise StorageError("Supabase storage not configured. Set SUPABASE_URL and SUPABASE_SERVICE_KEY environment variables.")
     
     async def upload_file(
         self, 
@@ -39,8 +45,10 @@ class StorageService:
             Public URL of the uploaded file
             
         Raises:
-            StorageError: If upload fails
+            StorageError: If upload fails or not configured
         """
+        self._check_configuration()
+        
         upload_url = f"{self.supabase_url}/storage/v1/object/{bucket}/{filename}"
         
         headers = {
@@ -83,6 +91,10 @@ class StorageService:
         Returns:
             True if deletion successful, False otherwise
         """
+        if not self.is_configured:
+            logger.warning("Storage not configured - skipping file deletion")
+            return False
+            
         delete_url = f"{self.supabase_url}/storage/v1/object/{bucket}/{filename}"
         
         headers = {
@@ -177,6 +189,8 @@ class StorageService:
         Returns:
             Dictionary with bucket information
         """
+        self._check_configuration()
+        
         info_url = f"{self.supabase_url}/storage/v1/bucket/{bucket}"
         
         headers = {

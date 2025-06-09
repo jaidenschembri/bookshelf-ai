@@ -1,24 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_, desc
-from sqlalchemy.orm import selectinload
 from typing import List, Optional
 
-
 from database import get_db
-from models import User, UserFollow, Reading, Book
-from schemas import (
-    UserPublicProfile, UserUpdate, UserResponse, ReadingResponse
-)
+from models import User
+from schemas import UserResponse, UserUpdate, UserPublicProfile, ReadingResponse
+from services import user_service, storage_service, validation_service
 from routers.auth import get_current_user
-from utils import parse_user_id, log_api_error, logger
-from error_handlers import handle_storage_error, handle_validation_error, StorageError, ValidationError
-from services.storage_service import storage_service
-from services.validation_service import validation_service
+from error_handlers import handle_storage_error, ValidationError, StorageError
+from utils import logger
 
 router = APIRouter()
-
-
 
 @router.get("/search", response_model=List[UserPublicProfile])
 async def search_users(
@@ -28,62 +20,7 @@ async def search_users(
     db: AsyncSession = Depends(get_db)
 ):
     """Search for users by name or username"""
-    # Search users by name or username
-    result = await db.execute(
-        select(User).where(
-            and_(
-                User.is_active == True,
-                or_(
-                    User.name.ilike(f"%{q}%"),
-                    User.username.ilike(f"%{q}%")
-                )
-            )
-        ).limit(limit)
-    )
-    users = result.scalars().all()
-    
-    # Build public profiles with follow status
-    profiles = []
-    for user in users:
-        # Check if current user is following this user
-        is_following_result = await db.execute(
-            select(UserFollow).where(
-                and_(
-                    UserFollow.follower_id == current_user.id,
-                    UserFollow.following_id == user.id
-                )
-            )
-        )
-        is_following = is_following_result.scalar_one_or_none() is not None
-        
-        # Get follower counts
-        follower_count_result = await db.execute(
-            select(func.count(UserFollow.id)).where(UserFollow.following_id == user.id)
-        )
-        follower_count = follower_count_result.scalar() or 0
-        
-        following_count_result = await db.execute(
-            select(func.count(UserFollow.id)).where(UserFollow.follower_id == user.id)
-        )
-        following_count = following_count_result.scalar() or 0
-        
-        profile = UserPublicProfile(
-            id=user.id,
-            name=user.name,
-            username=user.username,
-            bio=user.bio,
-            location=user.location,
-            profile_picture_url=user.profile_picture_url,
-            reading_goal=user.reading_goal,
-            is_private=user.is_private,
-            created_at=user.created_at,
-            follower_count=follower_count,
-            following_count=following_count,
-            is_following=is_following
-        )
-        profiles.append(profile)
-    
-    return profiles
+    return await user_service.search_users(q, current_user.id, db, limit)
 
 @router.get("/{user_id}", response_model=UserPublicProfile)
 async def get_user_profile(
@@ -92,50 +29,13 @@ async def get_user_profile(
     db: AsyncSession = Depends(get_db)
 ):
     """Get a user's public profile"""
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-    if not user:
+    profile = await user_service.get_user_public_profile(user_id, current_user.id, db)
+    if not profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
-    # Check if current user is following this user
-    is_following_result = await db.execute(
-        select(UserFollow).where(
-            and_(
-                UserFollow.follower_id == current_user.id,
-                UserFollow.following_id == user.id
-            )
-        )
-    )
-    is_following = is_following_result.scalar_one_or_none() is not None
-    
-    # Get follower counts
-    follower_count_result = await db.execute(
-        select(func.count(UserFollow.id)).where(UserFollow.following_id == user.id)
-    )
-    follower_count = follower_count_result.scalar() or 0
-    
-    following_count_result = await db.execute(
-        select(func.count(UserFollow.id)).where(UserFollow.follower_id == user.id)
-    )
-    following_count = following_count_result.scalar() or 0
-    
-    return UserPublicProfile(
-        id=user.id,
-        name=user.name,
-        username=user.username,
-        bio=user.bio,
-        location=user.location,
-        profile_picture_url=user.profile_picture_url,
-        reading_goal=user.reading_goal,
-        is_private=user.is_private,
-        created_at=user.created_at,
-        follower_count=follower_count,
-        following_count=following_count,
-        is_following=is_following
-    )
+    return profile
 
 @router.get("/{user_id}/library", response_model=List[ReadingResponse])
 async def get_user_library(
@@ -146,121 +46,22 @@ async def get_user_library(
     db: AsyncSession = Depends(get_db)
 ):
     """Get a user's reading library"""
-    # Check if user exists
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+    from services import reading_service
+    from schemas import ReadingStatus
     
-    # Check privacy - if private and not following, only show public reviews
-    can_view_private = user_id == current_user.id
-    if user.is_private and user_id != current_user.id:
-        # Check if current user follows this user
-        follow_result = await db.execute(
-            select(UserFollow).where(
-                and_(
-                    UserFollow.follower_id == current_user.id,
-                    UserFollow.following_id == user_id
-                )
-            )
-        )
-        can_view_private = follow_result.scalar_one_or_none() is not None
-    
-    # Build query
-    query = select(Reading).options(
-        selectinload(Reading.book),
-        selectinload(Reading.user)
-    ).where(Reading.user_id == user_id)
-    
-    # Filter by status if provided
+    # Convert status string to enum if provided
+    status_filter = None
     if status:
-        query = query.where(Reading.status == status)
-    
-    # If can't view private, only show public reviews or readings without reviews
-    if not can_view_private:
-        query = query.where(
-            or_(
-                Reading.is_review_public == True,
-                Reading.review.is_(None)
+        try:
+            status_filter = ReadingStatus(status)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid status filter"
             )
-        )
     
-    query = query.order_by(desc(Reading.updated_at)).limit(limit)
-    
-    result = await db.execute(query)
-    readings = result.scalars().all()
-    
-    # Enhance readings with interaction data
-    enhanced_readings = []
-    for reading in readings:
-        # Get like count (only for public reviews)
-        like_count = 0
-        comment_count = 0
-        is_liked = False
-        
-        if reading.review and reading.is_review_public:
-            from models import ReviewLike, ReviewComment
-            
-            like_count_result = await db.execute(
-                select(func.count(ReviewLike.id)).where(ReviewLike.reading_id == reading.id)
-            )
-            like_count = like_count_result.scalar() or 0
-            
-            comment_count_result = await db.execute(
-                select(func.count(ReviewComment.id)).where(ReviewComment.reading_id == reading.id)
-            )
-            comment_count = comment_count_result.scalar() or 0
-            
-            # Check if current user liked this review
-            is_liked_result = await db.execute(
-                select(ReviewLike).where(
-                    and_(
-                        ReviewLike.reading_id == reading.id,
-                        ReviewLike.user_id == current_user.id
-                    )
-                )
-            )
-            is_liked = is_liked_result.scalar_one_or_none() is not None
-        
-        reading_response = ReadingResponse(
-            id=reading.id,
-            user_id=reading.user_id,
-            book_id=reading.book_id,
-            status=reading.status,
-            rating=reading.rating,
-            review=reading.review if (can_view_private or reading.is_review_public) else None,
-            is_review_public=reading.is_review_public,
-            progress_pages=reading.progress_pages,
-            total_pages=reading.total_pages,
-            started_at=reading.started_at,
-            finished_at=reading.finished_at,
-            created_at=reading.created_at,
-            updated_at=reading.updated_at,
-            book=reading.book,
-            user=UserPublicProfile(
-                id=reading.user.id,
-                name=reading.user.name,
-                username=reading.user.username,
-                bio=reading.user.bio,
-                location=reading.user.location,
-                profile_picture_url=reading.user.profile_picture_url,
-                reading_goal=reading.user.reading_goal,
-                is_private=reading.user.is_private,
-                created_at=reading.user.created_at,
-                follower_count=0,  # Could be optimized
-                following_count=0,  # Could be optimized
-                is_following=user_id != current_user.id  # Not following yourself
-            ),
-            like_count=like_count,
-            comment_count=comment_count,
-            is_liked=is_liked
-        )
-        enhanced_readings.append(reading_response)
-    
-    return enhanced_readings
+    readings = await reading_service.get_user_readings(user_id, status_filter, db, limit)
+    return await reading_service.create_reading_responses(readings, current_user.id, db)
 
 @router.get("/{user_id}/reviews", response_model=List[ReadingResponse])
 async def get_user_reviews(
@@ -270,98 +71,7 @@ async def get_user_reviews(
     db: AsyncSession = Depends(get_db)
 ):
     """Get a user's public reviews"""
-    # Check if user exists
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    # Get public reviews only
-    result = await db.execute(
-        select(Reading)
-        .options(
-            selectinload(Reading.book),
-            selectinload(Reading.user)
-        )
-        .where(
-            and_(
-                Reading.user_id == user_id,
-                Reading.is_review_public == True,
-                Reading.review.isnot(None)
-            )
-        )
-        .order_by(desc(Reading.updated_at))
-        .limit(limit)
-    )
-    readings = result.scalars().all()
-    
-    # Enhance with interaction data
-    enhanced_readings = []
-    for reading in readings:
-        from models import ReviewLike, ReviewComment
-        
-        # Get like count
-        like_count_result = await db.execute(
-            select(func.count(ReviewLike.id)).where(ReviewLike.reading_id == reading.id)
-        )
-        like_count = like_count_result.scalar() or 0
-        
-        # Get comment count
-        comment_count_result = await db.execute(
-            select(func.count(ReviewComment.id)).where(ReviewComment.reading_id == reading.id)
-        )
-        comment_count = comment_count_result.scalar() or 0
-        
-        # Check if current user liked this review
-        is_liked_result = await db.execute(
-            select(ReviewLike).where(
-                and_(
-                    ReviewLike.reading_id == reading.id,
-                    ReviewLike.user_id == current_user.id
-                )
-            )
-        )
-        is_liked = is_liked_result.scalar_one_or_none() is not None
-        
-        reading_response = ReadingResponse(
-            id=reading.id,
-            user_id=reading.user_id,
-            book_id=reading.book_id,
-            status=reading.status,
-            rating=reading.rating,
-            review=reading.review,
-            is_review_public=reading.is_review_public,
-            progress_pages=reading.progress_pages,
-            total_pages=reading.total_pages,
-            started_at=reading.started_at,
-            finished_at=reading.finished_at,
-            created_at=reading.created_at,
-            updated_at=reading.updated_at,
-            book=reading.book,
-            user=UserPublicProfile(
-                id=reading.user.id,
-                name=reading.user.name,
-                username=reading.user.username,
-                bio=reading.user.bio,
-                location=reading.user.location,
-                profile_picture_url=reading.user.profile_picture_url,
-                reading_goal=reading.user.reading_goal,
-                is_private=reading.user.is_private,
-                created_at=reading.user.created_at,
-                follower_count=0,  # Could be optimized
-                following_count=0,  # Could be optimized
-                is_following=user_id != current_user.id
-            ),
-            like_count=like_count,
-            comment_count=comment_count,
-            is_liked=is_liked
-        )
-        enhanced_readings.append(reading_response)
-    
-    return enhanced_readings
+    return await user_service.get_user_reviews(user_id, current_user.id, db, limit)
 
 @router.put("/me", response_model=UserResponse)
 async def update_my_profile(
@@ -370,47 +80,28 @@ async def update_my_profile(
     db: AsyncSession = Depends(get_db)
 ):
     """Update current user's profile"""
-    # Validate and clean input data
+    # Validate and clean input data using validation service
     update_data = user_data.dict(exclude_unset=True)
     
-    # Validate individual fields
+    # Apply validation service to each field
     if 'username' in update_data:
         update_data['username'] = validation_service.validate_username(update_data['username'])
-        
-        # Check if username is taken (if different from current)
-        if update_data['username'] != current_user.username:
-            result = await db.execute(
-                select(User).where(
-                    and_(
-                        User.username == update_data['username'],
-                        User.id != current_user.id
-                    )
-                )
-            )
-            existing_user = result.scalar_one_or_none()
-            if existing_user:
-                raise ValidationError("Username already taken")
-    
     if 'name' in update_data:
         update_data['name'] = validation_service.validate_name(update_data['name'])
-    
     if 'bio' in update_data:
         update_data['bio'] = validation_service.validate_bio(update_data['bio'])
-    
     if 'location' in update_data:
         update_data['location'] = validation_service.validate_location(update_data['location'])
-    
     if 'reading_goal' in update_data:
         update_data['reading_goal'] = validation_service.validate_reading_goal(update_data['reading_goal'])
     
-    # Update fields
-    for field, value in update_data.items():
-        setattr(current_user, field, value)
+    # Create validated UserUpdate object
+    validated_update = UserUpdate(**update_data)
     
-    await db.commit()
-    await db.refresh(current_user)
+    # Update using user service
+    updated_user = await user_service.update_user_profile(current_user.id, validated_update, db)
     
-    return current_user
+    return updated_user
 
 @router.post("/me/profile-picture")
 async def upload_profile_picture(
@@ -419,8 +110,6 @@ async def upload_profile_picture(
     db: AsyncSession = Depends(get_db)
 ):
     """Upload a new profile picture for the current user"""
-    
-
     
     # Read file content
     content = await file.read()
@@ -443,16 +132,14 @@ async def upload_profile_picture(
             file_extension=file_extension
         )
         
-        # Update user's profile picture URL
-        current_user.profile_picture_url = public_url
-        await db.commit()
-        await db.refresh(current_user)
+        # Update user's profile picture URL using user service
+        await user_service.update_profile_picture(current_user.id, public_url, db)
         
         logger.info(f"Profile picture uploaded for user {current_user.id}")
         
         return {
             "message": "Profile picture uploaded successfully",
-            "profile_picture_url": current_user.profile_picture_url
+            "profile_picture_url": public_url
         }
         
     except ValidationError:
