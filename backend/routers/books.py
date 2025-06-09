@@ -91,7 +91,21 @@ async def add_book(
         existing_book = result.scalar_one_or_none()
     
     if existing_book:
-        return BookResponse.from_orm(existing_book)
+        # Manually create response to avoid async issues
+        return BookResponse(
+            id=existing_book.id,
+            title=existing_book.title,
+            author=existing_book.author,
+            isbn=existing_book.isbn,
+            cover_url=existing_book.cover_url,
+            description=existing_book.description,
+            publication_year=existing_book.publication_year,
+            genre=existing_book.genre,
+            page_count=existing_book.page_count,
+            open_library_id=existing_book.open_library_id,
+            created_at=existing_book.created_at,
+            updated_at=existing_book.updated_at
+        )
     
     # Create new book
     book = Book(**book_data.dict())
@@ -99,7 +113,21 @@ async def add_book(
     await db.commit()
     await db.refresh(book)
     
-    return BookResponse.from_orm(book)
+    # Manually create response to avoid async issues
+    return BookResponse(
+        id=book.id,
+        title=book.title,
+        author=book.author,
+        isbn=book.isbn,
+        cover_url=book.cover_url,
+        description=book.description,
+        publication_year=book.publication_year,
+        genre=book.genre,
+        page_count=book.page_count,
+        open_library_id=book.open_library_id,
+        created_at=book.created_at,
+        updated_at=book.updated_at
+    )
 
 @router.get("/user/{user_id}", response_model=List[BookResponse])
 async def get_user_books(
@@ -127,7 +155,25 @@ async def get_user_books(
     )
     books = result.scalars().all()
     
-    return [BookResponse.from_orm(book) for book in books]
+    # Manually create response objects to avoid async issues
+    books_response = []
+    for book in books:
+        books_response.append(BookResponse(
+            id=book.id,
+            title=book.title,
+            author=book.author,
+            isbn=book.isbn,
+            cover_url=book.cover_url,
+            description=book.description,
+            publication_year=book.publication_year,
+            genre=book.genre,
+            page_count=book.page_count,
+            open_library_id=book.open_library_id,
+            created_at=book.created_at,
+            updated_at=book.updated_at
+        ))
+    
+    return books_response
 
 @router.get("/{book_id}", response_model=BookResponse)
 async def get_book(
@@ -141,4 +187,18 @@ async def get_book(
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
     
-    return BookResponse.from_orm(book) 
+    # Manually create response to avoid async issues
+    return BookResponse(
+        id=book.id,
+        title=book.title,
+        author=book.author,
+        isbn=book.isbn,
+        cover_url=book.cover_url,
+        description=book.description,
+        publication_year=book.publication_year,
+        genre=book.genre,
+        page_count=book.page_count,
+        open_library_id=book.open_library_id,
+        created_at=book.created_at,
+        updated_at=book.updated_at
+    ) 

@@ -139,12 +139,60 @@ async def get_dashboard(
         is_private=current_user.is_private or False
     )
     
+    # Manually create response objects to avoid async issues
+    recent_readings_response = []
+    for reading in recent_readings:
+        recent_readings_response.append(ReadingResponse(
+            id=reading.id,
+            user_id=reading.user_id,
+            book_id=reading.book_id,
+            status=reading.status,
+            rating=reading.rating,
+            progress_pages=reading.progress_pages,
+            notes=reading.notes,
+            started_at=reading.started_at,
+            finished_at=reading.finished_at,
+            created_at=reading.created_at,
+            updated_at=reading.updated_at,
+            book=reading.book
+        ))
+    
+    current_books_response = []
+    for reading in current_books:
+        current_books_response.append(ReadingResponse(
+            id=reading.id,
+            user_id=reading.user_id,
+            book_id=reading.book_id,
+            status=reading.status,
+            rating=reading.rating,
+            progress_pages=reading.progress_pages,
+            notes=reading.notes,
+            started_at=reading.started_at,
+            finished_at=reading.finished_at,
+            created_at=reading.created_at,
+            updated_at=reading.updated_at,
+            book=reading.book
+        ))
+    
+    recent_recommendations_response = []
+    for rec in recent_recommendations:
+        recent_recommendations_response.append(RecommendationResponse(
+            id=rec.id,
+            user_id=rec.user_id,
+            book_id=rec.book_id,
+            reason=rec.reason,
+            score=rec.score,
+            is_dismissed=rec.is_dismissed,
+            created_at=rec.created_at,
+            book=rec.book
+        ))
+    
     return DashboardResponse(
         user=user_response,
         stats=stats,
-        recent_readings=[ReadingResponse.from_orm(reading) for reading in recent_readings],
-        current_books=[ReadingResponse.from_orm(reading) for reading in current_books],
-        recent_recommendations=[RecommendationResponse.from_orm(rec) for rec in recent_recommendations]
+        recent_readings=recent_readings_response,
+        current_books=current_books_response,
+        recent_recommendations=recent_recommendations_response
     )
 
 @router.get("/stats", response_model=ReadingStats)

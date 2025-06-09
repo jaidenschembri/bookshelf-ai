@@ -393,7 +393,21 @@ async def get_user_recommendations(
     )
     recommendations = result.scalars().all()
     
-    return [RecommendationResponse.from_orm(rec) for rec in recommendations]
+    # Manually create response objects to avoid async issues
+    recommendations_response = []
+    for rec in recommendations:
+        recommendations_response.append(RecommendationResponse(
+            id=rec.id,
+            user_id=rec.user_id,
+            book_id=rec.book_id,
+            reason=rec.reason,
+            score=rec.confidence_score,
+            is_dismissed=rec.is_dismissed,
+            created_at=rec.created_at,
+            book=rec.book
+        ))
+    
+    return recommendations_response
 
 @router.post("/generate")
 async def generate_recommendations(
