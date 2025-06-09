@@ -11,7 +11,8 @@ import json
 from database import get_db
 from models import User, Reading, Book, Recommendation
 from schemas import RecommendationResponse, RecommendationCreate
-from routers.books import search_open_library, BookCreate
+from services import book_service
+from schemas import BookCreate
 from routers.auth import get_current_user
 from utils import parse_user_id, log_api_error, log_external_api_call, logger
 
@@ -492,37 +493,25 @@ async def generate_recommendations(
         for ai_rec in ai_recommendations:
             try:
                 # Search for the book in Open Library
-                search_results = await search_open_library(f"{ai_rec['title']} {ai_rec['author']}")
+                search_results = await book_service.search_open_library(f"{ai_rec['title']} {ai_rec['author']}")
                 
                 if search_results:
                     # Use the first search result
                     book_data = search_results[0]
                     
-                    # Check if book already exists in our database
-                    result = await db.execute(
-                        select(Book).where(
-                            Book.title == book_data.title,
-                            Book.author == book_data.author
-                        )
+                    # Create BookCreate object from search result
+                    book_create_data = BookCreate(
+                        title=book_data.title,
+                        author=book_data.author,
+                        isbn=book_data.isbn,
+                        cover_url=book_data.cover_url,
+                        description=book_data.description,
+                        publication_year=book_data.publication_year,
+                        open_library_id=book_data.open_library_key
                     )
-                    existing_book = result.scalar_one_or_none()
                     
-                    if existing_book:
-                        book = existing_book
-                    else:
-                        # Create new book entry
-                        book = Book(
-                            title=book_data.title,
-                            author=book_data.author,
-                            isbn=book_data.isbn,
-                            cover_url=book_data.cover_url,
-                            description=book_data.description,
-                            publication_year=book_data.publication_year,
-                            open_library_id=book_data.open_library_key
-                        )
-                        db.add(book)
-                        await db.commit()
-                        await db.refresh(book)
+                    # Get or create book using the service
+                    book = await book_service.get_or_create_book(book_create_data, db)
                     
                     # Create recommendation
                     recommendation = Recommendation(
