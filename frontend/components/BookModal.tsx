@@ -28,17 +28,19 @@ export default function BookModal({ isOpen, onClose, book, bookId }: BookModalPr
     }
   )
 
-  // Check if book is in user's library
-  const { data: userLibrary, isLoading: isLoadingLibrary } = useQuery(
-    ['user-library', session?.user?.id],
-    () => session?.user?.id ? bookApi.getUserBooks(parseInt(session.user.id)) : [],
-    {
-      enabled: !!session?.user?.id && isOpen,
-    }
-  )
+  // Check if book is in user's library - TEMPORARILY DISABLED
+  // const { data: userLibrary, isLoading: isLoadingLibrary } = useQuery(
+  //   ['user-library', session?.user?.id],
+  //   () => session?.user?.id ? bookApi.getUserBooks(parseInt(session.user.id)) : [],
+  //   {
+  //     enabled: !!session?.user?.id && isOpen,
+  //   }
+  // )
+  const userLibrary: any[] = []
+  const isLoadingLibrary = false
 
   const currentBook = book || fetchedBook
-  const isInLibrary = userLibrary?.some(userBook => userBook.id === currentBook?.id)
+  const isInLibrary = false // Temporarily disabled library check
 
   // Add to library mutation
   const addToLibraryMutation = useMutation(
@@ -205,7 +207,7 @@ export default function BookModal({ isOpen, onClose, book, bookId }: BookModalPr
                   </div>
 
                   {/* Ratings */}
-                  {(currentBook.total_ratings > 0) && (
+                  {(currentBook.total_ratings && currentBook.total_ratings > 0) && (
                     <div className="flex items-center space-x-2">
                       <Star className="h-4 w-4 text-yellow-500 fill-current" />
                       <span className="text-sm text-gray-600">

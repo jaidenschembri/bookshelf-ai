@@ -35,14 +35,15 @@ if is_production:
         DATABASE_URL,
         echo=False,  # Disable SQL logging in production
         future=True,
-        pool_size=10,
-        max_overflow=20,
-        pool_timeout=30,
-        pool_recycle=3600,
+        pool_size=5,  # Reduced pool size for Supabase
+        max_overflow=10,  # Reduced overflow
+        pool_timeout=60,  # Increased timeout
+        pool_recycle=1800,  # Shorter recycle time
         pool_pre_ping=True,
-        # Basic connection settings
+        # Extended connection settings for Railway/Supabase
         connect_args={
-            "command_timeout": 60,
+            "command_timeout": 120,  # Increased command timeout
+            "connect_timeout": 60,   # Added connection timeout
             "server_settings": {
                 "application_name": "bookshelf-ai-backend",
             },
