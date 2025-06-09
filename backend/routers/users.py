@@ -482,12 +482,24 @@ async def upload_profile_picture(
         )
     
     try:
+        # Check Supabase configuration first
+        if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+            logger.error(f"Supabase configuration missing: URL={bool(SUPABASE_URL)}, KEY={bool(SUPABASE_SERVICE_KEY)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Storage service not configured"
+            )
+        
         # Generate unique filename
         file_id = str(uuid.uuid4())
         filename = f"user_{current_user.id}_{file_id}{file_extension}"
         
+        logger.info(f"Attempting to upload {filename} for user {current_user.id}")
+        
         # Upload to Supabase Storage
         public_url = await upload_to_supabase_storage(content, filename)
+        
+        logger.info(f"Upload successful, public URL: {public_url}")
         
         # Delete old profile picture if exists and it's from Supabase
         if current_user.profile_picture_url and "supabase" in current_user.profile_picture_url:
@@ -513,8 +525,11 @@ async def upload_profile_picture(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error uploading profile picture for user {current_user.id}: {e}")
+        logger.error(f"Error uploading profile picture for user {current_user.id}: {str(e)}")
+        logger.error(f"Exception type: {type(e).__name__}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to upload profile picture"
+            detail=f"Failed to upload profile picture: {str(e)}"
         ) 
