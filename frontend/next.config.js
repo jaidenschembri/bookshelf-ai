@@ -1,7 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['covers.openlibrary.org', 'lh3.googleusercontent.com'],
+    domains: [
+      'covers.openlibrary.org', 
+      'lh3.googleusercontent.com',
+      'localhost:8000',
+      'bookshelf-ai-production.up.railway.app'
+    ],
   },
   async headers() {
     return [

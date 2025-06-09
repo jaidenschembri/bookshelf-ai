@@ -1,8 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_, desc
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
+import os
+import uuid
+from pathlib import Path
+import shutil
 
 from database import get_db
 from models import User, UserFollow, Reading, Book
@@ -10,8 +14,17 @@ from schemas import (
     UserPublicProfile, UserUpdate, UserResponse, ReadingResponse
 )
 from routers.auth import get_current_user
+from utils import parse_user_id, log_api_error, logger
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter()
+
+# Create uploads directory if it doesn't exist
+UPLOAD_DIR = Path("uploads/profile_pictures")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# Allowed image extensions
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
 @router.get("/search", response_model=List[UserPublicProfile])
 async def search_users(
@@ -388,4 +401,66 @@ async def update_my_profile(
     await db.commit()
     await db.refresh(current_user)
     
-    return current_user 
+    return current_user
+
+@router.post("/me/profile-picture")
+async def upload_profile_picture(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Upload a new profile picture for the current user"""
+    
+    # Validate file type
+    file_extension = Path(file.filename).suffix.lower()
+    if file_extension not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid file type. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
+        )
+    
+    # Read file content to check size
+    content = await file.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File too large. Maximum size: {MAX_FILE_SIZE // (1024*1024)}MB"
+        )
+    
+    # Reset file pointer
+    await file.seek(0)
+    
+    try:
+        # Generate unique filename
+        file_id = str(uuid.uuid4())
+        filename = f"{file_id}{file_extension}"
+        file_path = UPLOAD_DIR / filename
+        
+        # Save file
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Delete old profile picture if exists
+        if current_user.profile_picture_url and current_user.profile_picture_url.startswith("/uploads/"):
+            old_file_path = Path(current_user.profile_picture_url[1:])  # Remove leading slash
+            if old_file_path.exists():
+                old_file_path.unlink()
+        
+        # Update user's profile picture URL
+        current_user.profile_picture_url = f"/uploads/profile_pictures/{filename}"
+        await db.commit()
+        await db.refresh(current_user)
+        
+        logger.info(f"Profile picture uploaded for user {current_user.id}: {filename}")
+        
+        return {
+            "message": "Profile picture uploaded successfully",
+            "profile_picture_url": current_user.profile_picture_url
+        }
+        
+    except Exception as e:
+        logger.error(f"Error uploading profile picture for user {current_user.id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to upload profile picture"
+        ) 

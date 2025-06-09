@@ -319,4 +319,14 @@ export const userApi = {
   
   getCurrentUser: (): Promise<User> =>
     api.get('/auth/me').then(res => res.data),
+  
+  uploadProfilePicture: (file: File): Promise<{ message: string; profile_picture_url: string }> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/users/me/profile-picture', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then(res => res.data)
+  },
 } 

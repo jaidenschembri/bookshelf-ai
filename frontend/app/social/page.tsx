@@ -499,6 +499,7 @@ function ProfileSettings() {
   const { data: session } = useSession()
   const queryClient = useQueryClient()
   const [isEditing, setIsEditing] = useState(false)
+  const [isUploadingPicture, setIsUploadingPicture] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -542,6 +543,22 @@ function ProfileSettings() {
     }
   })
 
+  // Profile picture upload mutation
+  const uploadPictureMutation = useMutation({
+    mutationFn: (file: File) => userApi.uploadProfilePicture(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['current-user'])
+      queryClient.invalidateQueries(['dashboard'])
+      setIsUploadingPicture(false)
+      // Show success message
+    },
+    onError: (error: any) => {
+      setIsUploadingPicture(false)
+      console.error('Profile picture upload failed:', error)
+      // Show error message
+    }
+  })
+
   const handleSave = () => {
     updateProfileMutation.mutate(formData)
   }
@@ -558,6 +575,28 @@ function ProfileSettings() {
       })
     }
     setIsEditing(false)
+  }
+
+  const handleProfilePictureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please select a valid image file (JPEG, PNG, GIF, or WebP)')
+        return
+      }
+
+      // Validate file size (5MB max)
+      const maxSize = 5 * 1024 * 1024 // 5MB
+      if (file.size > maxSize) {
+        alert('File size must be less than 5MB')
+        return
+      }
+
+      setIsUploadingPicture(true)
+      uploadPictureMutation.mutate(file)
+    }
   }
 
   if (isLoading) {
@@ -639,9 +678,27 @@ function ProfileSettings() {
                 )}
               </div>
               {isEditing && (
-                <button className="absolute bottom-0 right-0 w-10 h-10 bg-black text-white border-2 border-white flex items-center justify-center hover:bg-gray-800">
-                  <Camera className="h-5 w-5" />
-                </button>
+                <>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfilePictureUpload}
+                    className="hidden"
+                    id="profile-picture-input"
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => document.getElementById('profile-picture-input')?.click()}
+                    disabled={isUploadingPicture}
+                    className="absolute bottom-0 right-0 w-10 h-10 bg-black text-white border-2 border-white flex items-center justify-center hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    {isUploadingPicture ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Camera className="h-5 w-5" />
+                    )}
+                  </button>
+                </>
               )}
             </div>
             <p className="text-caption text-gray-600 mt-4">
