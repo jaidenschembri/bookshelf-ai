@@ -3,11 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_, desc
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
-import os
-import uuid
-from pathlib import Path
-import httpx
-import base64
+
 
 from database import get_db
 from models import User, UserFollow, Reading, Book
@@ -17,63 +13,12 @@ from schemas import (
 from routers.auth import get_current_user
 from utils import parse_user_id, log_api_error, logger
 from error_handlers import handle_storage_error, handle_validation_error, StorageError, ValidationError
+from services.storage_service import storage_service
+from services.validation_service import validation_service
 
 router = APIRouter()
 
-# Supabase Storage configuration
-SUPABASE_URL = os.getenv("SUPABASE_URL", "").replace("/rest/v1", "")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")  # Use service key for backend operations
-SUPABASE_BUCKET = "profile-pictures"  # Match the actual bucket name in Supabase
 
-# Allowed image extensions
-ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
-MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
-
-async def upload_to_supabase_storage(file_content: bytes, filename: str) -> str:
-    """Upload file to Supabase Storage and return public URL"""
-    
-    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
-        raise StorageError("Supabase configuration missing")
-    
-    # Supabase Storage API endpoint
-    upload_url = f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{filename}"
-    
-    headers = {
-        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-        "Content-Type": "application/octet-stream"
-    }
-    
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            upload_url,
-            content=file_content,
-            headers=headers
-        )
-        
-        if response.status_code not in [200, 201]:
-            error_details = f"{response.status_code} - {response.text}"
-            raise StorageError(f"Supabase upload failed: {error_details}")
-    
-    # Return public URL
-    public_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/{filename}"
-    return public_url
-
-async def delete_from_supabase_storage(filename: str):
-    """Delete file from Supabase Storage"""
-    
-    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
-        return  # Skip deletion if not configured
-    
-    delete_url = f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{filename}"
-    
-    headers = {
-        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}"
-    }
-    
-    async with httpx.AsyncClient() as client:
-        response = await client.delete(delete_url, headers=headers)
-        if response.status_code not in [200, 204]:
-            logger.warning(f"Failed to delete old profile picture: {response.status_code}")
 
 @router.get("/search", response_model=List[UserPublicProfile])
 async def search_users(
@@ -425,25 +370,40 @@ async def update_my_profile(
     db: AsyncSession = Depends(get_db)
 ):
     """Update current user's profile"""
-    # Check if username is taken (if provided and different)
-    if user_data.username and user_data.username != current_user.username:
-        result = await db.execute(
-            select(User).where(
-                and_(
-                    User.username == user_data.username,
-                    User.id != current_user.id
+    # Validate and clean input data
+    update_data = user_data.dict(exclude_unset=True)
+    
+    # Validate individual fields
+    if 'username' in update_data:
+        update_data['username'] = validation_service.validate_username(update_data['username'])
+        
+        # Check if username is taken (if different from current)
+        if update_data['username'] != current_user.username:
+            result = await db.execute(
+                select(User).where(
+                    and_(
+                        User.username == update_data['username'],
+                        User.id != current_user.id
+                    )
                 )
             )
-        )
-        existing_user = result.scalar_one_or_none()
-        if existing_user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username already taken"
-            )
+            existing_user = result.scalar_one_or_none()
+            if existing_user:
+                raise ValidationError("Username already taken")
+    
+    if 'name' in update_data:
+        update_data['name'] = validation_service.validate_name(update_data['name'])
+    
+    if 'bio' in update_data:
+        update_data['bio'] = validation_service.validate_bio(update_data['bio'])
+    
+    if 'location' in update_data:
+        update_data['location'] = validation_service.validate_location(update_data['location'])
+    
+    if 'reading_goal' in update_data:
+        update_data['reading_goal'] = validation_service.validate_reading_goal(update_data['reading_goal'])
     
     # Update fields
-    update_data = user_data.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(current_user, field, value)
     
@@ -462,39 +422,33 @@ async def upload_profile_picture(
     
 
     
-    # Validate file type
-    file_extension = Path(file.filename).suffix.lower()
-    if file_extension not in ALLOWED_EXTENSIONS:
-        raise ValidationError(f"Invalid file type. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}")
-    
-    # Read file content to check size
+    # Read file content
     content = await file.read()
-    if len(content) > MAX_FILE_SIZE:
-        raise ValidationError(f"File too large. Maximum size: {MAX_FILE_SIZE // (1024*1024)}MB")
+    
+    # Validate file upload
+    file_extension = validation_service.validate_file_upload(
+        filename=file.filename,
+        file_content=content
+    )
     
     try:
-        # Generate unique filename
-        file_id = str(uuid.uuid4())
-        filename = f"user_{current_user.id}_{file_id}{file_extension}"
+        # Delete old profile picture if it exists
+        if current_user.profile_picture_url:
+            await storage_service.delete_profile_picture_from_url(current_user.profile_picture_url)
         
-        # Upload to Supabase Storage
-        public_url = await upload_to_supabase_storage(content, filename)
-        
-        # Delete old profile picture if exists and it's from Supabase
-        if current_user.profile_picture_url and "supabase" in current_user.profile_picture_url:
-            try:
-                # Extract filename from old URL
-                old_filename = current_user.profile_picture_url.split("/")[-1]
-                await delete_from_supabase_storage(old_filename)
-            except Exception as e:
-                logger.warning(f"Failed to delete old profile picture: {e}")
+        # Upload new profile picture
+        public_url = await storage_service.upload_profile_picture(
+            file_content=content,
+            user_id=current_user.id,
+            file_extension=file_extension
+        )
         
         # Update user's profile picture URL
         current_user.profile_picture_url = public_url
         await db.commit()
         await db.refresh(current_user)
         
-        logger.info(f"Profile picture uploaded for user {current_user.id}: {filename}")
+        logger.info(f"Profile picture uploaded for user {current_user.id}")
         
         return {
             "message": "Profile picture uploaded successfully",
@@ -503,9 +457,8 @@ async def upload_profile_picture(
         
     except ValidationError:
         raise  # Re-raise validation errors as-is
+    except StorageError:
+        raise  # Re-raise storage errors as-is
     except Exception as e:
-        # Convert any storage-related exceptions to our custom error type
-        if "supabase" in str(e).lower() or "storage" in str(e).lower() or "upload" in str(e).lower():
-            raise handle_storage_error(e, "profile picture upload")
-        else:
-            raise handle_storage_error(e, "profile picture upload") 
+        # Convert any unexpected exceptions to storage errors
+        raise handle_storage_error(e, "profile picture upload") 
