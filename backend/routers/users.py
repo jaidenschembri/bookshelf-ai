@@ -21,8 +21,8 @@ router = APIRouter()
 
 # Supabase Storage configuration
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").replace("/rest/v1", "")
-SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
-SUPABASE_BUCKET = "profile-pictures"
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")  # Use service key for backend operations
+SUPABASE_BUCKET = "profile-picture"  # Match the actual bucket name in Supabase
 
 # Allowed image extensions
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
@@ -31,7 +31,7 @@ MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 async def upload_to_supabase_storage(file_content: bytes, filename: str) -> str:
     """Upload file to Supabase Storage and return public URL"""
     
-    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Supabase configuration missing"
@@ -41,7 +41,7 @@ async def upload_to_supabase_storage(file_content: bytes, filename: str) -> str:
     upload_url = f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{filename}"
     
     headers = {
-        "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
         "Content-Type": "application/octet-stream"
     }
     
@@ -66,13 +66,13 @@ async def upload_to_supabase_storage(file_content: bytes, filename: str) -> str:
 async def delete_from_supabase_storage(filename: str):
     """Delete file from Supabase Storage"""
     
-    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
         return  # Skip deletion if not configured
     
     delete_url = f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{filename}"
     
     headers = {
-        "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}"
     }
     
     async with httpx.AsyncClient() as client:
