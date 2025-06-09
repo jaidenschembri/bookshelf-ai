@@ -374,7 +374,9 @@ function UserCard({
             )}
           </div>
           <div>
-            <h4 className="font-serif font-bold text-lg">{user.name}</h4>
+            <Link href={`/user/${user.id}`}>
+              <h4 className="font-serif font-bold text-lg hover:text-blue-600 cursor-pointer transition-colors">{user.name}</h4>
+            </Link>
             {user.username && (
               <p className="text-caption text-gray-600">@{user.username}</p>
             )}
@@ -452,6 +454,13 @@ function ReviewCard({ reading }: { reading: Reading }) {
             )}
           </div>
           <p className="text-caption text-gray-600 mb-3">by {reading.book.author}</p>
+          {reading.user && (
+            <Link href={`/user/${reading.user.id}`}>
+              <p className="text-caption text-blue-600 hover:text-blue-800 cursor-pointer mb-2">
+                Review by {reading.user.name}
+              </p>
+            </Link>
+          )}
           {reading.review && (
             <p className="text-body text-gray-700 mb-4">{reading.review}</p>
           )}
@@ -503,7 +512,9 @@ function ActivityCard({ activity }: { activity: any }) {
         </div>
         <div className="flex-1">
           <p className="text-body">
-            <span className="font-bold">{activity.user.name}</span>{' '}
+            <Link href={`/user/${activity.user.id}`}>
+              <span className="font-bold text-blue-600 hover:text-blue-800 cursor-pointer">{activity.user.name}</span>
+            </Link>{' '}
             {activity.activity_type === 'followed_user' && 'followed a new user'}
             {activity.activity_type === 'finished_book' && 'finished reading a book'}
             {activity.activity_type === 'started_book' && 'started reading a book'}

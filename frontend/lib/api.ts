@@ -120,6 +120,10 @@ export interface Reading {
   created_at: string
   updated_at: string
   book: Book
+  user?: UserPublicProfile
+  like_count?: number
+  comment_count?: number
+  is_liked?: boolean
 }
 
 export interface Recommendation {
@@ -313,6 +317,12 @@ export const userApi = {
   
   searchUsers: (query: string): Promise<UserPublicProfile[]> =>
     api.get(`/users/search?q=${encodeURIComponent(query)}`).then(res => res.data),
+  
+  getUserLibrary: (userId: number, status?: string): Promise<Reading[]> =>
+    api.get(`/users/${userId}/library${status ? `?status=${status}` : ''}`).then(res => res.data),
+  
+  getUserReviews: (userId: number, limit = 20): Promise<Reading[]> =>
+    api.get(`/users/${userId}/reviews?limit=${limit}`).then(res => res.data),
   
   updateProfile: (updates: Partial<User>): Promise<User> =>
     api.put('/users/me', updates).then(res => res.data),
