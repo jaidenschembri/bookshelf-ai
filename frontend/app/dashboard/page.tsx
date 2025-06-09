@@ -22,9 +22,9 @@ export default function DashboardPage() {
 
   const { data: dashboard, isLoading, error } = useQuery<Dashboard>(
     ['dashboard', session?.user?.id],
-    () => dashboardApi.get(parseInt(session?.user?.id || '1')),
+    () => dashboardApi.get(),
     {
-      enabled: !!session?.user?.id,
+      enabled: !!session?.user?.id && !!session?.accessToken,
       refetchOnWindowFocus: false,
     }
   )

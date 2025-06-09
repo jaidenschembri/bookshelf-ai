@@ -12,6 +12,7 @@ from database import get_db
 from models import User, Reading, Book, Recommendation
 from schemas import RecommendationResponse, RecommendationCreate
 from routers.books import search_open_library, BookCreate
+from routers.auth import get_current_user
 from utils import parse_user_id, log_api_error, log_external_api_call, logger
 
 router = APIRouter()
@@ -373,21 +374,21 @@ def get_fallback_recommendations() -> List[dict]:
 
 @router.get("/", response_model=List[RecommendationResponse])
 async def get_user_recommendations(
-    user_id: int,
     limit: int = 10,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get recommendations for a user"""
+    """Get recommendations for the current authenticated user"""
     
-    # Convert user_id to SQLite-compatible integer
-    safe_user_id = parse_user_id(str(user_id))
-    
-    # Get existing recommendations
+    # Get existing recommendations for the current user
     result = await db.execute(
         select(Recommendation)
         .options(selectinload(Recommendation.book))
-        .where(Recommendation.user_id == safe_user_id)
-        .where(Recommendation.is_dismissed == False)
+        .where(
+            Recommendation.user_id == current_user.id,
+            Recommendation.is_dismissed == False
+        )
+        .order_by(Recommendation.confidence_score.desc(), Recommendation.created_at.desc())
         .limit(limit)
     )
     recommendations = result.scalars().all()
@@ -396,131 +397,163 @@ async def get_user_recommendations(
 
 @router.post("/generate")
 async def generate_recommendations(
-    user_id: int,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Generate new AI recommendations for a user"""
+    """Generate new AI recommendations for the current authenticated user"""
     
-    # Convert user_id to SQLite-compatible integer
-    safe_user_id = parse_user_id(str(user_id))
-    
-    # Get user's reading history
-    result = await db.execute(
-        select(Reading)
-        .options(selectinload(Reading.book))
-        .where(Reading.user_id == safe_user_id)
-        .limit(20)  # Last 20 books
-    )
-    readings = result.scalars().all()
-    
-    if not readings:
-        raise HTTPException(
-            status_code=400,
-            detail="User has no reading history to base recommendations on"
+    try:
+        # Clear existing recommendations for this user
+        await db.execute(
+            select(Recommendation).where(Recommendation.user_id == current_user.id)
         )
-    
-    # Prepare reading history for AI
-    reading_history = []
-    for reading in readings:
-        reading_history.append({
-            'status': reading.status,
-            'rating': reading.rating if reading.rating is not None else 0,
-            'book': {
-                'title': reading.book.title,
-                'author': reading.book.author,
-                'genre': reading.book.genre
-            }
-        })
-    
-    # Get ALL books in user's library (not just readings) to avoid recommending them
-    user_books = []
-    for reading in readings:
-        user_books.append({
-            'title': reading.book.title,
-            'author': reading.book.author,
-            'genre': reading.book.genre
-        })
-    
-    # Get AI recommendations, passing the user's books to avoid duplicates
-    logger.info(f"Generating AI recommendations for user {safe_user_id} with {len(reading_history)} books in history")
-    ai_recommendations = await get_ai_recommendations(reading_history, user_books)
-    logger.info(f"AI returned {len(ai_recommendations)} recommendations")
-    
-    # Clear existing recommendations
-    existing_recs = (await db.execute(
-        select(Recommendation).where(Recommendation.user_id == safe_user_id)
-    )).scalars().all()
-    
-    for rec in existing_recs:
-        await db.delete(rec)
-    
-    # Create new recommendations
-    created_recommendations = []
-    for ai_rec in ai_recommendations:
-        # Final check: make sure this book isn't already in the user's library
-        is_already_in_library = False
-        for user_book in user_books:
-            if (user_book['title'].lower().strip() == ai_rec['title'].lower().strip() and 
-                user_book['author'].lower().strip() == ai_rec['author'].lower().strip()):
-                is_already_in_library = True
-                logger.info(f"Skipping recommendation for book already in library: {ai_rec['title']}")
-                break
+        existing_recs = await db.execute(
+            select(Recommendation).where(Recommendation.user_id == current_user.id)
+        )
+        for rec in existing_recs.scalars().all():
+            await db.delete(rec)
         
-        if is_already_in_library:
-            continue
-            
-        # Try to find existing book or create a placeholder
-        book_result = await db.execute(
+        # Get user's reading history
+        result = await db.execute(
+            select(Reading)
+            .options(selectinload(Reading.book))
+            .where(Reading.user_id == current_user.id)
+            .order_by(Reading.updated_at.desc())
+        )
+        user_readings = result.scalars().all()
+        
+        # Get all books in user's library to avoid recommending them
+        result = await db.execute(
             select(Book)
-            .where(Book.title == ai_rec['title'])
-            .where(Book.author == ai_rec['author'])  # Also match by author to be more specific
+            .join(Reading)
+            .where(Reading.user_id == current_user.id)
         )
-        book = book_result.scalars().first()  # Use first() instead of scalar_one_or_none()
+        user_books = result.scalars().all()
         
-        if not book:
-            # Create a new book entry (no description for AI recommendations)
-            book = Book(
-                title=ai_rec['title'],
-                author=ai_rec['author'],
-                description=None,  # Don't set description for AI recommendations
-                genre=ai_rec.get('genre', 'Recommended')
-            )
-            db.add(book)
-            await db.flush()
+        # Convert to format expected by AI function
+        reading_history = []
+        for reading in user_readings:
+            reading_history.append({
+                "book": {
+                    "title": reading.book.title,
+                    "author": reading.book.author,
+                    "genre": reading.book.genre,
+                    "description": reading.book.description
+                },
+                "rating": reading.rating,
+                "status": reading.status,
+                "review": reading.review
+            })
         
-        # Create recommendation
-        recommendation = Recommendation(
-            user_id=safe_user_id,
-            book_id=book.id,
-            reason=ai_rec['reason'],
-            confidence_score=ai_rec.get('confidence', 0.7),
-            is_dismissed=False
+        user_books_list = []
+        for book in user_books:
+            user_books_list.append({
+                "title": book.title,
+                "author": book.author
+            })
+        
+        # Get AI recommendations
+        ai_recommendations = await get_ai_recommendations(
+            reading_history, 
+            user_books_list, 
+            num_recommendations=8
         )
-        db.add(recommendation)
-        created_recommendations.append(recommendation)
-    
-    await db.commit()
-    
-    return {
-        "message": f"Generated {len(created_recommendations)} new recommendations",
-        "count": len(created_recommendations)
-    }
+        
+        # Process and save recommendations
+        saved_recommendations = []
+        for ai_rec in ai_recommendations:
+            try:
+                # Search for the book in Open Library
+                search_results = await search_open_library(f"{ai_rec['title']} {ai_rec['author']}")
+                
+                if search_results:
+                    # Use the first search result
+                    book_data = search_results[0]
+                    
+                    # Check if book already exists in our database
+                    result = await db.execute(
+                        select(Book).where(
+                            Book.title == book_data.title,
+                            Book.author == book_data.author
+                        )
+                    )
+                    existing_book = result.scalar_one_or_none()
+                    
+                    if existing_book:
+                        book = existing_book
+                    else:
+                        # Create new book entry
+                        book = Book(
+                            title=book_data.title,
+                            author=book_data.author,
+                            isbn=book_data.isbn,
+                            cover_url=book_data.cover_url,
+                            description=book_data.description,
+                            publication_year=book_data.publication_year,
+                            open_library_id=book_data.open_library_key
+                        )
+                        db.add(book)
+                        await db.commit()
+                        await db.refresh(book)
+                    
+                    # Create recommendation
+                    recommendation = Recommendation(
+                        user_id=current_user.id,
+                        book_id=book.id,
+                        reason=ai_rec['reason'],
+                        confidence_score=ai_rec['confidence'],
+                        is_dismissed=False
+                    )
+                    db.add(recommendation)
+                    saved_recommendations.append(recommendation)
+                    
+            except Exception as e:
+                logger.error(f"Error processing recommendation for {ai_rec['title']}: {e}")
+                continue
+        
+        await db.commit()
+        
+        # Refresh all recommendations to get the book data
+        for rec in saved_recommendations:
+            await db.refresh(rec)
+        
+        return {
+            "message": f"Generated {len(saved_recommendations)} new recommendations",
+            "count": len(saved_recommendations)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error generating recommendations for user {current_user.id}: {e}")
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate recommendations: {str(e)}"
+        )
 
 @router.put("/{recommendation_id}/dismiss")
 async def dismiss_recommendation(
     recommendation_id: int,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Dismiss a recommendation"""
+    """Dismiss a recommendation for the current authenticated user"""
+    
+    # Get the recommendation and verify it belongs to the current user
     result = await db.execute(
-        select(Recommendation).where(Recommendation.id == recommendation_id)
+        select(Recommendation).where(
+            Recommendation.id == recommendation_id,
+            Recommendation.user_id == current_user.id
+        )
     )
     recommendation = result.scalar_one_or_none()
     
     if not recommendation:
-        raise HTTPException(status_code=404, detail="Recommendation not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Recommendation not found or doesn't belong to you"
+        )
     
     recommendation.is_dismissed = True
     await db.commit()
     
-    return {"message": "Recommendation dismissed"} 
+    return {"message": "Recommendation dismissed successfully"} 

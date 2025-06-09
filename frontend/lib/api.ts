@@ -65,14 +65,14 @@ api.interceptors.response.use(
         // Only log once per session to avoid spam
         const authErrorKey = 'auth_error_logged'
         if (!sessionStorage.getItem(authErrorKey)) {
-          console.warn('Authentication error detected. User may need to sign in again.')
-          
-          // Show a more helpful message to the user
-          const errorMessage = error.response?.status === 401 
-            ? 'Your session has expired. Please sign in again.' 
-            : 'Authentication failed. Please sign in again.'
-          
-          console.error(errorMessage)
+        console.warn('Authentication error detected. User may need to sign in again.')
+        
+        // Show a more helpful message to the user
+        const errorMessage = error.response?.status === 401 
+          ? 'Your session has expired. Please sign in again.' 
+          : 'Authentication failed. Please sign in again.'
+        
+        console.error(errorMessage)
           sessionStorage.setItem(authErrorKey, 'true')
         }
       }
@@ -245,14 +245,14 @@ export const readingApi = {
 }
 
 export const recommendationApi = {
-  get: (userId: number, refresh = false): Promise<Recommendation[]> => {
+  get: (refresh = false): Promise<Recommendation[]> => {
     if (refresh) {
       // First generate new recommendations, then get them
-      return api.post(`/recommendations/generate?user_id=${userId}`)
-        .then(() => api.get(`/recommendations/?user_id=${userId}`))
+      return api.post('/recommendations/generate')
+        .then(() => api.get('/recommendations/'))
         .then(res => res.data);
     } else {
-      return api.get(`/recommendations/?user_id=${userId}`).then(res => res.data);
+      return api.get('/recommendations/').then(res => res.data);
     }
   },
   
@@ -261,11 +261,11 @@ export const recommendationApi = {
 }
 
 export const dashboardApi = {
-  get: (userId: number): Promise<Dashboard> =>
-    api.get(`/dashboard/${userId}`).then(res => res.data),
+  get: (): Promise<Dashboard> =>
+    api.get('/dashboard/').then(res => res.data),
   
-  getStats: (userId: number): Promise<ReadingStats> =>
-    api.get(`/dashboard/${userId}/stats`).then(res => res.data),
+  getStats: (): Promise<ReadingStats> =>
+    api.get('/dashboard/stats').then(res => res.data),
 }
 
 export const socialApi = {

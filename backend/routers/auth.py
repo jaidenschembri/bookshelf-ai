@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -7,11 +7,17 @@ import jwt
 from datetime import datetime, timedelta
 import httpx
 import asyncio
+from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 from database import get_db
 from models import User
 from schemas import GoogleAuthRequest, AuthResponse, UserCreate, UserResponse
 from utils import parse_user_id, convert_user_id, log_auth_event, log_api_error, log_external_api_call, logger
+from auth_utils import (
+    hash_password, verify_password, create_verification_token, 
+    validate_email_address, send_verification_email, validate_password_strength
+)
 
 router = APIRouter()
 security = HTTPBearer()
@@ -20,7 +26,26 @@ SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-here")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
+# Unified Pydantic models for both auth methods
+class SignupRequest(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    username: Optional[str] = None
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str
+
 def create_access_token(data: dict, expires_delta: timedelta = None):
+    """Create JWT access token - ALWAYS uses user_id as 'sub' for consistency"""
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -30,7 +55,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_or_create_user(google_user_info: dict, db: AsyncSession) -> User:
+async def get_or_create_user_google(google_user_info: dict, db: AsyncSession) -> User:
     """Get existing user or create new one from Google user info"""
     # Google API v2 returns 'id', Google API v1 might return 'sub'
     google_id = google_user_info.get("id") or google_user_info.get("sub")
@@ -52,6 +77,10 @@ async def get_or_create_user(google_user_info: dict, db: AsyncSession) -> User:
     
     if user:
         log_auth_event("existing_user_found", user_email=user.email, user_id=user.id)
+        # Update auth provider and last login
+        user.auth_provider = "google"
+        user.last_login = datetime.utcnow()
+        await db.commit()
         return user
     
     # Also check by email in case the user exists but with different google_id
@@ -62,6 +91,9 @@ async def get_or_create_user(google_user_info: dict, db: AsyncSession) -> User:
         log_auth_event("user_google_id_update", user_email=email, user_id=existing_user.id)
         existing_user.google_id = str(google_id)
         existing_user.name = name  # Update name in case it changed
+        existing_user.auth_provider = "google"  # Update auth provider
+        existing_user.email_verified = True  # Google emails are verified
+        existing_user.last_login = datetime.utcnow()
         await db.commit()
         await db.refresh(existing_user)
         return existing_user
@@ -82,14 +114,15 @@ async def get_or_create_user(google_user_info: dict, db: AsyncSession) -> User:
             username = f"{base_username}{counter}"
             counter += 1
         
-        # Create new user (PostgreSQL will auto-generate ID)
+        # Create new user
         user = User(
             google_id=str(google_id),
             email=email,
             name=name,
             username=username,
             profile_picture_url=google_user_info.get("picture"),
-            email_verified=google_user_info.get("verified_email", False),
+            email_verified=True,  # Google emails are verified
+            auth_provider="google",
             last_login=datetime.utcnow(),
             reading_goal=12,  # Default reading goal
             is_private=False  # Default to public profile
@@ -102,13 +135,66 @@ async def get_or_create_user(google_user_info: dict, db: AsyncSession) -> User:
         return user
         
     except Exception as e:
-        log_api_error("get_or_create_user", e)
+        log_api_error("get_or_create_user_google", e)
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create user: {str(e)}"
         )
 
+# UNIFIED get_current_user function - works for both auth methods
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db)
+) -> User:
+    """Unified dependency to get current user from JWT token - works for both Google and email auth"""
+    token = credentials.credentials
+    
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id_str: str = payload.get("sub")
+        if user_id_str is None:
+            log_auth_event("invalid_token", details="missing_user_id_in_token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+    except jwt.PyJWTError as e:
+        log_auth_event("jwt_decode_failed", details=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
+    
+    try:
+        # Convert user_id to integer (handles both string and int inputs)
+        safe_user_id = parse_user_id(user_id_str)
+        log_auth_event("user_lookup_attempt", details=f"user_id={safe_user_id}")
+        
+        result = await db.execute(select(User).where(User.id == safe_user_id))
+        user = result.scalar_one_or_none()
+        
+        if user is None:
+            log_auth_event("user_not_found", details=f"user_id={safe_user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        log_auth_event("user_lookup_success", user_email=user.email, user_id=user.id)
+        return user
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        log_api_error("get_current_user", e, user_id=safe_user_id if 'safe_user_id' in locals() else None)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Authentication error: {str(e)}"
+        )
+
+# GOOGLE OAUTH ENDPOINTS
 @router.post("/google", response_model=AuthResponse)
 async def google_auth(
     auth_request: GoogleAuthRequest,
@@ -158,10 +244,10 @@ async def google_auth(
             )
         
         # Get or create user
-        user = await get_or_create_user(google_user_info, db)
+        user = await get_or_create_user_google(google_user_info, db)
         log_auth_event("user_processed", user_email=user.email, user_id=user.id)
         
-        # Create access token
+        # Create access token with user_id as 'sub' (CONSISTENT)
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
             data={"sub": str(user.id)}, expires_delta=access_token_expires
@@ -191,60 +277,148 @@ async def google_auth(
             detail=f"Authentication failed: {str(e)}"
         )
 
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+# EMAIL/PASSWORD AUTHENTICATION ENDPOINTS
+@router.post("/signup", response_model=dict)
+async def signup(
+    signup_data: SignupRequest,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
-) -> User:
-    """Dependency to get current user from JWT token"""
-    token = credentials.credentials
+):
+    """Register a new user with email and password"""
     
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            log_auth_event("invalid_token", details="missing_user_id_in_token")
+    # Validate email format
+    if not validate_email_address(signup_data.email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid email address format"
+        )
+    
+    # Validate password strength
+    is_strong, message = validate_password_strength(signup_data.password)
+    if not is_strong:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=message
+        )
+    
+    # Check if user already exists
+    result = await db.execute(select(User).where(User.email == signup_data.email))
+    existing_user = result.scalar_one_or_none()
+    
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Check if username is taken (if provided)
+    if signup_data.username:
+        result = await db.execute(select(User).where(User.username == signup_data.username))
+        existing_username = result.scalar_one_or_none()
+        
+        if existing_username:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken"
             )
-    except jwt.PyJWTError as e:
-        log_auth_event("jwt_decode_failed", details=str(e))
+    else:
+        # Generate username from name if not provided
+        base_username = signup_data.name.lower().replace(" ", "").replace(".", "")[:15]
+        username = base_username
+        counter = 1
+        
+        while True:
+            result = await db.execute(select(User).where(User.username == username))
+            if not result.scalar_one_or_none():
+                break
+            username = f"{base_username}{counter}"
+            counter += 1
+        
+        signup_data.username = username
+    
+    # Create new user
+    hashed_password = hash_password(signup_data.password)
+    verification_token = create_verification_token(signup_data.email)
+    
+    new_user = User(
+        email=signup_data.email,
+        name=signup_data.name,
+        username=signup_data.username,
+        password_hash=hashed_password,
+        auth_provider="email",
+        email_verified=False,
+        email_verification_token=verification_token,
+        reading_goal=12,
+        is_private=False
+    )
+    
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+    
+    # Send verification email in background
+    background_tasks.add_task(
+        send_verification_email,
+        signup_data.email,
+        verification_token
+    )
+    
+    return {
+        "message": "Account created successfully! Please check your email to verify your account.",
+        "user_id": new_user.id
+    }
+
+@router.post("/login", response_model=AuthResponse)
+async def login(
+    login_data: LoginRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Login with email and password"""
+    
+    # Find user by email
+    result = await db.execute(select(User).where(User.email == login_data.email))
+    user = result.scalar_one_or_none()
+    
+    if not user or not user.password_hash:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token"
+            detail="Invalid email or password"
         )
     
-    try:
-        # Convert user_id to SQLite-compatible integer using utility function
-        safe_user_id = parse_user_id(user_id)
-        log_auth_event("user_lookup_attempt", details=f"user_id={safe_user_id}")
-        
-        result = await db.execute(select(User).where(User.id == safe_user_id))
-        user = result.scalar_one_or_none()
-        
-        if user is None:
-            log_auth_event("user_not_found", details=f"user_id={safe_user_id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
-        
-        log_auth_event("user_lookup_success", user_email=user.email, user_id=user.id)
-        return user
-        
-    except HTTPException:
-        # Re-raise HTTP exceptions as-is
-        raise
-    except Exception as e:
-        log_api_error("get_current_user", e, user_id=safe_user_id if 'safe_user_id' in locals() else None)
+    # Verify password
+    if not verify_password(login_data.password, user.password_hash):
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Authentication error: {str(e)}"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
         )
+    
+    # Check if account is active
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account is deactivated"
+        )
+    
+    # Update last login and auth provider
+    user.last_login = datetime.utcnow()
+    user.auth_provider = "email"
+    await db.commit()
+    
+    # Create access token with user_id as 'sub' (CONSISTENT)
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": str(user.id)}, expires_delta=access_token_expires
+    )
+    
+    return AuthResponse(
+        user=UserResponse.from_orm(user),
+        access_token=access_token
+    )
 
+# COMMON ENDPOINTS
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(
     current_user: User = Depends(get_current_user)
 ):
-    """Get current user information"""
+    """Get current user information - works for both auth methods"""
     return UserResponse.from_orm(current_user) 

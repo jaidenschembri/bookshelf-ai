@@ -265,24 +265,24 @@ export default function BooksPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
                       <span className="text-sm text-gray-600 text-center sm:text-left">Rating:</span>
                       <div className="flex justify-center sm:justify-start items-center space-x-2">
-                        <div className="flex space-x-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              onClick={() => handleRatingChange(reading, star)}
-                              className={`${
-                                reading.rating && star <= reading.rating
-                                  ? 'text-yellow-400'
-                                  : 'text-gray-300'
-                              } hover:text-yellow-400 transition-colors`}
-                            >
-                              <Star className="h-5 w-5 fill-current" />
-                            </button>
-                          ))}
-                        </div>
-                        {reading.rating && (
-                          <span className="text-sm text-gray-600">({reading.rating}/5)</span>
-                        )}
+                      <div className="flex space-x-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => handleRatingChange(reading, star)}
+                            className={`${
+                              reading.rating && star <= reading.rating
+                                ? 'text-yellow-400'
+                                : 'text-gray-300'
+                            } hover:text-yellow-400 transition-colors`}
+                          >
+                            <Star className="h-5 w-5 fill-current" />
+                          </button>
+                        ))}
+                      </div>
+                      {reading.rating && (
+                        <span className="text-sm text-gray-600">({reading.rating}/5)</span>
+                      )}
                       </div>
                     </div>
 

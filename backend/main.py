@@ -7,7 +7,7 @@ import os
 from sqlalchemy import text
 
 from database import engine, Base, AsyncSessionLocal
-from routers import auth, books, readings, recommendations, dashboard, social, users, email_auth
+from routers import auth, books, readings, recommendations, dashboard, social, users
 from utils import setup_logging
 
 load_dotenv()
@@ -95,7 +95,6 @@ async def health_check():
 
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
-app.include_router(email_auth.router, tags=["email-authentication"])  # New email auth
 app.include_router(books.router, prefix="/books", tags=["books"])
 app.include_router(readings.router, prefix="/readings", tags=["readings"])
 app.include_router(recommendations.router, prefix="/recommendations", tags=["recommendations"])

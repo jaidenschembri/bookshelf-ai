@@ -16,15 +16,15 @@ export default function RecommendationsPage() {
 
   const { data: recommendations, isLoading, error, refetch } = useQuery<Recommendation[]>(
     ['recommendations', session?.user?.id],
-    () => recommendationApi.get(parseInt(session?.user?.id || '1')),
+    () => recommendationApi.get(),
     {
-      enabled: !!session?.user?.id,
+      enabled: !!session?.user?.id && !!session?.accessToken,
       refetchOnWindowFocus: false,
     }
   )
 
   const refreshMutation = useMutation(
-    (options?: { silent?: boolean }) => recommendationApi.get(parseInt(session?.user?.id || '1'), true),
+    (options?: { silent?: boolean }) => recommendationApi.get(true),
     {
       onSuccess: (data, variables) => {
         queryClient.setQueryData(['recommendations', session?.user?.id], data)
