@@ -50,6 +50,13 @@ cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 # Remove empty strings from the list
 cors_origins = [origin.strip() for origin in cors_origins if origin.strip()]
 
+# Add production frontend URL if not already included
+production_frontend = "https://libraria.up.railway.app"
+if production_frontend not in cors_origins:
+    cors_origins.append(production_frontend)
+
+logger.info(f"CORS origins configured: {cors_origins}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,

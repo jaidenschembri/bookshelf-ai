@@ -20,6 +20,10 @@ if is_production:
     
     logger.info("Production environment detected - using PostgreSQL")
     
+    # Note: For Railway deployment with Supabase, use Session Mode connection string:
+    # postgres://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+    # This provides IPv4/IPv6 compatibility and is ideal for persistent applications
+    
     # Handle different PostgreSQL URL formats and ensure asyncpg driver
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
