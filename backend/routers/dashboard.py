@@ -182,7 +182,7 @@ async def get_dashboard(
                 user_id=rec.user_id,
                 book_id=rec.book_id,
                 reason=rec.reason,
-                score=rec.score,
+                score=rec.confidence_score,
                 is_dismissed=rec.is_dismissed,
                 created_at=rec.created_at,
                 book=rec.book
