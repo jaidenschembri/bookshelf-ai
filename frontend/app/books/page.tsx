@@ -8,12 +8,14 @@ import { readingApi, Reading } from '@/lib/api'
 import { BookOpen, Star, Clock, CheckCircle, Edit3, Trash2, MessageSquare, Eye, EyeOff } from 'lucide-react'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
+import { useBookModal } from '@/contexts/BookModalContext'
 
 export default function BooksPage() {
   const { data: session } = useSession()
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
   const [editingReading, setEditingReading] = useState<Reading | null>(null)
   const queryClient = useQueryClient()
+  const { openBookModal } = useBookModal()
 
   const { data: readings, isLoading } = useQuery<Reading[]>(
     ['readings', session?.user?.id, selectedStatus],
@@ -185,8 +187,13 @@ export default function BooksPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3">
                       <div className="text-center sm:text-left mb-2 sm:mb-0">
-                        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
-                          {reading.book.title}
+                        <h3 className="text-lg sm:text-xl font-semibold mb-2">
+                          <button
+                            onClick={() => openBookModal(null, reading.book.id)}
+                            className="text-gray-900 hover:text-blue-600 hover:underline text-left transition-colors"
+                          >
+                            {reading.book.title}
+                          </button>
                         </h3>
                         <p className="text-gray-600 mb-2">by {reading.book.author}</p>
                         

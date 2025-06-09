@@ -8,11 +8,13 @@ import { Star, RefreshCw, X, BookOpen, Brain } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+import { useBookModal } from '@/contexts/BookModalContext'
 
 
 export default function RecommendationsPage() {
   const { data: session } = useSession()
   const queryClient = useQueryClient()
+  const { openBookModal } = useBookModal()
 
   const { data: recommendations, isLoading, error, refetch } = useQuery<Recommendation[]>(
     ['recommendations', session?.user?.id],
@@ -200,8 +202,13 @@ export default function RecommendationsPage() {
                   <div className="flex-1 min-w-0 sm:pr-8">
                     {/* Book Info */}
                     <div className="mb-4 text-center sm:text-left">
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
-                        {recommendation.book.title}
+                      <h3 className="text-lg sm:text-xl font-semibold mb-2">
+                        <button
+                          onClick={() => openBookModal(null, recommendation.book.id)}
+                          className="text-gray-900 hover:text-blue-600 hover:underline text-left transition-colors"
+                        >
+                          {recommendation.book.title}
+                        </button>
                       </h3>
                       <p className="text-gray-600 mb-2">by {recommendation.book.author}</p>
                       
