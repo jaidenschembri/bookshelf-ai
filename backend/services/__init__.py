@@ -5,5 +5,6 @@
 from .storage_service import storage_service
 from .validation_service import validation_service
 from .book_service import book_service
+from .reading_service import reading_service
 
-__all__ = ["storage_service", "validation_service", "book_service"] 
+__all__ = ["storage_service", "validation_service", "book_service", "reading_service"] 

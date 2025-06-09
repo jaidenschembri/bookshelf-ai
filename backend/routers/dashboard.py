@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from database import get_db
 from models import User, Reading, Recommendation
 from schemas import DashboardResponse, ReadingStats, UserResponse, ReadingResponse, RecommendationResponse
+from services import reading_service
 from routers.auth import get_current_user
 from utils import convert_user_id, logger
 
@@ -25,102 +26,24 @@ async def get_dashboard(
         # Get current year
         current_year = datetime.now().year
         
-        # Calculate reading statistics
+        # Calculate reading statistics using service
         logger.debug(f"Calculating reading statistics for user {current_user.id}")
-        
-        # Total books read (finished)
-        result = await db.execute(
-            select(func.count(Reading.id))
-            .where(Reading.user_id == current_user.id, Reading.status == "finished")
-        )
-        total_books = result.scalar() or 0
-        logger.debug(f"Total books: {total_books}")
-        
-        # Books read this year
-        result = await db.execute(
-            select(func.count(Reading.id))
-            .where(
-                Reading.user_id == current_user.id,
-                Reading.status == "finished",
-                extract('year', Reading.finished_at) == current_year
-            )
-        )
-        books_this_year = result.scalar() or 0
-        logger.debug(f"Books this year: {books_this_year}")
-        
-        # Currently reading count
-        result = await db.execute(
-            select(func.count(Reading.id))
-            .where(Reading.user_id == current_user.id, Reading.status == "currently_reading")
-        )
-        currently_reading = result.scalar() or 0
-        logger.debug(f"Currently reading: {currently_reading}")
-        
-        # Want to read count
-        result = await db.execute(
-            select(func.count(Reading.id))
-            .where(Reading.user_id == current_user.id, Reading.status == "want_to_read")
-        )
-        want_to_read = result.scalar() or 0
-        logger.debug(f"Want to read: {want_to_read}")
-        
-        # Finished count
-        result = await db.execute(
-            select(func.count(Reading.id))
-            .where(Reading.user_id == current_user.id, Reading.status == "finished")
-        )
-        finished = result.scalar() or 0
-        logger.debug(f"Finished: {finished}")
-        
-        # Average rating
-        result = await db.execute(
-            select(func.avg(Reading.rating))
-            .where(Reading.user_id == current_user.id, Reading.rating.isnot(None))
-        )
-        average_rating = result.scalar()
-        if average_rating:
-            average_rating = round(float(average_rating), 1)
-        logger.debug(f"Average rating: {average_rating}")
-        
-        # Calculate goal progress
-        reading_goal = current_user.reading_goal or 12
-        goal_progress = min((books_this_year / reading_goal) * 100, 100) if reading_goal > 0 else 0
-        logger.debug(f"Goal progress: {goal_progress}%")
-        
-        # Create reading stats
-        stats = ReadingStats(
-            total_books=total_books,
-            books_this_year=books_this_year,
-            currently_reading=currently_reading,
-            want_to_read=want_to_read,
-            finished=finished,
-            average_rating=average_rating,
-            reading_goal=reading_goal,
-            goal_progress=round(goal_progress, 1)
-        )
+        stats = await reading_service.get_reading_statistics(current_user.id, db)
         logger.debug("Reading stats created successfully")
         
         # Get recent readings (last 5)
         logger.debug("Fetching recent readings")
-        result = await db.execute(
-            select(Reading)
-            .options(selectinload(Reading.book))
-            .where(Reading.user_id == current_user.id)
-            .order_by(Reading.updated_at.desc())
-            .limit(5)
+        recent_readings = await reading_service.get_user_readings(
+            current_user.id, None, db, limit=5
         )
-        recent_readings = result.scalars().all()
         logger.debug(f"Found {len(recent_readings)} recent readings")
         
         # Get current books (currently reading)
         logger.debug("Fetching current books")
-        result = await db.execute(
-            select(Reading)
-            .options(selectinload(Reading.book))
-            .where(Reading.user_id == current_user.id, Reading.status == "currently_reading")
-            .order_by(Reading.started_at.desc())
+        from schemas import ReadingStatus
+        current_books = await reading_service.get_user_readings(
+            current_user.id, ReadingStatus.CURRENTLY_READING, db
         )
-        current_books = result.scalars().all()
         logger.debug(f"Found {len(current_books)} current books")
         
         # Get recent recommendations (last 3)
@@ -159,53 +82,15 @@ async def get_dashboard(
         )
         logger.debug("User response created successfully")
         
-        # Manually create response objects to avoid async issues
+        # Create reading responses using service
         logger.debug("Creating reading responses")
-        recent_readings_response = []
-        for reading in recent_readings:
-            recent_readings_response.append(ReadingResponse(
-                id=reading.id,
-                user_id=reading.user_id,
-                book_id=reading.book_id,
-                status=reading.status,
-                rating=reading.rating,
-                review=reading.review,
-                is_review_public=reading.is_review_public,
-                progress_pages=reading.progress_pages,
-                total_pages=reading.total_pages,
-                started_at=reading.started_at,
-                finished_at=reading.finished_at,
-                created_at=reading.created_at,
-                updated_at=reading.updated_at,
-                book=reading.book,
-                user=None,
-                like_count=0,
-                comment_count=0,
-                is_liked=False
-            ))
+        recent_readings_response = await reading_service.create_reading_responses(
+            recent_readings, current_user.id, db
+        )
         
-        current_books_response = []
-        for reading in current_books:
-            current_books_response.append(ReadingResponse(
-                id=reading.id,
-                user_id=reading.user_id,
-                book_id=reading.book_id,
-                status=reading.status,
-                rating=reading.rating,
-                review=reading.review,
-                is_review_public=reading.is_review_public,
-                progress_pages=reading.progress_pages,
-                total_pages=reading.total_pages,
-                started_at=reading.started_at,
-                finished_at=reading.finished_at,
-                created_at=reading.created_at,
-                updated_at=reading.updated_at,
-                book=reading.book,
-                user=None,
-                like_count=0,
-                comment_count=0,
-                is_liked=False
-            ))
+        current_books_response = await reading_service.create_reading_responses(
+            current_books, current_user.id, db
+        )
         
         logger.debug("Creating recommendation responses")
         recent_recommendations_response = []
@@ -246,42 +131,4 @@ async def get_reading_stats(
 ):
     """Get detailed reading statistics for the current authenticated user"""
     
-    current_year = datetime.now().year
-    
-    # Get basic counts
-    result = await db.execute(
-        select(
-            func.count(Reading.id).label('total'),
-            func.sum(func.case((Reading.status == 'finished', 1), else_=0)).label('finished'),
-            func.sum(func.case((Reading.status == 'currently_reading', 1), else_=0)).label('current'),
-            func.sum(func.case((Reading.status == 'want_to_read', 1), else_=0)).label('want_to_read'),
-            func.avg(Reading.rating).label('avg_rating')
-        )
-        .where(Reading.user_id == current_user.id)
-    )
-    stats_row = result.first()
-    
-    # Books this year
-    result = await db.execute(
-        select(func.count(Reading.id))
-        .where(
-            Reading.user_id == current_user.id,
-            Reading.status == "finished",
-            extract('year', Reading.finished_at) == current_year
-        )
-    )
-    books_this_year = result.scalar() or 0
-    
-    reading_goal = current_user.reading_goal or 12
-    goal_progress = min((books_this_year / reading_goal) * 100, 100) if reading_goal > 0 else 0
-    
-    return ReadingStats(
-        total_books=stats_row.finished or 0,
-        books_this_year=books_this_year,
-        currently_reading=stats_row.current or 0,
-        want_to_read=stats_row.want_to_read or 0,
-        finished=stats_row.finished or 0,
-        average_rating=round(float(stats_row.avg_rating), 1) if stats_row.avg_rating else None,
-        reading_goal=reading_goal,
-        goal_progress=round(goal_progress, 1)
-    ) 
+    return await reading_service.get_reading_statistics(current_user.id, db) 
