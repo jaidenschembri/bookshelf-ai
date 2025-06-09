@@ -30,23 +30,28 @@ if is_production:
     if "pooler.supabase.com:6543" in DATABASE_URL:
         logger.info("Supabase pooler detected. Attempting to switch to a direct connection...")
         try:
-            # Extract the project reference from the pooler URL
-            # e.g., from postgres.bmgmgscghehroogkssgq@...
-            project_ref_part = DATABASE_URL.split('@')[0].split('.')[1]
+            # Parse the URL more carefully
+            # Example URL: postgresql+asyncpg://postgres.bmgmgscghehroogkssgq:password@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres
             
-            # Reconstruct the original hostname from the pooler URL
-            # e.g., aws-0-ap-southeast-1.pooler.supabase.com:6543
-            original_host_part = DATABASE_URL.split('@')[1]
+            # Split into parts
+            protocol_and_auth = DATABASE_URL.split('@')[0]  # postgresql+asyncpg://postgres.bmgmgscghehroogkssgq:password
+            host_and_db = DATABASE_URL.split('@')[1]        # aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres
             
-            # Create the new direct connection hostname
-            # e.g., db.bmgmgscghehroogkssgq.supabase.co:5432
-            new_host_part = f"db.{project_ref_part}.supabase.co:5432"
+            # Extract project reference from the auth part
+            # From postgres.bmgmgscghehroogkssgq:password, get bmgmgscghehroogkssgq
+            auth_part = protocol_and_auth.split('://')[-1]  # postgres.bmgmgscghehroogkssgq:password
+            project_ref = auth_part.split(':')[0].split('.')[1]  # bmgmgscghehroogkssgq
             
-            # Replace the old host with the new one
-            DATABASE_URL = DATABASE_URL.replace(original_host_part, new_host_part)
-            logger.info("Successfully switched from Supabase pooler to direct connection.")
-        except IndexError:
-            logger.error("Could not parse project reference from Supabase URL. Continuing with pooler.")
+            # Extract database name from the end
+            db_name = host_and_db.split('/')[-1]  # postgres
+            
+            # Create the new direct connection URL
+            new_host = f"db.{project_ref}.supabase.co:5432"
+            DATABASE_URL = f"{protocol_and_auth}@{new_host}/{db_name}"
+            
+            logger.info(f"Successfully switched from Supabase pooler to direct connection: {new_host}")
+        except (IndexError, ValueError) as e:
+            logger.error(f"Could not parse project reference from Supabase URL: {e}. Continuing with pooler.")
     
     # Production PostgreSQL configuration
     engine = create_async_engine(
