@@ -92,6 +92,8 @@ export interface Book {
   genre?: string
   publication_year?: number
   total_pages?: number
+  average_rating?: number
+  total_ratings?: number
   created_at: string
 }
 
