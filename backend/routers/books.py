@@ -101,10 +101,11 @@ async def add_book(
             description=existing_book.description,
             publication_year=existing_book.publication_year,
             genre=existing_book.genre,
-            page_count=existing_book.page_count,
+            total_pages=existing_book.total_pages,
             open_library_id=existing_book.open_library_id,
-            created_at=existing_book.created_at,
-            updated_at=existing_book.updated_at
+            average_rating=existing_book.average_rating,
+            total_ratings=existing_book.total_ratings,
+            created_at=existing_book.created_at
         )
     
     # Create new book
@@ -123,10 +124,11 @@ async def add_book(
         description=book.description,
         publication_year=book.publication_year,
         genre=book.genre,
-        page_count=book.page_count,
+        total_pages=book.total_pages,
         open_library_id=book.open_library_id,
-        created_at=book.created_at,
-        updated_at=book.updated_at
+        average_rating=book.average_rating,
+        total_ratings=book.total_ratings,
+        created_at=book.created_at
     )
 
 @router.get("/user/{user_id}", response_model=List[BookResponse])
@@ -167,10 +169,11 @@ async def get_user_books(
             description=book.description,
             publication_year=book.publication_year,
             genre=book.genre,
-            page_count=book.page_count,
+            total_pages=book.total_pages,
             open_library_id=book.open_library_id,
-            created_at=book.created_at,
-            updated_at=book.updated_at
+            average_rating=book.average_rating,
+            total_ratings=book.total_ratings,
+            created_at=book.created_at
         ))
     
     return books_response
@@ -197,8 +200,9 @@ async def get_book(
         description=book.description,
         publication_year=book.publication_year,
         genre=book.genre,
-        page_count=book.page_count,
+        total_pages=book.total_pages,
         open_library_id=book.open_library_id,
-        created_at=book.created_at,
-        updated_at=book.updated_at
+        average_rating=book.average_rating,
+        total_ratings=book.total_ratings,
+        created_at=book.created_at
     ) 

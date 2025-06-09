@@ -350,13 +350,25 @@ function UserCard({
         <div className="flex items-center space-x-4">
           <div className="w-16 h-16 bg-gray-200 border-2 border-black flex items-center justify-center">
             {user.profile_picture_url ? (
-              <Image
-                src={user.profile_picture_url}
-                alt={user.name}
-                width={64}
-                height={64}
-                className="w-full h-full object-cover"
-              />
+              user.profile_picture_url.includes('supabase.co') ? (
+                // Use Next.js Image for Supabase URLs (they're optimized and reliable)
+                <Image
+                  src={user.profile_picture_url}
+                  alt={user.name}
+                  width={64}
+                  height={64}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                // Use Next.js Image for external URLs (Google profile pics)
+                <Image
+                  src={user.profile_picture_url}
+                  alt={user.name}
+                  width={64}
+                  height={64}
+                  className="w-full h-full object-cover"
+                />
+              )
             ) : (
               <Users className="h-8 w-8 text-gray-600" />
             )}
@@ -466,13 +478,25 @@ function ActivityCard({ activity }: { activity: any }) {
       <div className="flex items-center space-x-3">
         <div className="w-10 h-10 bg-gray-200 border-2 border-black flex items-center justify-center">
           {activity.user.profile_picture_url ? (
-            <Image
-              src={activity.user.profile_picture_url}
-              alt={activity.user.name}
-              width={40}
-              height={40}
-              className="w-full h-full object-cover"
-            />
+            activity.user.profile_picture_url.includes('supabase.co') ? (
+              // Use Next.js Image for Supabase URLs (they're optimized and reliable)
+              <Image
+                src={activity.user.profile_picture_url}
+                alt={activity.user.name}
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              // Use Next.js Image for external URLs (Google profile pics)
+              <Image
+                src={activity.user.profile_picture_url}
+                alt={activity.user.name}
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+              />
+            )
           ) : (
             <Users className="h-5 w-5 text-gray-600" />
           )}
@@ -666,13 +690,25 @@ function ProfileSettings() {
             <div className="relative inline-block">
               <div className="w-32 h-32 bg-gray-200 border-4 border-black flex items-center justify-center mx-auto">
                 {currentUser.profile_picture_url ? (
-                  <Image
-                    src={currentUser.profile_picture_url}
-                    alt={currentUser.name}
-                    width={128}
-                    height={128}
-                    className="w-full h-full object-cover"
-                  />
+                  currentUser.profile_picture_url.includes('supabase.co') ? (
+                    // Use Next.js Image for Supabase URLs (they're optimized and reliable)
+                    <Image
+                      src={currentUser.profile_picture_url}
+                      alt={currentUser.name}
+                      width={128}
+                      height={128}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    // Use Next.js Image for external URLs (Google profile pics)
+                    <Image
+                      src={currentUser.profile_picture_url}
+                      alt={currentUser.name}
+                      width={128}
+                      height={128}
+                      className="w-full h-full object-cover"
+                    />
+                  )
                 ) : (
                   <Users className="h-16 w-16 text-gray-600" />
                 )}

@@ -1,13 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import uvicorn
 from dotenv import load_dotenv
 import os
 from sqlalchemy import text
 from datetime import datetime
-from pathlib import Path
 
 from database import engine, Base, AsyncSessionLocal
 from routers import auth, books, readings, recommendations, dashboard, social, users
@@ -78,13 +76,6 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
-
-# Create uploads directory if it doesn't exist
-UPLOAD_DIR = Path("uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
-
-# Mount static files for serving uploaded images
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Health check endpoint
 @app.get("/")

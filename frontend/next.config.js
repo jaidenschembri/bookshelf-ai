@@ -5,7 +5,18 @@ const nextConfig = {
       'covers.openlibrary.org', 
       'lh3.googleusercontent.com',
       'localhost:8000',
-      'bookshelf-ai-production.up.railway.app'
+      'bookshelf-ai-production.up.railway.app',
+      // Supabase Storage domains - replace with your actual Supabase URL
+      'your-project.supabase.co',
+      'supabase.co'
+    ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
   },
   async headers() {

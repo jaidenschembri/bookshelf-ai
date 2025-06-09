@@ -6,7 +6,8 @@ from typing import List, Optional
 import os
 import uuid
 from pathlib import Path
-import shutil
+import httpx
+import base64
 
 from database import get_db
 from models import User, UserFollow, Reading, Book
@@ -18,13 +19,66 @@ from utils import parse_user_id, log_api_error, logger
 
 router = APIRouter()
 
-# Create uploads directory if it doesn't exist
-UPLOAD_DIR = Path("uploads/profile_pictures")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+# Supabase Storage configuration
+SUPABASE_URL = os.getenv("SUPABASE_URL", "").replace("/rest/v1", "")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
+SUPABASE_BUCKET = "profile-pictures"
 
 # Allowed image extensions
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+
+async def upload_to_supabase_storage(file_content: bytes, filename: str) -> str:
+    """Upload file to Supabase Storage and return public URL"""
+    
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Supabase configuration missing"
+        )
+    
+    # Supabase Storage API endpoint
+    upload_url = f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{filename}"
+    
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+        "Content-Type": "application/octet-stream"
+    }
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            upload_url,
+            content=file_content,
+            headers=headers
+        )
+        
+        if response.status_code not in [200, 201]:
+            logger.error(f"Supabase upload failed: {response.status_code} - {response.text}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to upload to cloud storage"
+            )
+    
+    # Return public URL
+    public_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/{filename}"
+    return public_url
+
+async def delete_from_supabase_storage(filename: str):
+    """Delete file from Supabase Storage"""
+    
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        return  # Skip deletion if not configured
+    
+    delete_url = f"{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{filename}"
+    
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
+    }
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.delete(delete_url, headers=headers)
+        if response.status_code not in [200, 204]:
+            logger.warning(f"Failed to delete old profile picture: {response.status_code}")
 
 @router.get("/search", response_model=List[UserPublicProfile])
 async def search_users(
@@ -427,27 +481,25 @@ async def upload_profile_picture(
             detail=f"File too large. Maximum size: {MAX_FILE_SIZE // (1024*1024)}MB"
         )
     
-    # Reset file pointer
-    await file.seek(0)
-    
     try:
         # Generate unique filename
         file_id = str(uuid.uuid4())
-        filename = f"{file_id}{file_extension}"
-        file_path = UPLOAD_DIR / filename
+        filename = f"user_{current_user.id}_{file_id}{file_extension}"
         
-        # Save file
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        # Upload to Supabase Storage
+        public_url = await upload_to_supabase_storage(content, filename)
         
-        # Delete old profile picture if exists
-        if current_user.profile_picture_url and current_user.profile_picture_url.startswith("/uploads/"):
-            old_file_path = Path(current_user.profile_picture_url[1:])  # Remove leading slash
-            if old_file_path.exists():
-                old_file_path.unlink()
+        # Delete old profile picture if exists and it's from Supabase
+        if current_user.profile_picture_url and "supabase" in current_user.profile_picture_url:
+            try:
+                # Extract filename from old URL
+                old_filename = current_user.profile_picture_url.split("/")[-1]
+                await delete_from_supabase_storage(old_filename)
+            except Exception as e:
+                logger.warning(f"Failed to delete old profile picture: {e}")
         
         # Update user's profile picture URL
-        current_user.profile_picture_url = f"/uploads/profile_pictures/{filename}"
+        current_user.profile_picture_url = public_url
         await db.commit()
         await db.refresh(current_user)
         
@@ -458,6 +510,8 @@ async def upload_profile_picture(
             "profile_picture_url": current_user.profile_picture_url
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error uploading profile picture for user {current_user.id}: {e}")
         raise HTTPException(
