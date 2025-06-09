@@ -11,6 +11,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { useAuthRefresh } from '@/lib/auth-utils'
+import { useBookModal } from '@/contexts/BookModalContext'
 
 export default function SocialPage() {
   const { needsAuth, isRefreshing, hasValidAuth, session, status } = useAuthRefresh()
@@ -18,6 +19,7 @@ export default function SocialPage() {
   const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'feed' | 'discover' | 'profile'>('feed')
+  const { openBookModal } = useBookModal()
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -222,7 +224,7 @@ export default function SocialPage() {
                     <h3 className="heading-sm mb-6">RECENT REVIEWS</h3>
                     <div className="space-y-6">
                       {feed.recent_reviews.map((reading) => (
-                        <ReviewCard key={reading.id} reading={reading} />
+                        <ReviewCard key={reading.id} reading={reading} openBookModal={openBookModal} />
                       ))}
                     </div>
                   </div>
@@ -417,7 +419,7 @@ function UserCard({
 }
 
 // Review Card Component
-function ReviewCard({ reading }: { reading: Reading }) {
+function ReviewCard({ reading, openBookModal }: { reading: Reading; openBookModal: (book: any, bookId?: number) => void }) {
   return (
     <div className="card p-6">
       <div className="flex items-start space-x-4">
@@ -439,7 +441,12 @@ function ReviewCard({ reading }: { reading: Reading }) {
         </div>
         <div className="flex-1">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="font-serif font-bold text-lg">{reading.book.title}</h4>
+            <button
+              onClick={() => openBookModal(null, reading.book.id)}
+              className="font-serif font-bold text-lg text-black hover:text-blue-600 hover:underline text-left transition-colors"
+            >
+              {reading.book.title}
+            </button>
             {reading.rating && (
               <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (

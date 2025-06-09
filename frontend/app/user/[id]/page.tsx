@@ -13,6 +13,7 @@ import {
 import Image from 'next/image'
 import Link from 'next/link'
 import { useAuthRefresh } from '@/lib/auth-utils'
+import { useBookModal } from '@/contexts/BookModalContext'
 
 export default function UserProfilePage() {
   const { needsAuth, isRefreshing, hasValidAuth } = useAuthRefresh()
@@ -22,6 +23,7 @@ export default function UserProfilePage() {
   const userId = parseInt(id as string)
   const [activeTab, setActiveTab] = useState<'library' | 'reviews'>('library')
   const [libraryFilter, setLibraryFilter] = useState<string>('all')
+  const { openBookModal } = useBookModal()
 
   // Get user profile
   const { data: userProfile, isLoading: profileLoading, error: profileError } = useQuery<UserPublicProfile>(
@@ -288,7 +290,7 @@ export default function UserProfilePage() {
             ) : userLibrary && userLibrary.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {userLibrary.map((reading) => (
-                  <LibraryCard key={reading.id} reading={reading} />
+                  <LibraryCard key={reading.id} reading={reading} openBookModal={openBookModal} />
                 ))}
               </div>
             ) : (
@@ -320,7 +322,7 @@ export default function UserProfilePage() {
             ) : userReviews && userReviews.length > 0 ? (
               <div className="space-y-6">
                 {userReviews.map((reading) => (
-                  <ReviewCard key={reading.id} reading={reading} />
+                  <ReviewCard key={reading.id} reading={reading} openBookModal={openBookModal} />
                 ))}
               </div>
             ) : (
@@ -340,7 +342,7 @@ export default function UserProfilePage() {
 }
 
 // Library Card Component
-function LibraryCard({ reading }: { reading: Reading }) {
+function LibraryCard({ reading, openBookModal }: { reading: Reading; openBookModal: (book: any, bookId?: number) => void }) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'finished': return 'bg-green-100 text-green-800'
@@ -379,7 +381,12 @@ function LibraryCard({ reading }: { reading: Reading }) {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="font-serif font-bold text-lg mb-1 line-clamp-2">{reading.book.title}</h4>
+          <button
+            onClick={() => openBookModal(null, reading.book.id)}
+            className="font-serif font-bold text-lg mb-1 line-clamp-2 text-black hover:text-blue-600 hover:underline text-left transition-colors"
+          >
+            {reading.book.title}
+          </button>
           <p className="text-caption text-gray-600 mb-2">{reading.book.author}</p>
           
           <div className="flex items-center space-x-2 mb-2">
@@ -410,7 +417,7 @@ function LibraryCard({ reading }: { reading: Reading }) {
 }
 
 // Review Card Component
-function ReviewCard({ reading }: { reading: Reading }) {
+function ReviewCard({ reading, openBookModal }: { reading: Reading; openBookModal: (book: any, bookId?: number) => void }) {
   return (
     <div className="card-flat p-6">
       <div className="flex space-x-4">
@@ -432,7 +439,12 @@ function ReviewCard({ reading }: { reading: Reading }) {
         </div>
         <div className="flex-1">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="font-serif font-bold text-lg">{reading.book.title}</h4>
+            <button
+              onClick={() => openBookModal(null, reading.book.id)}
+              className="font-serif font-bold text-lg text-black hover:text-blue-600 hover:underline text-left transition-colors"
+            >
+              {reading.book.title}
+            </button>
             {reading.rating && (
               <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (

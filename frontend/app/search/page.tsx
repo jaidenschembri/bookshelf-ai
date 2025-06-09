@@ -8,6 +8,7 @@ import { bookApi, readingApi, BookSearch } from '@/lib/api'
 import { Search, BookOpen, Plus, Check } from 'lucide-react'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
+import { useBookModal } from '@/contexts/BookModalContext'
 
 export default function SearchPage() {
   const { data: session } = useSession()
@@ -16,6 +17,7 @@ export default function SearchPage() {
   const [isSearching, setIsSearching] = useState(false)
   const [addedBooks, setAddedBooks] = useState<Set<string>>(new Set())
   const queryClient = useQueryClient()
+  const { openBookModal } = useBookModal()
 
   const addBookMutation = useMutation(
     async ({ book, status }: { book: BookSearch; status: string }) => {
@@ -140,8 +142,24 @@ export default function SearchPage() {
 
                     {/* Book Details */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        {book.title}
+                      <h3 className="text-lg font-semibold mb-2">
+                        <button
+                          onClick={() => openBookModal({
+                            id: 0, // Temporary ID for search results
+                            title: book.title,
+                            author: book.author,
+                            isbn: book.isbn,
+                            cover_url: book.cover_url,
+                            description: book.description,
+                            publication_year: book.publication_year,
+                            created_at: new Date().toISOString(),
+                            genre: undefined,
+                            total_pages: undefined,
+                          })}
+                          className="text-gray-900 hover:text-blue-600 hover:underline text-left transition-colors"
+                        >
+                          {book.title}
+                        </button>
                       </h3>
                       <p className="text-gray-600 mb-2">by {book.author}</p>
                       

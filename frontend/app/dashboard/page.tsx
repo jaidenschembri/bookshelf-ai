@@ -9,10 +9,12 @@ import { dashboardApi, Dashboard } from '@/lib/api'
 import { BookOpen, Target, TrendingUp, Star, Clock, CheckCircle, ArrowRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useBookModal } from '@/contexts/BookModalContext'
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const { openBookModal } = useBookModal()
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -176,9 +178,12 @@ export default function DashboardPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-serif font-bold text-lg text-black truncate">
+                      <button
+                        onClick={() => openBookModal(null, reading.book.id)}
+                        className="font-serif font-bold text-lg text-black hover:text-blue-600 hover:underline text-left truncate transition-colors"
+                      >
                         {reading.book.title}
-                      </p>
+                      </button>
                       <p className="text-caption text-gray-600">{reading.book.author}</p>
                       {reading.total_pages && (
                         <div className="mt-3">
@@ -241,7 +246,12 @@ export default function DashboardPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-serif font-bold text-black">{rec.book.title}</p>
+                        <button
+                          onClick={() => openBookModal(null, rec.book.id)}
+                          className="font-serif font-bold text-black hover:text-blue-600 hover:underline text-left transition-colors"
+                        >
+                          {rec.book.title}
+                        </button>
                         <p className="text-caption text-gray-600 mb-3">{rec.book.author}</p>
                         <p className="text-sm text-gray-700 line-clamp-3 mb-3">{rec.reason}</p>
                         <div className="flex items-center">
@@ -290,7 +300,12 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-body text-black">
-                      <span className="font-serif font-bold">{reading.book.title}</span> by {reading.book.author}
+                      <button
+                        onClick={() => openBookModal(null, reading.book.id)}
+                        className="font-serif font-bold hover:text-blue-600 hover:underline transition-colors"
+                      >
+                        {reading.book.title}
+                      </button> by {reading.book.author}
                     </p>
                     <p className="text-caption text-gray-600">
                       {reading.status === 'finished' ? 'FINISHED READING' : 
