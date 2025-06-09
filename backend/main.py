@@ -55,6 +55,11 @@ production_frontend = "https://libraria.up.railway.app"
 if production_frontend not in cors_origins:
     cors_origins.append(production_frontend)
 
+# For debugging: temporarily allow all origins if in production
+is_production = os.getenv("RAILWAY_ENVIRONMENT") == "production" or os.getenv("PORT") is not None
+if is_production:
+    cors_origins = ["*"]  # Temporarily allow all origins for debugging
+
 logger.info(f"CORS origins configured: {cors_origins}")
 
 app.add_middleware(
