@@ -26,11 +26,27 @@ if is_production:
     elif DATABASE_URL.startswith("postgresql://"):
         DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
     
-    # For Supabase: Try to use direct connection instead of pooler to avoid pgbouncer issues
-    if "supabase.com:6543" in DATABASE_URL:
-        # Switch from pooler (6543) to direct connection (5432)
-        DATABASE_URL = DATABASE_URL.replace(":6543/", ":5432/")
-        logger.info("Switched from Supabase pooler to direct connection to avoid pgbouncer issues")
+    # For Supabase: Use direct connection instead of pooler to avoid pgbouncer issues
+    if "pooler.supabase.com:6543" in DATABASE_URL:
+        logger.info("Supabase pooler detected. Attempting to switch to a direct connection...")
+        try:
+            # Extract the project reference from the pooler URL
+            # e.g., from postgres.bmgmgscghehroogkssgq@...
+            project_ref_part = DATABASE_URL.split('@')[0].split('.')[1]
+            
+            # Reconstruct the original hostname from the pooler URL
+            # e.g., aws-0-ap-southeast-1.pooler.supabase.com:6543
+            original_host_part = DATABASE_URL.split('@')[1]
+            
+            # Create the new direct connection hostname
+            # e.g., db.bmgmgscghehroogkssgq.supabase.co:5432
+            new_host_part = f"db.{project_ref_part}.supabase.co:5432"
+            
+            # Replace the old host with the new one
+            DATABASE_URL = DATABASE_URL.replace(original_host_part, new_host_part)
+            logger.info("Successfully switched from Supabase pooler to direct connection.")
+        except IndexError:
+            logger.error("Could not parse project reference from Supabase URL. Continuing with pooler.")
     
     # Production PostgreSQL configuration
     engine = create_async_engine(

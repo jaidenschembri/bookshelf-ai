@@ -81,6 +81,8 @@ async def get_or_create_user_google(google_user_info: dict, db: AsyncSession) ->
         user.auth_provider = "google"
         user.last_login = datetime.utcnow()
         await db.commit()
+        await db.refresh(user)
+        db.expunge(user)
         return user
     
     # Also check by email in case the user exists but with different google_id
@@ -96,6 +98,7 @@ async def get_or_create_user_google(google_user_info: dict, db: AsyncSession) ->
         existing_user.last_login = datetime.utcnow()
         await db.commit()
         await db.refresh(existing_user)
+        db.expunge(existing_user)
         return existing_user
     
     log_auth_event("new_user_creation_start", user_email=email, details=f"google_id={google_id}")
@@ -132,6 +135,7 @@ async def get_or_create_user_google(google_user_info: dict, db: AsyncSession) ->
         await db.refresh(user)
         
         log_auth_event("new_user_created", user_email=user.email, user_id=user.id, details=f"google_id={user.google_id}")
+        db.expunge(user)
         return user
         
     except Exception as e:
