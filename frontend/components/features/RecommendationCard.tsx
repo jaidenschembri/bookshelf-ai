@@ -87,7 +87,7 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
             
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-4 text-sm text-gray-500">
               {recommendation.book.genre && (
-                <Badge variant="default" size="sm">
+                <Badge variant="genre" size="sm">
                   {recommendation.book.genre}
                 </Badge>
               )}

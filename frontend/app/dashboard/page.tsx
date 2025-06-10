@@ -169,7 +169,18 @@ export default function DashboardPage() {
                   <RecommendationCard
                     key={rec.id}
                     recommendation={rec}
-                          onClick={() => openBookModal(null, rec.book.id)}
+                    onBookClick={() => openBookModal(null, rec.book.id)}
+                    onAddToLibrary={() => {
+                      // TODO: Implement add to library functionality
+                      console.log('Add to library:', rec.book.title)
+                    }}
+                    onDismiss={() => {
+                      // TODO: Implement dismiss functionality
+                      console.log('Dismiss recommendation:', rec.book.title)
+                    }}
+                    isAddingToLibrary={false}
+                    isDismissing={false}
+                    variant="compact"
                   />
                 ))}
               </div>
