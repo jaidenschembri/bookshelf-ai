@@ -170,7 +170,7 @@ export default function BooksPage() {
             ))}
           </div>
         ) : (
-          <Card variant="flat" padding="xl" className="text-center">
+          <Card variant="flat" padding="lg" className="text-center">
             <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-6" />
             <h3 className="heading-sm mb-4">
               {selectedStatus === 'all' ? 'NO BOOKS IN YOUR LIBRARY' : `NO ${selectedStatus.replace('_', ' ').toUpperCase()} BOOKS`}
