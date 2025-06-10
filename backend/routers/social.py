@@ -301,11 +301,16 @@ async def get_social_feed(
     following_ids = [row[0] for row in following_result.fetchall()]
     following_ids.append(current_user.id)  # Include own activities
     
-    # Get recent activities
+    # Get recent activities (exclude follow activities)
     activities_result = await db.execute(
         select(UserActivity)
         .options(selectinload(UserActivity.user))
-        .where(UserActivity.user_id.in_(following_ids))
+        .where(
+            and_(
+                UserActivity.user_id.in_(following_ids),
+                UserActivity.activity_type != 'followed_user'
+            )
+        )
         .order_by(desc(UserActivity.created_at))
         .limit(limit)
     )

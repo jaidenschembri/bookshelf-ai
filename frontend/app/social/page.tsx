@@ -511,8 +511,6 @@ function ActivityCard({ activity, openBookModal }: { activity: any; openBookModa
     ) : null
 
     switch (activity.activity_type) {
-      case 'followed_user':
-        return <>{userName} followed a new user</>
       case 'finished_book':
         return clickableBookTitle ? (
           <>{userName} finished reading {clickableBookTitle}</>
