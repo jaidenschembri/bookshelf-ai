@@ -167,6 +167,8 @@ export interface UserPublicProfile extends User {
   follower_count: number
   following_count: number
   is_following: boolean
+  is_own_profile: boolean
+  can_edit: boolean
 }
 
 export interface UserFollow {

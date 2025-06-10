@@ -61,6 +61,8 @@ class UserPublicProfile(BaseModel):
     follower_count: int = 0
     following_count: int = 0
     is_following: bool = False
+    is_own_profile: bool = False
+    can_edit: bool = False
     
     class Config:
         from_attributes = True

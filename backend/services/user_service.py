@@ -145,8 +145,11 @@ class UserService:
             Complete UserPublicProfile object
         """
         try:
-            # Check if current user is following this user
-            is_following = await self.is_following(current_user_id, user.id, db)
+            # Check if this is the current user's own profile
+            is_own_profile = user.id == current_user_id
+            
+            # Check if current user is following this user (only relevant for other users)
+            is_following = False if is_own_profile else await self.is_following(current_user_id, user.id, db)
             
             # Get follower and following counts
             follower_count = await self.get_follower_count(user.id, db)
@@ -164,7 +167,9 @@ class UserService:
                 created_at=user.created_at,
                 follower_count=follower_count,
                 following_count=following_count,
-                is_following=is_following
+                is_following=is_following,
+                is_own_profile=is_own_profile,
+                can_edit=is_own_profile  # Can edit if it's your own profile
             )
             
         except Exception as e:

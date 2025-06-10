@@ -134,6 +134,18 @@ export default function UserProfilePage() {
     return null
   }
 
+  // TEMP: Test the new ownership flags
+  console.log('🔍 Profile Data:', {
+    userId,
+    userProfile: {
+      id: userProfile.id,
+      name: userProfile.name,
+      is_own_profile: userProfile.is_own_profile,
+      can_edit: userProfile.can_edit,
+      is_following: userProfile.is_following
+    }
+  })
+
   const libraryStatusOptions = [
     { value: 'all', label: 'All Books' },
     { value: 'want_to_read', label: 'Want to Read' },
