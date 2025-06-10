@@ -127,29 +127,39 @@ export default function BooksPage() {
     <Layout>
       <div className="px-4 sm:px-0">
         {/* Header */}
-        <div className="mb-12">
-          <h1 className="heading-lg mb-4">MY BOOKS</h1>
-          <p className="text-body text-gray-600">Manage your personal library and reading progress</p>
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold font-serif tracking-tight mb-2">My Books</h1>
+          <p className="text-sm text-gray-600">Manage your personal library and reading progress</p>
         </div>
 
         {/* Status Filter */}
         <div className="mb-8">
-          <div className="flex flex-wrap gap-3">
-            {statusOptions.map((option) => (
-              <Button
-                key={option.value}
-                variant={selectedStatus === option.value ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={() => setSelectedStatus(option.value)}
-              >
-                {option.label}
-                {readings && option.value !== 'all' && (
-                  <span className="ml-2">
-                    ({readings.filter(r => r.status === option.value).length})
-                  </span>
-                )}
-              </Button>
-            ))}
+          <div className="flex items-center space-x-8">
+            {statusOptions.map((option) => {
+              const isActive = selectedStatus === option.value
+              const count = readings && option.value !== 'all' 
+                ? readings.filter(r => r.status === option.value).length 
+                : null
+              
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => setSelectedStatus(option.value)}
+                  className={`text-sm transition-colors duration-200 focus:outline-none focus:ring-0 active:bg-transparent ${
+                    isActive 
+                      ? 'text-gray-900 font-semibold' 
+                      : 'text-gray-600 hover:text-gray-900 font-medium'
+                  }`}
+                >
+                  {option.label}
+                  {count !== null && (
+                    <span className="ml-2 text-xs text-gray-500">
+                      ({count})
+                    </span>
+                  )}
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -170,20 +180,18 @@ export default function BooksPage() {
             ))}
           </div>
         ) : (
-          <Card variant="flat" padding="lg" className="text-center">
-            <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-6" />
-            <h3 className="heading-sm mb-4">
-              {selectedStatus === 'all' ? 'NO BOOKS IN YOUR LIBRARY' : `NO ${selectedStatus.replace('_', ' ').toUpperCase()} BOOKS`}
+          <div className="text-center py-16">
+            <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold font-serif mb-2">
+              {selectedStatus === 'all' ? 'No books in your library' : `No ${selectedStatus.replace('_', ' ')} books`}
             </h3>
-            <p className="text-body text-gray-600 mb-8">
+            <p className="text-sm text-gray-600 mb-6">
               Start building your personal library by searching for books.
             </p>
-            <a href="/search">
-              <Button variant="primary" size="lg">
-                SEARCH FOR BOOKS
-              </Button>
+            <a href="/search" className="inline-flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors">
+              <span>Search for Books</span>
             </a>
-          </Card>
+          </div>
         )}
       </div>
 

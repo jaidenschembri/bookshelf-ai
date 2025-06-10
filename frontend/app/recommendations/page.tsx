@@ -135,24 +135,22 @@ export default function RecommendationsPage() {
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="heading-xl text-black flex items-center">
-                <Brain className="h-6 w-6 sm:h-8 sm:w-8 text-black mr-2 sm:mr-3" />
+              <h1 className="text-2xl font-semibold font-serif tracking-tight flex items-center mb-2">
+                <Brain className="h-6 w-6 text-gray-700 mr-3" />
                 AI Recommendations
               </h1>
-              <p className="text-body text-gray-600 mt-2">
+              <p className="text-sm text-gray-600">
                 Personalized book suggestions based on your reading history
               </p>
             </div>
-            <Button
+            <button
               onClick={handleRefresh}
-              variant="primary"
               disabled={refreshMutation.isLoading}
-              loading={refreshMutation.isLoading}
-              icon={<RefreshCw className="h-4 w-4" />}
-              className="w-full sm:w-auto"
+              className="inline-flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
             >
-              {refreshMutation.isLoading ? 'Generating...' : 'Refresh'}
-            </Button>
+              <RefreshCw className="h-4 w-4" />
+              <span>{refreshMutation.isLoading ? 'Generating...' : 'Refresh'}</span>
+            </button>
           </div>
         </div>
 
@@ -172,58 +170,54 @@ export default function RecommendationsPage() {
             ))}
           </div>
         ) : error ? (
-          <Card variant="flat" className="text-center py-12">
-            <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="heading-lg text-black mb-2">
+          <div className="text-center py-16">
+            <Brain className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold font-serif mb-2">
               Unable to generate recommendations
             </h3>
-            <p className="text-body text-gray-600 mb-6">
+            <p className="text-sm text-gray-600 mb-6">
               Add and rate some books in your library first, then we can suggest books you'll love!
             </p>
-            <div className="space-x-4">
-              <Link href="/search">
-                <Button variant="primary">Search for Books</Button>
+            <div className="flex gap-4 justify-center">
+              <Link href="/search" className="inline-flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors">
+                <span>Search for Books</span>
               </Link>
-              <Link href="/books">
-                <Button variant="secondary">View My Library</Button>
+              <Link href="/books" className="inline-flex items-center space-x-2 border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm font-medium hover:bg-gray-50 transition-colors">
+                <span>View My Library</span>
               </Link>
             </div>
-          </Card>
+          </div>
         ) : (
-          <Card variant="flat" className="text-center py-12">
-            <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="heading-lg text-black mb-2">
+          <div className="text-center py-16">
+            <Brain className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold font-serif mb-2">
               No recommendations yet
             </h3>
-            <p className="text-body text-gray-600 mb-6">
+            <p className="text-sm text-gray-600 mb-6">
               Add and rate some books to get personalized AI recommendations!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/search">
-                <Button variant="primary" className="w-full sm:w-auto">
-                  Search for Books
-                </Button>
+              <Link href="/search" className="inline-flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors">
+                <span>Search for Books</span>
               </Link>
-              <Button
+              <button
                 onClick={handleRefresh}
-                variant="secondary"
                 disabled={refreshMutation.isLoading}
-                loading={refreshMutation.isLoading}
-                className="w-full sm:w-auto"
+                className="inline-flex items-center space-x-2 border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
               >
-                {refreshMutation.isLoading ? 'Generating...' : 'Generate Recommendations'}
-              </Button>
+                <span>{refreshMutation.isLoading ? 'Generating...' : 'Generate Recommendations'}</span>
+              </button>
             </div>
-          </Card>
+          </div>
         )}
 
         {/* Info Box */}
-        <Card variant="flat" className="mt-12">
+        <div className="border border-gray-200 p-4 rounded mt-8">
           <div className="flex items-start space-x-3">
-            <Brain className="h-6 w-6 text-black mt-0.5" />
+            <Brain className="h-5 w-5 text-gray-600 mt-0.5" />
             <div>
-              <h3 className="heading-sm text-black mb-2">How AI Recommendations Work</h3>
-              <p className="text-body text-gray-600">
+              <h3 className="text-lg font-semibold font-serif mb-2">How AI Recommendations Work</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
                 Our AI analyzes your reading history, including the books you've rated highly, 
                 your favorite genres, and authors you enjoy. It then finds patterns in your 
                 preferences and suggests books that match your taste, complete with detailed 
@@ -231,7 +225,7 @@ export default function RecommendationsPage() {
               </p>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
     </Layout>
   )

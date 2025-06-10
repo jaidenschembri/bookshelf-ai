@@ -1,7 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { BookOpen } from 'lucide-react'
-import { Card, Badge } from '@/components/ui'
+import { Badge } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
 export interface BookCardProps {
@@ -35,20 +35,17 @@ const BookCard: React.FC<BookCardProps> = ({
   className
 }) => {
   const isCompact = variant === 'compact'
-  const isFeatured = variant === 'featured'
-  
-  const cardVariant = isFeatured ? 'featured' : 'hover'
   
   return (
-    <Card
-      variant={cardVariant}
-      clickable={!!onClick}
+    <div
+      className={cn(
+        'border border-gray-200 p-3 rounded cursor-pointer hover:border-gray-300 transition-colors',
+        className
+      )}
       onClick={onClick}
-      padding={isCompact ? 'sm' : 'md'}
-      className={cn('w-full', className)}
     >
       <div className={cn(
-        'flex space-x-4',
+        'flex space-x-3',
         isCompact ? 'items-center' : 'items-start'
       )}>
         {/* Book Cover */}
@@ -57,22 +54,22 @@ const BookCard: React.FC<BookCardProps> = ({
             <Image
               src={book.cover_url}
               alt={book.title}
-              width={isCompact ? 48 : 80}
-              height={isCompact ? 64 : 112}
+              width={isCompact ? 40 : 64}
+              height={isCompact ? 56 : 88}
               className={cn(
-                'book-cover object-cover',
-                isCompact ? 'w-12 h-16' : 'w-20 h-28'
+                'object-cover rounded border border-gray-200',
+                isCompact ? 'w-10 h-14' : 'w-16 h-22'
               )}
-              sizes={isCompact ? '48px' : '80px'}
+              sizes={isCompact ? '40px' : '64px'}
             />
           ) : (
             <div className={cn(
-              'bg-gray-200 border-4 border-black flex items-center justify-center',
-              isCompact ? 'w-12 h-16' : 'w-20 h-28'
+              'bg-gray-50 border border-gray-200 rounded flex items-center justify-center',
+              isCompact ? 'w-10 h-14' : 'w-16 h-22'
             )}>
               <BookOpen className={cn(
-                'text-gray-600',
-                isCompact ? 'h-6 w-6' : 'h-8 w-8'
+                'text-gray-400',
+                isCompact ? 'h-4 w-4' : 'h-6 w-6'
               )} />
             </div>
           )}
@@ -82,23 +79,23 @@ const BookCard: React.FC<BookCardProps> = ({
         <div className="flex-1 min-w-0">
           <div className="mb-2">
             <h3 className={cn(
-              'font-serif font-bold text-black hover:underline transition-colors truncate',
-              isCompact ? 'text-base' : 'text-lg'
+              'font-serif font-medium text-gray-900 hover:underline transition-colors truncate',
+              isCompact ? 'text-sm' : 'text-base'
             )}>
               {book.title}
             </h3>
-            <p className="text-caption text-gray-600">{book.author}</p>
+            <p className="text-xs text-gray-500">{book.author}</p>
           </div>
           
           {/* Status and Rating */}
-          <div className="flex items-center space-x-2 mb-3">
+          <div className="flex items-center space-x-2 mb-2">
             {reading?.status && (
               <Badge
                 variant="status"
                 size="sm"
-                color="black"
+                color="gray"
               >
-                {reading.status.replace('_', ' ')}
+                {reading.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
               </Badge>
             )}
             
@@ -106,7 +103,7 @@ const BookCard: React.FC<BookCardProps> = ({
               <Badge
                 variant="rating"
                 size="sm"
-                color="black"
+                color="gray"
                 rating={reading.rating}
               />
             )}
@@ -117,23 +114,23 @@ const BookCard: React.FC<BookCardProps> = ({
            reading?.status === 'currently_reading' && 
            reading.total_pages && 
            !isCompact && (
-            <div className="mt-3">
-              <div className="progress-bar">
+            <div className="mt-2">
+              <div className="w-full bg-gray-100 rounded-full h-1.5">
                 <div 
-                  className="progress-fill" 
+                  className="bg-gray-600 h-1.5 rounded-full transition-all duration-300" 
                   style={{ 
                     width: `${(reading.progress_pages || 0 / reading.total_pages) * 100}%` 
                   }}
                 />
               </div>
-              <p className="text-caption text-gray-500 mt-2">
-                {reading.progress_pages || 0} / {reading.total_pages} PAGES
+              <p className="text-xs text-gray-400 mt-1">
+                {reading.progress_pages || 0} / {reading.total_pages} pages
               </p>
             </div>
           )}
         </div>
       </div>
-    </Card>
+    </div>
   )
 }
 

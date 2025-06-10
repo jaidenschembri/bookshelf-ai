@@ -18,16 +18,16 @@ const StatCard: React.FC<StatCardProps> = ({
   variant = 'flat'
 }) => {
   return (
-    <Card variant={variant} padding="md">
+    <Card variant={variant} padding="sm" className="border border-gray-200 shadow-none">
       <div className="flex items-center">
-        <div className="w-16 h-16 bg-black text-white flex items-center justify-center">
-          <Icon className="h-8 w-8" />
+        <div className="w-10 h-10 bg-gray-900 text-white flex items-center justify-center rounded">
+          <Icon className="h-5 w-5" />
         </div>
-        <div className="ml-6">
-          <p className="text-caption text-gray-600 mb-1">{label}</p>
-          <p className="text-4xl font-black font-serif">{value}</p>
+        <div className="ml-4">
+          <p className="text-xs font-mono uppercase tracking-wide text-gray-500 mb-1">{label}</p>
+          <p className="text-xl font-semibold font-serif">{value}</p>
           {subtitle && (
-            <p className="text-caption text-gray-500">{subtitle}</p>
+            <p className="text-xs text-gray-400 mt-1">{subtitle}</p>
           )}
         </div>
       </div>

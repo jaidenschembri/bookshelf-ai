@@ -50,13 +50,17 @@ export default function Layout({ children }: LayoutProps) {
     <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav className="bg-white border-b border-gray-200">
-        <div className="container-brutalist">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link href="/dashboard" className="flex items-center focus:outline-none">
-                <div className="p-2 bg-black text-white rounded">
+              <Link href="/dashboard" className="flex items-center group focus:outline-none">
+                <div className="p-3 border-4 border-black bg-black text-white group-hover:bg-white group-hover:text-black transition-all duration-200">
                   <BookOpen className="h-6 w-6" />
+                </div>
+                <div className="ml-3">
+                  <span className="text-xl font-black font-serif tracking-tight">BOOKSHELF</span>
+                  <div className="text-xs font-mono uppercase tracking-ultra-wide text-gray-600">AI POWERED</div>
                 </div>
               </Link>
             </div>
@@ -147,7 +151,7 @@ export default function Layout({ children }: LayoutProps) {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-gray-200 bg-white">
-            <div className="container-brutalist py-4">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
               <div className="space-y-2">
                 {navigation.map((item) => {
                   const Icon = item.icon
@@ -191,47 +195,22 @@ export default function Layout({ children }: LayoutProps) {
       </nav>
 
       {/* Main Content */}
-      <main className="container-brutalist section-brutalist">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="bg-black text-white border-t-8 border-black">
-        <div className="container-brutalist py-12">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div>
-              <div className="flex items-center mb-4">
-                <BookOpen className="h-6 w-6 mr-2" />
-                <span className="font-serif font-bold text-xl">BOOKSHELF AI</span>
-              </div>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                Discover your next favorite book with AI-powered personalized recommendations.
-              </p>
+      <footer className="bg-gray-50 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-4">
+              <BookOpen className="h-5 w-5 mr-2 text-gray-600" />
+              <span className="font-serif font-semibold text-lg text-gray-900">Bookshelf AI</span>
             </div>
-            
-            <div>
-              <h3 className="font-serif font-bold text-lg mb-4">FEATURES</h3>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li>• AI Recommendations</li>
-                <li>• Reading Progress</li>
-                <li>• Book Management</li>
-                <li>• Personal Library</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-serif font-bold text-lg mb-4">TECHNOLOGY</h3>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li>• Next.js Frontend</li>
-                <li>• FastAPI Backend</li>
-                <li>• DeepSeek AI</li>
-                <li>• Open Library API</li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-700 mt-8 pt-8 text-center">
-            <p className="text-gray-400 font-mono text-xs uppercase tracking-wider">
+            <p className="text-sm text-gray-600 mb-4">
+              Discover your next favorite book with AI-powered personalized recommendations.
+            </p>
+            <p className="text-xs text-gray-400">
               © 2024 Bookshelf AI • Literature Meets Technology
             </p>
           </div>

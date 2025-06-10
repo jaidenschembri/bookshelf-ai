@@ -82,38 +82,39 @@ export default function SearchPage() {
       <div className="px-4 sm:px-0">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="heading-xl text-black">Search Books</h1>
-          <p className="text-body text-gray-600 mt-2">Find books to add to your library</p>
+          <h1 className="text-2xl font-semibold font-serif tracking-tight mb-2">Search Books</h1>
+          <p className="text-sm text-gray-600">Find books to add to your library</p>
         </div>
 
         {/* Search Form */}
-        <Card className="mb-8">
+        <div className="border border-gray-200 p-4 rounded mb-8">
           <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <Input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search for books by title, author, or ISBN..."
-                icon={<Search className="h-5 w-5" />}
-              />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search for books by title, author, or ISBN..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                />
+              </div>
             </div>
-            <Button
+            <button
               type="submit"
-              variant="primary"
               disabled={isSearching || !query.trim()}
-              loading={isSearching}
-              className="w-full sm:w-auto"
+              className="bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
             >
               {isSearching ? 'Searching...' : 'Search'}
-            </Button>
+            </button>
           </form>
-        </Card>
+        </div>
 
         {/* Search Results */}
         {results.length > 0 && (
           <div className="space-y-6">
-            <h2 className="heading-lg text-black">
+            <h2 className="text-lg font-semibold font-serif">
               Search Results ({results.length})
             </h2>
             
@@ -135,26 +136,26 @@ export default function SearchPage() {
 
         {/* Empty State */}
         {!isSearching && results.length === 0 && query && (
-          <Card variant="flat" className="text-center py-12">
-            <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="heading-lg text-black mb-2">No books found</h3>
-            <p className="text-body text-gray-600">
+          <div className="text-center py-16">
+            <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold font-serif mb-2">No books found</h3>
+            <p className="text-sm text-gray-600">
               Try searching with different keywords or check your spelling.
             </p>
-          </Card>
+          </div>
         )}
 
         {/* Initial State */}
         {!query && results.length === 0 && (
-          <Card variant="flat" className="text-center py-12">
-            <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="heading-lg text-black mb-2">
+          <div className="text-center py-16">
+            <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold font-serif mb-2">
               Search for books to add to your library
             </h3>
-            <p className="text-body text-gray-600">
+            <p className="text-sm text-gray-600">
               Enter a book title, author name, or ISBN to get started.
             </p>
-          </Card>
+          </div>
         )}
       </div>
     </Layout>

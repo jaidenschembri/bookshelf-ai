@@ -16,28 +16,28 @@ const Badge: React.FC<BadgeProps> = ({
   children,
   variant = 'status',
   size = 'md',
-  color = 'black',
+  color = 'gray',
   className,
   icon,
   count,
   rating,
   ...props
 }) => {
-  const baseClasses = 'inline-flex items-center font-bold uppercase tracking-wider border-2'
+  const baseClasses = 'inline-flex items-center font-medium text-xs rounded-full px-2 py-1'
   
   const sizeClasses = {
-    sm: 'px-2 py-1 text-xs',
-    md: 'px-3 py-1 text-xs',
-    lg: 'px-4 py-2 text-sm'
+    sm: 'text-xs px-2 py-0.5',
+    md: 'text-xs px-2 py-1',
+    lg: 'text-sm px-3 py-1'
   }
   
   const colorClasses = {
-    black: 'bg-black text-white border-black',
-    red: 'bg-red-600 text-white border-red-600',
-    green: 'bg-green-600 text-white border-green-600',
-    blue: 'bg-blue-600 text-white border-blue-600',
-    yellow: 'bg-yellow-400 text-black border-yellow-400',
-    gray: 'bg-gray-200 text-black border-gray-400'
+    black: 'bg-gray-900 text-white',
+    red: 'bg-red-100 text-red-800',
+    green: 'bg-green-100 text-green-800',
+    blue: 'bg-blue-100 text-blue-800',
+    yellow: 'bg-yellow-100 text-yellow-800',
+    gray: 'bg-gray-100 text-gray-700'
   }
   
   const badgeClasses = cn(
@@ -51,7 +51,7 @@ const Badge: React.FC<BadgeProps> = ({
     if (variant === 'rating' && rating !== undefined) {
       return (
         <div className="flex items-center space-x-1">
-          <Star className="w-3 h-3 fill-current" />
+          <Star className="w-3 h-3 fill-current text-yellow-400" />
           <span>{rating}</span>
         </div>
       )
