@@ -234,7 +234,7 @@ function ReviewEditModal({
               <img
                   src={reading.book.cover_url}
                   alt={reading.book.title}
-                className="w-12 h-16 object-cover book-cover"
+                                      className="w-12 h-16 object-cover border-2 border-gray-200 rounded"
                 />
               ) : (
               <div className="w-12 h-16 bg-gray-200 border-4 border-black flex items-center justify-center">

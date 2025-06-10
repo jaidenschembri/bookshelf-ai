@@ -177,10 +177,8 @@ export default function UserProfilePage() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-96">
-          <div className="loading-brutalist">
-            <div className="w-32 h-32 border-8 border-black bg-white flex items-center justify-center">
-              <Users className="h-16 w-16 text-black" />
-            </div>
+          <div className="w-16 h-16 bg-gray-900 rounded flex items-center justify-center">
+            <Users className="h-8 w-8 text-white animate-pulse" />
           </div>
         </div>
       </Layout>
@@ -192,16 +190,16 @@ export default function UserProfilePage() {
       <Layout>
         <div className="text-center py-20">
           <div className="max-w-md mx-auto">
-            <div className="w-24 h-24 bg-red-500 flex items-center justify-center mx-auto mb-8">
+            <div className="w-24 h-24 bg-red-500 rounded flex items-center justify-center mx-auto mb-8">
               <Users className="h-12 w-12 text-white" />
             </div>
-            <h3 className="heading-sm mb-4">USER NOT FOUND</h3>
-            <p className="text-body text-gray-600 mb-8">
+            <h3 className="text-xl font-semibold font-serif mb-4">User Not Found</h3>
+            <p className="text-gray-600 mb-8">
               The user you're looking for doesn't exist or has been removed.
             </p>
             <button
               onClick={() => router.back()}
-              className="btn-primary"
+              className="bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors"
             >
               Go Back
             </button>
@@ -215,10 +213,8 @@ export default function UserProfilePage() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-96">
-          <div className="loading-brutalist">
-            <div className="w-32 h-32 border-8 border-black bg-white flex items-center justify-center">
-              <Users className="h-16 w-16 text-black" />
-            </div>
+          <div className="w-16 h-16 bg-gray-900 rounded flex items-center justify-center">
+            <Users className="h-8 w-8 text-white animate-pulse" />
           </div>
         </div>
       </Layout>
@@ -240,18 +236,18 @@ export default function UserProfilePage() {
     <Layout>
       <div>
         {/* Profile Header */}
-        <div className="card-flat p-8 mb-8">
+        <div className="border border-gray-200 p-6 rounded bg-white mb-8">
           <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8">
             {/* Profile Picture */}
             <div className="relative inline-block flex-shrink-0">
-              <div className="w-32 h-32 bg-gray-200 border-4 border-black flex items-center justify-center">
+              <div className="w-32 h-32 bg-gray-200 border border-gray-300 rounded flex items-center justify-center">
                 {userProfile.profile_picture_url ? (
                   <Image
                     src={userProfile.profile_picture_url}
                     alt={userProfile.name}
                     width={128}
                     height={128}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover rounded"
                   />
                 ) : (
                   <User className="h-16 w-16 text-gray-600" />
@@ -270,7 +266,7 @@ export default function UserProfilePage() {
                     type="button"
                     onClick={() => document.getElementById('profile-picture-input')?.click()}
                     disabled={isUploadingPicture}
-                    className="absolute bottom-0 right-0 w-10 h-10 bg-black text-white border-2 border-white flex items-center justify-center hover:bg-gray-800 disabled:opacity-50"
+                    className="absolute bottom-0 right-0 w-10 h-10 bg-gray-900 text-white rounded-full flex items-center justify-center hover:bg-gray-800 disabled:opacity-50 transition-colors"
                   >
                     {isUploadingPicture ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -292,11 +288,11 @@ export default function UserProfilePage() {
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="heading-lg mb-2 w-full px-3 py-2 border-2 border-black focus:outline-none focus:ring-0 bg-white"
+                      className="text-3xl font-bold font-serif mb-2 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                       placeholder="Display name"
                     />
                   ) : (
-                    <h1 className="heading-lg mb-2">{userProfile.name}</h1>
+                    <h1 className="text-3xl font-bold font-serif mb-2">{userProfile.name}</h1>
                   )}
                   
                   {/* Username - Editable */}
@@ -306,13 +302,13 @@ export default function UserProfilePage() {
                         type="text"
                         value={formData.username}
                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                        className="text-caption text-gray-600 px-3 py-1 border-2 border-black focus:outline-none focus:ring-0 bg-white"
+                        className="text-sm text-gray-600 px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                         placeholder="@username"
                       />
                     </div>
                   ) : (
                     userProfile.username && (
-                      <p className="text-caption text-gray-600 mb-2">@{userProfile.username}</p>
+                      <p className="text-sm text-gray-600 mb-2">@{userProfile.username}</p>
                     )
                   )}
                 </div>
@@ -322,26 +318,26 @@ export default function UserProfilePage() {
                   !isEditing ? (
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="px-6 py-3 font-bold border-2 border-black transition-all duration-200 bg-white text-black hover:bg-gray-100"
+                      className="bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors flex items-center space-x-2"
                     >
-                      <Settings className="h-4 w-4 inline mr-2" />
-                      EDIT PROFILE
+                      <Settings className="h-4 w-4" />
+                      <span>Edit Profile</span>
                     </button>
                   ) : (
                     <div className="flex space-x-3">
                       <button
                         onClick={handleCancel}
-                        className="px-4 py-3 font-bold border-2 border-black transition-all duration-200 bg-white text-black hover:bg-gray-100"
+                        className="border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm font-medium hover:bg-gray-50 transition-colors"
                       >
-                        CANCEL
+                        Cancel
                       </button>
                       <button
                         onClick={handleSave}
                         disabled={updateProfileMutation.isLoading}
-                        className="px-4 py-3 font-bold border-2 border-black transition-all duration-200 bg-black text-white hover:bg-gray-800 disabled:opacity-50 flex items-center space-x-2"
+                        className="bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center space-x-2"
                       >
                         <Save className="h-4 w-4" />
-                        <span>SAVE</span>
+                        <span>Save</span>
                       </button>
                     </div>
                   )
@@ -349,21 +345,21 @@ export default function UserProfilePage() {
                   <button
                     onClick={handleFollow}
                     disabled={followMutation.isLoading || unfollowMutation.isLoading}
-                    className={`px-6 py-3 font-bold border-2 border-black transition-all duration-200 ${
+                    className={`px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50 flex items-center space-x-2 ${
                       userProfile.is_following
-                        ? 'bg-black text-white hover:bg-gray-800'
-                        : 'bg-white text-black hover:bg-gray-100'
-                    } disabled:opacity-50`}
+                        ? 'bg-gray-900 text-white hover:bg-gray-800'
+                        : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
                   >
                     {userProfile.is_following ? (
                       <>
-                        <UserMinus className="h-4 w-4 inline mr-2" />
-                        UNFOLLOW
+                        <UserMinus className="h-4 w-4" />
+                        <span>Unfollow</span>
                       </>
                     ) : (
                       <>
-                        <UserPlus className="h-4 w-4 inline mr-2" />
-                        FOLLOW
+                        <UserPlus className="h-4 w-4" />
+                        <span>Follow</span>
                       </>
                     )}
                   </button>
@@ -377,18 +373,18 @@ export default function UserProfilePage() {
                     value={formData.bio}
                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                     rows={3}
-                    className="w-full px-3 py-2 border-2 border-black focus:outline-none focus:ring-0 bg-white text-body"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-700"
                     placeholder="Tell other readers about yourself..."
                   />
                 </div>
               ) : (
                 userProfile.bio && (
-                  <p className="text-body text-gray-700 mb-4">{userProfile.bio}</p>
+                  <p className="text-gray-700 mb-4">{userProfile.bio}</p>
                 )
               )}
 
               {/* User Stats */}
-              <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 text-caption text-gray-600 mb-4">
+              <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 text-sm text-gray-600 mb-4">
                 <div className="flex items-center space-x-1">
                   <Users className="h-4 w-4" />
                   <span>{userProfile.follower_count} followers</span>
@@ -410,7 +406,7 @@ export default function UserProfilePage() {
                         max="365"
                         value={formData.reading_goal}
                         onChange={(e) => setFormData({ ...formData, reading_goal: parseInt(e.target.value) || 12 })}
-                        className="w-16 px-2 py-1 border border-black focus:outline-none focus:ring-0 bg-white text-center"
+                        className="w-16 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-center text-sm"
                       />
                       <span>books/year</span>
                     </div>
@@ -427,7 +423,7 @@ export default function UserProfilePage() {
                       type="text"
                       value={formData.location}
                       onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                      className="px-2 py-1 border border-black focus:outline-none focus:ring-0 bg-white"
+                      className="px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm"
                       placeholder="City, Country"
                     />
                   </div>
@@ -443,19 +439,19 @@ export default function UserProfilePage() {
 
               {/* Privacy Settings - Only show when editing */}
               {isEditing && userProfile.can_edit && (
-                <div className="card-flat p-4 mb-4">
-                  <h4 className="text-caption font-bold text-gray-900 mb-3">PRIVACY SETTINGS</h4>
+                <div className="border border-gray-200 p-4 rounded bg-gray-50 mb-4">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Privacy Settings</h4>
                   <div className="flex items-center justify-between">
                     <div>
-                      <h5 className="font-bold text-gray-900 text-sm">Private Profile</h5>
-                      <p className="text-caption text-gray-600">
+                      <h5 className="font-medium text-gray-900 text-sm">Private Profile</h5>
+                      <p className="text-xs text-gray-600">
                         Only approved followers can see your reading activity
                       </p>
                     </div>
                     <button
                       onClick={() => setFormData({ ...formData, is_private: !formData.is_private })}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        formData.is_private ? 'bg-black' : 'bg-gray-200'
+                        formData.is_private ? 'bg-gray-900' : 'bg-gray-200'
                       }`}
                     >
                       <span
@@ -469,7 +465,7 @@ export default function UserProfilePage() {
               )}
 
               {/* Join Date */}
-              <div className="flex items-center justify-center md:justify-start space-x-1 text-caption text-gray-500">
+              <div className="flex items-center justify-center md:justify-start space-x-1 text-xs text-gray-500">
                 <Calendar className="h-4 w-4" />
                 <span>Joined {new Date(userProfile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
               </div>
@@ -507,10 +503,8 @@ export default function UserProfilePage() {
             {/* Library Content */}
             {libraryLoading ? (
               <div className="text-center py-12">
-                <div className="loading-brutalist">
-                  <div className="w-16 h-16 border-4 border-black bg-white flex items-center justify-center">
-                    <BookOpen className="h-8 w-8 text-black" />
-                  </div>
+                <div className="w-16 h-16 bg-gray-900 rounded flex items-center justify-center mx-auto">
+                  <BookOpen className="h-8 w-8 text-white animate-pulse" />
                 </div>
               </div>
             ) : userLibrary && userLibrary.length > 0 ? (
@@ -522,8 +516,8 @@ export default function UserProfilePage() {
             ) : (
               <div className="text-center py-20">
                 <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-6" />
-                <h3 className="heading-sm mb-4">NO BOOKS FOUND</h3>
-                <p className="text-body text-gray-600">
+                <h3 className="text-lg font-semibold font-serif mb-4">No Books Found</h3>
+                <p className="text-gray-600">
                   {libraryFilter === 'all' 
                     ? "This user hasn't added any books to their library yet."
                     : `This user has no ${libraryFilter.replace('_', ' ')} books.`
@@ -539,10 +533,8 @@ export default function UserProfilePage() {
           <div>
             {reviewsLoading ? (
               <div className="text-center py-12">
-                <div className="loading-brutalist">
-                  <div className="w-16 h-16 border-4 border-black bg-white flex items-center justify-center">
-                    <Star className="h-8 w-8 text-black" />
-                  </div>
+                <div className="w-16 h-16 bg-gray-900 rounded flex items-center justify-center mx-auto">
+                  <Star className="h-8 w-8 text-white animate-pulse" />
                 </div>
               </div>
             ) : userReviews && userReviews.length > 0 ? (
@@ -554,8 +546,8 @@ export default function UserProfilePage() {
             ) : (
               <div className="text-center py-20">
                 <Star className="h-16 w-16 text-gray-400 mx-auto mb-6" />
-                <h3 className="heading-sm mb-4">NO REVIEWS YET</h3>
-                <p className="text-body text-gray-600">
+                <h3 className="text-lg font-semibold font-serif mb-4">No Reviews Yet</h3>
+                <p className="text-gray-600">
                   This user hasn't written any public reviews yet.
                 </p>
               </div>
@@ -588,7 +580,7 @@ function LibraryCard({ reading, openBookModal }: { reading: Reading; openBookMod
   }
 
   return (
-    <div className="card-flat p-4">
+    <div className="border border-gray-200 p-4 rounded bg-white">
       <div className="flex space-x-4">
         <div className="flex-shrink-0">
           {reading.book.cover_url ? (
@@ -597,11 +589,11 @@ function LibraryCard({ reading, openBookModal }: { reading: Reading; openBookMod
               alt={reading.book.title}
               width={80}
               height={120}
-              className="object-cover border-2 border-black"
+              className="object-cover border border-gray-200 rounded"
               style={{ width: '80px', height: 'auto' }}
             />
           ) : (
-            <div className="w-20 h-28 bg-gray-200 border-2 border-black flex items-center justify-center">
+            <div className="w-20 h-28 bg-gray-200 border border-gray-200 rounded flex items-center justify-center">
               <BookOpen className="h-8 w-8 text-gray-600" />
             </div>
           )}
@@ -613,7 +605,7 @@ function LibraryCard({ reading, openBookModal }: { reading: Reading; openBookMod
           >
             {reading.book.title}
           </button>
-          <p className="text-caption text-gray-600 mb-2">{reading.book.author}</p>
+          <p className="text-sm text-gray-600 mb-2">{reading.book.author}</p>
           
           <div className="flex items-center space-x-2 mb-2">
             <span className={`text-xs px-2 py-1 rounded ${getStatusColor(reading.status)}`}>
@@ -645,7 +637,7 @@ function LibraryCard({ reading, openBookModal }: { reading: Reading; openBookMod
 // Review Card Component
 function ReviewCard({ reading, openBookModal }: { reading: Reading; openBookModal: (book: any, bookId?: number) => void }) {
   return (
-    <div className="card-flat p-6">
+    <div className="border border-gray-200 p-6 rounded bg-white">
       <div className="flex space-x-4">
         <div className="flex-shrink-0">
           {reading.book.cover_url ? (
@@ -654,11 +646,11 @@ function ReviewCard({ reading, openBookModal }: { reading: Reading; openBookModa
               alt={reading.book.title}
               width={80}
               height={120}
-              className="object-cover border-2 border-black"
+              className="object-cover border border-gray-200 rounded"
               style={{ width: '80px', height: 'auto' }}
             />
           ) : (
-            <div className="w-20 h-28 bg-gray-200 border-2 border-black flex items-center justify-center">
+            <div className="w-20 h-28 bg-gray-200 border border-gray-200 rounded flex items-center justify-center">
               <BookOpen className="h-8 w-8 text-gray-600" />
             </div>
           )}
@@ -684,16 +676,16 @@ function ReviewCard({ reading, openBookModal }: { reading: Reading; openBookModa
               </div>
             )}
           </div>
-          <p className="text-caption text-gray-600 mb-3">by {reading.book.author}</p>
+          <p className="text-sm text-gray-600 mb-3">by {reading.book.author}</p>
           
           {reading.review && (
             <div className="mb-4">
-              <p className="text-body text-gray-700">{reading.review}</p>
+              <p className="text-gray-700">{reading.review}</p>
             </div>
           )}
 
           {/* Review interactions */}
-          <div className="flex items-center space-x-4 text-caption text-gray-500">
+          <div className="flex items-center space-x-4 text-sm text-gray-500">
             <div className="flex items-center space-x-1">
               <Heart className="h-4 w-4" />
               <span>{reading.like_count || 0}</span>

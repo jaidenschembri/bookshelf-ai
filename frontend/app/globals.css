@@ -28,172 +28,44 @@
   }
 }
 
-@layer components {
-  /* Brutalist Button Styles */
-  .btn-primary {
-    @apply bg-black text-white font-bold py-4 px-8 border-4 border-black 
-           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-           uppercase tracking-wider text-sm;
-  }
-  
-  .btn-secondary {
-    @apply bg-white text-black font-bold py-4 px-8 border-4 border-black 
-           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-           uppercase tracking-wider text-sm;
-  }
-
-  .btn-ghost {
-    @apply bg-transparent text-black font-bold py-2 px-4 border-2 border-black 
-           uppercase tracking-wider text-xs;
-  }
-
-  /* Brutalist Card Styles */
-  .card {
-    @apply bg-white border-4 border-black p-8 
-           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
-  }
-
-  .card-flat {
-    @apply bg-white border-2 border-black p-6;
-  }
-
-  /* Input Styles */
-  .input-field {
-    @apply w-full px-4 py-3 border-4 border-black bg-white text-black 
-           focus:outline-none focus:bg-gray-100 font-mono text-sm
-           placeholder:text-gray-500;
-  }
-
-  /* Progress Bar Styles */
-  .progress-bar {
-    @apply w-full bg-gray-200 border-2 border-black h-4;
-  }
-  
-  .progress-fill {
-    @apply bg-black h-full transition-all duration-300;
-  }
-
-  /* Navigation Styles - Removed in favor of inline styles for better control */
-
-  /* Typography Styles */
-  .heading-xl {
-    @apply text-6xl md:text-8xl font-black font-serif leading-none tracking-tighter;
-  }
-
-  .heading-lg {
-    @apply text-4xl md:text-6xl font-black font-serif leading-tight tracking-tight;
-  }
-
-  .heading-md {
-    @apply text-2xl md:text-4xl font-bold font-serif leading-tight;
-  }
-
-  .heading-sm {
-    @apply text-xl md:text-2xl font-bold font-serif;
-  }
-
-  .text-body {
-    @apply text-base md:text-lg leading-relaxed font-sans;
-  }
-
-  .text-caption {
-    @apply text-sm font-mono uppercase tracking-wider;
-  }
-
-  /* Layout Styles */
-  .container-brutalist {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
-
-  .section-brutalist {
-    @apply py-16 md:py-24;
-  }
-
-  /* Special Effects */
-  .text-shadow-brutal {
-    text-shadow: 4px 4px 0px rgba(0,0,0,1);
-  }
-
-  .border-brutal {
-    @apply border-4 border-black;
-  }
-
-  .shadow-brutal {
-    box-shadow: 2px 2px 0px 0px rgba(0,0,0,1);
-  }
-
-  .shadow-brutal-hover {
-    @apply shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
-  }
-
-  /* Book Cover Styles */
-  .book-cover {
-    @apply border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
-  }
-
-  /* Quote Styles */
-  .quote-brutalist {
-    @apply border-l-8 border-black pl-8 py-4 bg-gray-50 font-serif text-xl italic;
-  }
-}
-
-/* Custom scrollbar - Brutalist style */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 12px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: white;
-  border: 2px solid black;
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: black;
-  border: 2px solid white;
+  background: #64748b;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #333;
+  background: #475569;
 }
 
 /* Selection styles */
 ::selection {
-  background: black;
+  background: #1f2937;
   color: white;
 }
 
 ::-moz-selection {
-  background: black;
+  background: #1f2937;
   color: white;
-}
-
-/* Loading animation - Brutalist style */
-@keyframes brutalist-pulse {
-  0%, 100% {
-    transform: scale(1) rotate(0deg);
-  }
-  50% {
-    transform: scale(1.1) rotate(2deg);
-  }
-}
-
-.loading-brutalist {
-  animation: brutalist-pulse 1s ease-in-out infinite;
 }
 
 /* Focus styles */
 *:focus {
-  outline: 4px solid black;
+  outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
 
-/* Print styles for literature feel */
+/* Print styles */
 @media print {
   body {
     @apply text-black bg-white;
-  }
-  
-  .card {
-    @apply shadow-none border-2;
   }
 } 

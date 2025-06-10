@@ -6,13 +6,13 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Layout from '@/components/Layout'
 import { socialApi, userApi, SocialFeed, UserPublicProfile, Reading } from '@/lib/api'
-import { Heart, MessageCircle, Users, Search, UserPlus, UserMinus, Star, BookOpen } from 'lucide-react'
+import { Heart, MessageCircle, Users, Search, UserPlus, UserMinus, Star, BookOpen, CheckCircle, Clock } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { useAuthRefresh } from '@/lib/auth-utils'
 import { useBookModal } from '@/contexts/BookModalContext'
-import { Button, Card, Input, LoadingSpinner, TabNavigation } from '@/components/ui'
+import { Button, Card, Input, LoadingSpinner, TabNavigation, Badge, BookCard } from '@/components/ui'
 
 export default function SocialPage() {
   const { needsAuth, isRefreshing, hasValidAuth, session, status } = useAuthRefresh()
@@ -90,7 +90,7 @@ export default function SocialPage() {
     if (isRefreshing) {
       return (
         <Layout>
-          <Card variant="flat" className="text-center py-20 max-w-md mx-auto">
+          <Card variant="flat" padding="lg" className="text-center max-w-md mx-auto">
             <div className="w-24 h-24 bg-black flex items-center justify-center mx-auto mb-8">
               <Users className="h-12 w-12 text-white animate-pulse" />
             </div>
@@ -106,7 +106,7 @@ export default function SocialPage() {
 
     return (
       <Layout>
-        <Card variant="flat" className="text-center py-20 max-w-md mx-auto">
+        <Card variant="flat" padding="lg" className="text-center max-w-md mx-auto">
           <div className="w-24 h-24 bg-red-500 flex items-center justify-center mx-auto mb-8">
             <Users className="h-12 w-12 text-white" />
           </div>
@@ -137,11 +137,11 @@ export default function SocialPage() {
 
   return (
     <Layout>
-      <div>
+      <div className="px-4 sm:px-0">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="heading-xl text-black mb-4">SOCIAL FEED</h1>
-          <p className="text-body text-gray-600">Connect with other readers and discover new books</p>
+          <h1 className="text-2xl font-semibold font-serif tracking-tight mb-2">Social Feed</h1>
+          <p className="text-sm text-gray-600">Connect with other readers and discover new books</p>
         </div>
 
         {/* Tabs */}
@@ -161,13 +161,13 @@ export default function SocialPage() {
         {activeTab === 'feed' && (
           <div>
             {feedError ? (
-              <Card variant="flat" className="text-center py-20">
+              <Card variant="flat" padding="lg" className="text-center">
                 <div className="max-w-md mx-auto">
                   <div className="w-24 h-24 bg-red-500 flex items-center justify-center mx-auto mb-8">
                     <Users className="h-12 w-12 text-white" />
                   </div>
-                  <h3 className="heading-lg text-black mb-4">UNABLE TO LOAD FEED</h3>
-                  <p className="text-body text-gray-600 mb-8">
+                  <h3 className="text-lg font-semibold font-serif mb-4">Unable to Load Feed</h3>
+                  <p className="text-sm text-gray-600 mb-8">
                     There was an error loading your social feed. Please try signing out and signing in again.
                   </p>
                   <Button
@@ -186,9 +186,9 @@ export default function SocialPage() {
               <div className="space-y-8">
                 {/* Recent Reviews */}
                 {feed.recent_reviews.length > 0 && (
-                  <div>
-                    <h3 className="heading-lg text-black mb-6">RECENT REVIEWS</h3>
-                    <div className="space-y-6">
+                  <div className="border border-gray-200 p-4 rounded">
+                    <h3 className="text-lg font-semibold font-serif mb-4">Recent Reviews</h3>
+                    <div className="space-y-4">
                       {feed.recent_reviews.map((reading) => (
                         <ReviewCard key={reading.id} reading={reading} openBookModal={openBookModal} />
                       ))}
@@ -198,9 +198,9 @@ export default function SocialPage() {
 
                 {/* Activities */}
                 {feed.activities.length > 0 && (
-                  <div>
-                    <h3 className="heading-lg text-black mb-6">RECENT ACTIVITY</h3>
-                    <div className="space-y-4">
+                  <div className="border border-gray-200 p-4 rounded">
+                    <h3 className="text-lg font-semibold font-serif mb-4">Recent Activity</h3>
+                    <div className="space-y-3">
                       {feed.activities.map((activity) => (
                         <ActivityCard key={activity.id} activity={activity} openBookModal={openBookModal} />
                       ))}
@@ -209,13 +209,13 @@ export default function SocialPage() {
                 )}
               </div>
             ) : (
-              <Card variant="flat" className="text-center py-20">
+              <Card variant="flat" padding="lg" className="text-center">
                 <div className="max-w-md mx-auto">
                   <div className="w-24 h-24 bg-black flex items-center justify-center mx-auto mb-8">
                     <Users className="h-12 w-12 text-white" />
                   </div>
-                  <h3 className="heading-lg text-black mb-4">NO ACTIVITY YET</h3>
-                  <p className="text-body text-gray-600 mb-8">
+                  <h3 className="text-lg font-semibold font-serif mb-4">No Activity Yet</h3>
+                  <p className="text-sm text-gray-600 mb-8">
                     Follow other users to see their reading activity and reviews in your feed.
                   </p>
                   <Button
@@ -233,55 +233,70 @@ export default function SocialPage() {
         {/* Discover Tab */}
         {activeTab === 'discover' && (
           <div>
-            {/* Search */}
-            <div className="mb-8">
-              <Input
-                type="text"
-                placeholder="Search for users..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                icon={<Search className="h-5 w-5" />}
-              />
+            {/* Search Form - matching search books styling */}
+            <div className="border border-gray-200 p-4 rounded mb-8">
+              <form onSubmit={(e) => e.preventDefault()} className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search for users by name or username..."
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </form>
             </div>
 
             {/* Search Results */}
             {searchQuery.length > 2 && (
-              <div>
+              <div className="space-y-6">
+                <h2 className="text-lg font-semibold font-serif">
+                  Search Results ({searchResults?.length || 0})
+                </h2>
+                
                 {searchLoading ? (
                   <div className="text-center py-12">
                     <LoadingSpinner />
                   </div>
                 ) : searchResults && searchResults.length > 0 ? (
-                  <div className="space-y-4">
-                    {searchResults.map((user) => (
+                  <div className="grid gap-6">
+                    {searchResults.map((user, index) => (
                       <UserCard
                         key={user.id}
                         user={user}
+                        index={index}
                         onFollow={handleFollow}
                         isLoading={followMutation.isLoading || unfollowMutation.isLoading}
                       />
                     ))}
                   </div>
                 ) : (
-                  <Card variant="flat" className="text-center py-12">
-                    <p className="text-body text-gray-600">No users found matching "{searchQuery}"</p>
-                  </Card>
+                  <div className="text-center py-16">
+                    <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold font-serif mb-2">No users found</h3>
+                    <p className="text-sm text-gray-600">
+                      Try searching with different keywords or check your spelling.
+                    </p>
+                  </div>
                 )}
               </div>
             )}
 
-            {searchQuery.length <= 2 && (
-              <Card variant="flat" className="text-center py-20">
-                <div className="max-w-md mx-auto">
-                  <div className="w-24 h-24 bg-black flex items-center justify-center mx-auto mb-8">
-                    <Search className="h-12 w-12 text-white" />
-                  </div>
-                  <h3 className="heading-lg text-black mb-4">DISCOVER READERS</h3>
-                  <p className="text-body text-gray-600">
-                    Search for other users to follow and see their reading activity.
-                  </p>
-                </div>
-              </Card>
+            {/* Initial State - matching search books */}
+            {!searchQuery && (
+              <div className="text-center py-16">
+                <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold font-serif mb-2">
+                  Search for users to follow
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Enter a name or username to find other readers.
+                </p>
+              </div>
             )}
           </div>
         )}
@@ -290,250 +305,209 @@ export default function SocialPage() {
   )
 }
 
-// User Card Component
+// User Card Component - matching dashboard styling
 function UserCard({ 
   user, 
+  index,
   onFollow, 
   isLoading 
 }: { 
   user: UserPublicProfile
+  index: number
   onFollow: (userId: number, isFollowing: boolean) => void
   isLoading: boolean
 }) {
   return (
-    <Card variant="flat" padding="lg">
+    <div key={`${user.name}-${index}`} className="border border-gray-200 p-4 rounded">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-gray-200 border-2 border-black flex items-center justify-center">
+          <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
             {user.profile_picture_url ? (
-              user.profile_picture_url.includes('supabase.co') ? (
-                <Image
-                  src={user.profile_picture_url}
-                  alt={user.name}
-                  width={64}
-                  height={64}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Image
-                  src={user.profile_picture_url}
-                  alt={user.name}
-                  width={64}
-                  height={64}
-                  className="w-full h-full object-cover"
-                />
-              )
+              <Image
+                src={user.profile_picture_url}
+                alt={user.name}
+                width={48}
+                height={48}
+                className="w-full h-full object-cover rounded"
+              />
             ) : (
-              <Users className="h-8 w-8 text-gray-600" />
+              <Users className="h-6 w-6 text-gray-400" />
             )}
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <Link href={`/user/${user.id}`}>
-              <h4 className="heading-lg text-black hover:underline cursor-pointer transition-colors">{user.name}</h4>
+              <h4 className="text-lg font-semibold font-serif hover:underline cursor-pointer transition-colors">
+                {user.name}
+              </h4>
             </Link>
             {user.username && (
-              <p className="text-caption text-gray-600">@{user.username}</p>
+              <p className="text-sm text-gray-600">@{user.username}</p>
             )}
             {user.bio && (
-              <p className="text-body text-gray-700 mt-1">{user.bio}</p>
+              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{user.bio}</p>
             )}
-            <div className="flex items-center space-x-4 mt-2 text-caption text-gray-500">
+            <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
               <span>{user.follower_count} followers</span>
               <span>{user.following_count} following</span>
               <span>Goal: {user.reading_goal} books</span>
             </div>
           </div>
         </div>
-        <Button
-          onClick={() => onFollow(user.id, user.is_following)}
-          variant={user.is_following ? 'primary' : 'secondary'}
-          disabled={isLoading}
-          icon={user.is_following ? <UserMinus className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
-        >
-          {user.is_following ? 'UNFOLLOW' : 'FOLLOW'}
-        </Button>
+        <div className="flex-shrink-0 ml-4">
+          <button
+            onClick={() => onFollow(user.id, user.is_following)}
+            disabled={isLoading}
+            className={`px-3 py-1.5 text-sm font-medium rounded transition-colors ${
+              user.is_following
+                ? 'bg-gray-900 text-white hover:bg-gray-800'
+                : 'bg-white text-gray-900 border border-gray-300 hover:bg-gray-50'
+            } disabled:opacity-50`}
+          >
+            {user.is_following ? 'Following' : 'Follow'}
+          </button>
+        </div>
       </div>
-    </Card>
+    </div>
   )
 }
 
-// Review Card Component
+// Review Card Component - using existing BookCard
 function ReviewCard({ reading, openBookModal }: { reading: Reading; openBookModal: (book: any, bookId?: number) => void }) {
   return (
-    <Card padding="lg">
+    <div className="border-b border-gray-100 pb-4 last:border-b-0">
       <div className="flex items-start space-x-4">
         <div className="flex-shrink-0">
-          {reading.book.cover_url ? (
-            <Image
-              src={reading.book.cover_url}
-              alt={reading.book.title}
-              width={80}
-              height={120}
-              className="book-cover"
-              style={{ width: '80px', height: 'auto' }}
-            />
-          ) : (
-            <div className="w-20 h-28 bg-gray-200 border-2 border-black flex items-center justify-center">
-              <BookOpen className="h-8 w-8 text-gray-600" />
-            </div>
-          )}
+          <BookCard
+            book={reading.book}
+            reading={{
+              status: reading.status,
+              rating: reading.rating,
+              progress_pages: reading.progress_pages,
+              total_pages: reading.total_pages
+            }}
+            onClick={() => openBookModal(null, reading.book.id)}
+            variant="compact"
+          />
         </div>
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-2">
-            <button
-              onClick={() => openBookModal(null, reading.book.id)}
-              className="heading-lg text-black hover:underline text-left transition-colors"
-            >
-              {reading.book.title}
-            </button>
-            {reading.rating && (
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-4 w-4 ${
-                      i < reading.rating! ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-          <p className="text-caption text-gray-600 mb-3">by {reading.book.author}</p>
+        <div className="flex-1 min-w-0">
           {reading.user && (
             <Link href={`/user/${reading.user.id}`}>
-              <p className="text-caption text-black hover:underline cursor-pointer mb-2">
+              <p className="text-sm font-medium text-gray-900 hover:underline cursor-pointer mb-2">
                 Review by {reading.user.name}
               </p>
             </Link>
           )}
-          {reading.review && (
-            <p className="text-body text-gray-700 mb-4">{reading.review}</p>
+          {reading.rating && (
+            <div className="flex items-center mb-2">
+              <Badge variant="rating" size="sm" color="gray" rating={reading.rating} />
+            </div>
           )}
-          <div className="flex items-center space-x-4 text-caption text-gray-500">
-            <button className="flex items-center space-x-1 hover:text-red-500">
+          {reading.review && (
+            <p className="text-sm text-gray-600 mb-3">
+              {reading.review}
+            </p>
+          )}
+          <div className="flex items-center space-x-4 text-xs text-gray-500">
+            <button className="flex items-center space-x-1 hover:text-red-500 transition-colors">
               <Heart className="h-4 w-4" />
               <span>Like</span>
             </button>
-            <button className="flex items-center space-x-1 hover:text-blue-500">
+            <button className="flex items-center space-x-1 hover:text-blue-500 transition-colors">
               <MessageCircle className="h-4 w-4" />
               <span>Comment</span>
             </button>
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   )
 }
 
-// Activity Card Component
+// Activity Card Component - matching dashboard style
 function ActivityCard({ activity, openBookModal }: { activity: any; openBookModal: (book: any, bookId?: number) => void }) {
-  const getActivityMessage = () => {
-    const userName = (
-      <Link href={`/user/${activity.user.id}`}>
-        <span className="font-bold text-black hover:underline cursor-pointer">{activity.user.name}</span>
-      </Link>
-    )
+  const getActivityIcon = () => {
+    switch (activity.activity_type) {
+      case 'finished_book':
+        return <CheckCircle className="h-4 w-4 text-gray-600" />
+      case 'started_book':
+        return <Clock className="h-4 w-4 text-gray-600" />
+      case 'rated_book':
+        return <Star className="h-4 w-4 text-gray-600" />
+      case 'reviewed_book':
+      case 'added_review':
+        return <MessageCircle className="h-4 w-4 text-gray-600" />
+      default:
+        return <BookOpen className="h-4 w-4 text-gray-600" />
+    }
+  }
 
+  const renderActivityMessage = () => {
     const bookTitle = activity.activity_data?.book_title
     const bookId = activity.activity_data?.book_id
-    const rating = activity.activity_data?.rating
+    const bookAuthor = activity.activity_data?.book_author || 'Unknown Author'
 
     // Create clickable book title if available
     const clickableBookTitle = bookTitle && bookId ? (
       <button
         onClick={() => openBookModal(null, bookId)}
-        className="font-semibold text-black hover:underline cursor-pointer"
+        className="font-serif font-medium hover:underline transition-colors"
       >
-        "{bookTitle}"
+        {bookTitle}
       </button>
-    ) : null
+    ) : (
+      <span>a book</span>
+    )
 
+    return (
+      <>
+        {clickableBookTitle} by {bookAuthor}
+      </>
+    )
+  }
+
+  const getActivityText = () => {
     switch (activity.activity_type) {
       case 'finished_book':
-        return clickableBookTitle ? (
-          <>{userName} finished reading {clickableBookTitle}</>
-        ) : (
-          <>{userName} finished reading a book</>
-        )
+        return 'Finished reading'
       case 'started_book':
-        return clickableBookTitle ? (
-          <>{userName} started reading {clickableBookTitle}</>
-        ) : (
-          <>{userName} started reading a book</>
-        )
+        return 'Started reading'
       case 'rated_book':
-        return clickableBookTitle ? (
-          <>{userName} rated {clickableBookTitle} {rating && (
-            <span className="inline-flex items-center ml-1">
-              {Array.from({ length: rating }, (_, i) => (
-                <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              ))}
-            </span>
-          )}</>
-        ) : (
-          <>{userName} rated a book {rating && (
-            <span className="inline-flex items-center ml-1">
-              {Array.from({ length: rating }, (_, i) => (
-                <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              ))}
-            </span>
-          )}</>
-        )
+        return 'Rated'
       case 'reviewed_book':
-        return clickableBookTitle ? (
-          <>{userName} reviewed {clickableBookTitle}</>
-        ) : (
-          <>{userName} reviewed a book</>
-        )
       case 'added_review':
-        return clickableBookTitle ? (
-          <>{userName} reviewed {clickableBookTitle}</>
-        ) : (
-          <>{userName} added a review</>
-        )
+        return 'Reviewed'
       default:
-        return <>{userName} had some activity</>
+        return 'Activity with'
     }
   }
 
   return (
-    <Card variant="flat" padding="md">
-      <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-gray-200 border-2 border-black flex items-center justify-center">
-          {activity.user.profile_picture_url ? (
-            activity.user.profile_picture_url.includes('supabase.co') ? (
-              <Image
-                src={activity.user.profile_picture_url}
-                alt={activity.user.name}
-                width={40}
-                height={40}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <Image
-                src={activity.user.profile_picture_url}
-                alt={activity.user.name}
-                width={40}
-                height={40}
-                className="w-full h-full object-cover"
-              />
-            )
-          ) : (
-            <Users className="h-5 w-5 text-gray-600" />
-          )}
-        </div>
-        <div className="flex-1">
-          <p className="text-body">
-            {getActivityMessage()}
-          </p>
-          <p className="text-caption text-gray-500">
-            {new Date(activity.created_at).toLocaleDateString()}
-          </p>
+    <div className="flex items-center space-x-3 py-3 border-b border-gray-100 last:border-b-0">
+      <div className="flex-shrink-0">
+        <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
+          {getActivityIcon()}
         </div>
       </div>
-    </Card>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-gray-900">
+          <Link href={`/user/${activity.user.id}`}>
+            <span className="font-medium hover:underline cursor-pointer">
+              {activity.user.name}
+            </span>
+          </Link>
+          {' '}{getActivityText().toLowerCase()}{' '}
+          {renderActivityMessage()}
+        </p>
+        <p className="text-xs text-gray-500">
+          {new Date(activity.created_at).toLocaleDateString()}
+        </p>
+      </div>
+      {activity.activity_data?.rating && (
+        <Badge variant="rating" size="sm" color="gray" rating={activity.activity_data.rating} />
+      )}
+    </div>
   )
 }
 
+ 
  
