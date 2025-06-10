@@ -236,7 +236,7 @@ export default function SocialPage() {
                     <h3 className="heading-sm mb-6">RECENT ACTIVITY</h3>
                     <div className="space-y-4">
                       {feed.activities.map((activity) => (
-                        <ActivityCard key={activity.id} activity={activity} />
+                        <ActivityCard key={activity.id} activity={activity} openBookModal={openBookModal} />
                       ))}
                     </div>
                   </div>
@@ -488,7 +488,82 @@ function ReviewCard({ reading, openBookModal }: { reading: Reading; openBookModa
 }
 
 // Activity Card Component
-function ActivityCard({ activity }: { activity: any }) {
+function ActivityCard({ activity, openBookModal }: { activity: any; openBookModal: (book: any, bookId?: number) => void }) {
+  const getActivityMessage = () => {
+    const userName = (
+      <Link href={`/user/${activity.user.id}`}>
+        <span className="font-bold text-blue-600 hover:text-blue-800 cursor-pointer">{activity.user.name}</span>
+      </Link>
+    )
+
+    const bookTitle = activity.activity_data?.book_title
+    const bookId = activity.activity_data?.book_id
+    const rating = activity.activity_data?.rating
+
+    // Create clickable book title if available
+    const clickableBookTitle = bookTitle && bookId ? (
+      <button
+        onClick={() => openBookModal({ 
+          id: bookId, 
+          title: bookTitle, 
+          author: activity.activity_data?.book_author || 'Unknown Author' 
+        }, bookId)}
+        className="font-semibold text-black hover:underline cursor-pointer"
+      >
+        "{bookTitle}"
+      </button>
+    ) : null
+
+    switch (activity.activity_type) {
+      case 'followed_user':
+        return <>{userName} followed a new user</>
+      case 'finished_book':
+        return clickableBookTitle ? (
+          <>{userName} finished reading {clickableBookTitle}</>
+        ) : (
+          <>{userName} finished reading a book</>
+        )
+      case 'started_book':
+        return clickableBookTitle ? (
+          <>{userName} started reading {clickableBookTitle}</>
+        ) : (
+          <>{userName} started reading a book</>
+        )
+      case 'rated_book':
+        return clickableBookTitle ? (
+          <>{userName} rated {clickableBookTitle} {rating && (
+            <span className="inline-flex items-center ml-1">
+              {Array.from({ length: rating }, (_, i) => (
+                <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              ))}
+            </span>
+          )}</>
+        ) : (
+          <>{userName} rated a book {rating && (
+            <span className="inline-flex items-center ml-1">
+              {Array.from({ length: rating }, (_, i) => (
+                <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              ))}
+            </span>
+          )}</>
+        )
+      case 'reviewed_book':
+        return clickableBookTitle ? (
+          <>{userName} reviewed {clickableBookTitle}</>
+        ) : (
+          <>{userName} reviewed a book</>
+        )
+      case 'added_review':
+        return clickableBookTitle ? (
+          <>{userName} reviewed {clickableBookTitle}</>
+        ) : (
+          <>{userName} added a review</>
+        )
+      default:
+        return <>{userName} had some activity</>
+    }
+  }
+
   return (
     <div className="card-flat p-4">
       <div className="flex items-center space-x-3">
@@ -519,13 +594,7 @@ function ActivityCard({ activity }: { activity: any }) {
         </div>
         <div className="flex-1">
           <p className="text-body">
-            <Link href={`/user/${activity.user.id}`}>
-              <span className="font-bold text-blue-600 hover:text-blue-800 cursor-pointer">{activity.user.name}</span>
-            </Link>{' '}
-            {activity.activity_type === 'followed_user' && 'followed a new user'}
-            {activity.activity_type === 'finished_book' && 'finished reading a book'}
-            {activity.activity_type === 'started_book' && 'started reading a book'}
-            {activity.activity_type === 'added_review' && 'added a review'}
+            {getActivityMessage()}
           </p>
           <p className="text-caption text-gray-500">
             {new Date(activity.created_at).toLocaleDateString()}
