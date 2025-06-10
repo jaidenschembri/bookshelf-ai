@@ -15,7 +15,8 @@ import {
   LoadingSpinner,
   Modal,
   Input,
-  DetailedBookCard
+  DetailedBookCard,
+  TabNavigation
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
@@ -134,33 +135,17 @@ export default function BooksPage() {
 
         {/* Status Filter */}
         <div className="mb-8">
-          <div className="flex items-center space-x-8">
-            {statusOptions.map((option) => {
-              const isActive = selectedStatus === option.value
-              const count = readings && option.value !== 'all' 
+          <TabNavigation
+            options={statusOptions.map(option => ({
+              ...option,
+              count: readings && option.value !== 'all' 
                 ? readings.filter(r => r.status === option.value).length 
-                : null
-              
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => setSelectedStatus(option.value)}
-                  className={`text-sm transition-colors duration-200 focus:outline-none focus:ring-0 active:bg-transparent ${
-                    isActive 
-                      ? 'text-gray-900 font-semibold' 
-                      : 'text-gray-600 hover:text-gray-900 font-medium'
-                  }`}
-                >
-                  {option.label}
-                  {count !== null && (
-                    <span className="ml-2 text-xs text-gray-500">
-                      ({count})
-                    </span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
+                : undefined
+            }))}
+            activeTab={selectedStatus}
+            onTabChange={setSelectedStatus}
+            spacing="wide"
+          />
         </div>
 
         {/* Books Grid */}

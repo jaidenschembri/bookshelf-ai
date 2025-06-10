@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import Layout from '@/components/Layout'
 import { recommendationApi, Recommendation, bookApi, readingApi } from '@/lib/api'
 import { RefreshCw, Brain } from 'lucide-react'
@@ -15,6 +16,13 @@ export default function RecommendationsPage() {
   const { data: session } = useSession()
   const queryClient = useQueryClient()
   const { openBookModal } = useBookModal()
+  const [loadingStates, setLoadingStates] = useState<{
+    adding: Set<number>
+    dismissing: Set<number>
+  }>({
+    adding: new Set(),
+    dismissing: new Set()
+  })
 
   const { data: recommendations, isLoading, error, refetch } = useQuery<Recommendation[]>(
     ['recommendations', session?.user?.id],
@@ -49,12 +57,29 @@ export default function RecommendationsPage() {
   const dismissMutation = useMutation(
     (recommendationId: number) => recommendationApi.dismiss(recommendationId),
     {
-      onSuccess: () => {
+      onMutate: (recommendationId) => {
+        setLoadingStates(prev => {
+          const newDismissing = new Set(prev.dismissing)
+          newDismissing.add(recommendationId)
+          return { ...prev, dismissing: newDismissing }
+        })
+      },
+      onSuccess: (_, recommendationId) => {
         queryClient.invalidateQueries(['recommendations'])
         toast.success('Recommendation dismissed')
+        setLoadingStates(prev => {
+          const newDismissing = new Set(prev.dismissing)
+          newDismissing.delete(recommendationId)
+          return { ...prev, dismissing: newDismissing }
+        })
       },
-      onError: () => {
+      onError: (_, recommendationId) => {
         toast.error('Failed to dismiss recommendation')
+        setLoadingStates(prev => {
+          const newDismissing = new Set(prev.dismissing)
+          newDismissing.delete(recommendationId)
+          return { ...prev, dismissing: newDismissing }
+        })
       },
     }
   )
@@ -84,6 +109,13 @@ export default function RecommendationsPage() {
       return { book, reading, recommendationId: recommendation.id }
     },
     {
+      onMutate: (recommendation) => {
+        setLoadingStates(prev => {
+          const newAdding = new Set(prev.adding)
+          newAdding.add(recommendation.id)
+          return { ...prev, adding: newAdding }
+        })
+      },
       onSuccess: (data) => {
         queryClient.setQueryData<Recommendation[]>(
           ['recommendations', session?.user?.id],
@@ -94,14 +126,24 @@ export default function RecommendationsPage() {
         queryClient.invalidateQueries(['dashboard'])
         
         toast.success('Book added to your library!')
+        setLoadingStates(prev => {
+          const newAdding = new Set(prev.adding)
+          newAdding.delete(data.recommendationId)
+          return { ...prev, adding: newAdding }
+        })
       },
-      onError: (error: any) => {
+      onError: (error: any, recommendation) => {
         console.error('Add to library error:', error)
         if (error.response?.status === 409) {
           toast.error('Book is already in your library')
         } else {
           toast.error('Failed to add book to library')
         }
+        setLoadingStates(prev => {
+          const newAdding = new Set(prev.adding)
+          newAdding.delete(recommendation.id)
+          return { ...prev, adding: newAdding }
+        })
       },
     }
   )
@@ -164,8 +206,8 @@ export default function RecommendationsPage() {
                 onAddToLibrary={() => handleAddToLibrary(recommendation)}
                 onDismiss={() => handleDismiss(recommendation.id)}
                 onBookClick={() => openBookModal(null, recommendation.book.id)}
-                isAddingToLibrary={addToLibraryMutation.isLoading}
-                isDismissing={dismissMutation.isLoading}
+                isAddingToLibrary={loadingStates.adding.has(recommendation.id)}
+                isDismissing={loadingStates.dismissing.has(recommendation.id)}
               />
             ))}
           </div>

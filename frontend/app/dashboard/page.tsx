@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Layout from '@/components/Layout'
 import { dashboardApi, Dashboard, bookApi, readingApi, recommendationApi, Recommendation } from '@/lib/api'
 import { BookOpen, Target, TrendingUp, Star, Clock, CheckCircle, ArrowRight } from 'lucide-react'
@@ -27,6 +27,13 @@ export default function DashboardPage() {
   const router = useRouter()
   const { openBookModal } = useBookModal()
   const queryClient = useQueryClient()
+  const [loadingStates, setLoadingStates] = useState<{
+    adding: Set<number>
+    dismissing: Set<number>
+  }>({
+    adding: new Set(),
+    dismissing: new Set()
+  })
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -46,13 +53,30 @@ export default function DashboardPage() {
   const dismissMutation = useMutation(
     (recommendationId: number) => recommendationApi.dismiss(recommendationId),
     {
-      onSuccess: () => {
+      onMutate: (recommendationId) => {
+        setLoadingStates(prev => {
+          const newDismissing = new Set(prev.dismissing)
+          newDismissing.add(recommendationId)
+          return { ...prev, dismissing: newDismissing }
+        })
+      },
+      onSuccess: (_, recommendationId) => {
         queryClient.invalidateQueries(['dashboard'])
         queryClient.invalidateQueries(['recommendations'])
         toast.success('Recommendation dismissed')
+        setLoadingStates(prev => {
+          const newDismissing = new Set(prev.dismissing)
+          newDismissing.delete(recommendationId)
+          return { ...prev, dismissing: newDismissing }
+        })
       },
-      onError: () => {
+      onError: (_, recommendationId) => {
         toast.error('Failed to dismiss recommendation')
+        setLoadingStates(prev => {
+          const newDismissing = new Set(prev.dismissing)
+          newDismissing.delete(recommendationId)
+          return { ...prev, dismissing: newDismissing }
+        })
       },
     }
   )
@@ -82,20 +106,37 @@ export default function DashboardPage() {
       return { book, reading, recommendationId: recommendation.id }
     },
     {
+      onMutate: (recommendation) => {
+        setLoadingStates(prev => {
+          const newAdding = new Set(prev.adding)
+          newAdding.add(recommendation.id)
+          return { ...prev, adding: newAdding }
+        })
+      },
       onSuccess: (data) => {
         queryClient.invalidateQueries(['dashboard'])
         queryClient.invalidateQueries(['recommendations'])
         queryClient.invalidateQueries(['readings'])
         
         toast.success('Book added to your library!')
+        setLoadingStates(prev => {
+          const newAdding = new Set(prev.adding)
+          newAdding.delete(data.recommendationId)
+          return { ...prev, adding: newAdding }
+        })
       },
-      onError: (error: any) => {
+      onError: (error: any, recommendation) => {
         console.error('Add to library error:', error)
         if (error.response?.status === 409) {
           toast.error('Book is already in your library')
         } else {
           toast.error('Failed to add book to library')
         }
+        setLoadingStates(prev => {
+          const newAdding = new Set(prev.adding)
+          newAdding.delete(recommendation.id)
+          return { ...prev, adding: newAdding }
+        })
       },
     }
   )
@@ -238,8 +279,8 @@ export default function DashboardPage() {
                     onBookClick={() => openBookModal(null, rec.book.id)}
                     onAddToLibrary={() => handleAddToLibrary(rec)}
                     onDismiss={() => handleDismiss(rec.id)}
-                    isAddingToLibrary={addToLibraryMutation.isLoading}
-                    isDismissing={dismissMutation.isLoading}
+                    isAddingToLibrary={loadingStates.adding.has(rec.id)}
+                    isDismissing={loadingStates.dismissing.has(rec.id)}
                     variant="compact"
                   />
                 ))}

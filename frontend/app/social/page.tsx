@@ -12,7 +12,7 @@ import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { useAuthRefresh } from '@/lib/auth-utils'
 import { useBookModal } from '@/contexts/BookModalContext'
-import { Button, Card, Input, LoadingSpinner } from '@/components/ui'
+import { Button, Card, Input, LoadingSpinner, TabNavigation } from '@/components/ui'
 
 export default function SocialPage() {
   const { needsAuth, isRefreshing, hasValidAuth, session, status } = useAuthRefresh()
@@ -145,19 +145,16 @@ export default function SocialPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-4 mb-8">
-          <Button
-            onClick={() => setActiveTab('feed')}
-            variant={activeTab === 'feed' ? 'primary' : 'secondary'}
-          >
-            FEED
-          </Button>
-          <Button
-            onClick={() => setActiveTab('discover')}
-            variant={activeTab === 'discover' ? 'primary' : 'secondary'}
-          >
-            DISCOVER USERS
-          </Button>
+        <div className="mb-8">
+          <TabNavigation
+            options={[
+              { value: 'feed', label: 'Feed' },
+              { value: 'discover', label: 'Discover Users' }
+            ]}
+            activeTab={activeTab}
+            onTabChange={(value) => setActiveTab(value as 'feed' | 'discover')}
+            spacing="normal"
+          />
         </div>
 
         {/* Feed Tab */}

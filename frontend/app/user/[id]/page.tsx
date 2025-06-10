@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Layout from '@/components/Layout'
 import { userApi, socialApi, UserPublicProfile, Reading, User as UserType } from '@/lib/api'
+import { TabNavigation } from '@/components/ui'
 import { 
   Users, UserPlus, UserMinus, BookOpen, Star, Calendar, MapPin, 
   Eye, MessageCircle, Heart, User, Settings, Camera, Save 
@@ -477,27 +478,16 @@ export default function UserProfilePage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-4 mb-8">
-          <button
-            onClick={() => setActiveTab('library')}
-            className={`px-6 py-3 font-bold border-2 border-black transition-all duration-200 ${
-              activeTab === 'library'
-                ? 'bg-black text-white'
-                : 'bg-white text-black hover:bg-gray-100'
-            }`}
-          >
-            LIBRARY
-          </button>
-          <button
-            onClick={() => setActiveTab('reviews')}
-            className={`px-6 py-3 font-bold border-2 border-black transition-all duration-200 ${
-              activeTab === 'reviews'
-                ? 'bg-black text-white'
-                : 'bg-white text-black hover:bg-gray-100'
-            }`}
-          >
-            REVIEWS
-          </button>
+        <div className="mb-8">
+          <TabNavigation
+            options={[
+              { value: 'library', label: 'Library' },
+              { value: 'reviews', label: 'Reviews' }
+            ]}
+            activeTab={activeTab}
+            onTabChange={(value) => setActiveTab(value as 'library' | 'reviews')}
+            spacing="normal"
+          />
         </div>
 
         {/* Library Tab */}
@@ -505,21 +495,13 @@ export default function UserProfilePage() {
           <div>
             {/* Library Filter */}
             <div className="mb-6">
-              <div className="flex flex-wrap gap-2">
-                {libraryStatusOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => setLibraryFilter(option.value)}
-                    className={`px-4 py-2 text-sm font-bold border-2 border-black transition-all duration-200 ${
-                      libraryFilter === option.value
-                        ? 'bg-black text-white'
-                        : 'bg-white text-black hover:bg-gray-100'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+              <TabNavigation
+                options={libraryStatusOptions}
+                activeTab={libraryFilter}
+                onTabChange={setLibraryFilter}
+                spacing="normal"
+                className="flex-wrap"
+              />
             </div>
 
             {/* Library Content */}
