@@ -1,7 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
-import { BookOpen, Star } from 'lucide-react'
-import { Card, Badge } from '@/components/ui'
+import { BookOpen, Star, X, Brain } from 'lucide-react'
+import { Card, Badge, Button } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
 export interface RecommendationCardProps {
@@ -12,82 +12,141 @@ export interface RecommendationCardProps {
       title: string
       author: string
       cover_url?: string
+      genre?: string
+      publication_year?: number
+      description?: string
     }
     reason: string
     confidence_score: number
   }
-  onClick?: () => void
+  onBookClick: () => void
+  onAddToLibrary: () => void
+  onDismiss: () => void
+  isAddingToLibrary: boolean
+  isDismissing: boolean
   variant?: 'default' | 'compact'
   className?: string
 }
 
 const RecommendationCard: React.FC<RecommendationCardProps> = ({
   recommendation,
-  onClick,
+  onBookClick,
+  onAddToLibrary,
+  onDismiss,
+  isAddingToLibrary,
+  isDismissing,
   variant = 'default',
   className
 }) => {
   const isCompact = variant === 'compact'
   
   return (
-    <Card
-      variant="default"
-      clickable={!!onClick}
-      onClick={onClick}
-      padding="md"
-      className={className}
-    >
-      <div className="flex items-start space-x-4">
+    <Card variant="default" padding="lg" className={cn("relative", className)}>
+      {/* Dismiss Button */}
+      <button
+        onClick={onDismiss}
+        className="absolute top-2 right-2 sm:top-4 sm:right-4 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 z-10"
+        title="Dismiss recommendation"
+      >
+        <X className="h-4 w-4 sm:h-5 sm:w-5" />
+      </button>
+
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
         {/* Book Cover */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 mx-auto sm:mx-0">
           {recommendation.book.cover_url ? (
             <Image
               src={recommendation.book.cover_url}
               alt={recommendation.book.title}
-              width={isCompact ? 32 : 40}
-              height={isCompact ? 44 : 56}
-              className={cn(
-                'book-cover object-cover',
-                isCompact ? 'w-8 h-11' : 'w-10 h-14'
-              )}
-              sizes={isCompact ? '32px' : '40px'}
+              width={120}
+              height={160}
+              className="rounded-lg object-cover shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+              style={{ width: '120px', height: 'auto' }}
+              sizes="120px"
             />
           ) : (
-            <div className={cn(
-              'bg-gray-200 border-2 border-black flex items-center justify-center',
-              isCompact ? 'w-8 h-11' : 'w-10 h-14'
-            )}>
-              <BookOpen className={cn(
-                'text-gray-600',
-                isCompact ? 'h-3 w-3' : 'h-4 w-4'
-              )} />
+            <div className="w-30 h-40 bg-gray-200 rounded-lg flex items-center justify-center">
+              <BookOpen className="h-12 w-12 text-gray-400" />
             </div>
           )}
         </div>
-        
-        {/* Recommendation Info */}
-        <div className="flex-1 min-w-0">
-          <h3 className={cn(
-            'font-serif font-bold text-black hover:underline transition-colors',
-            isCompact ? 'text-sm' : 'text-base'
-          )}>
-            {recommendation.book.title}
-          </h3>
-          <p className="text-caption text-gray-600 mb-3">{recommendation.book.author}</p>
-          
-          {!isCompact && (
-            <p className="text-sm text-gray-700 line-clamp-3 mb-3">{recommendation.reason}</p>
+
+        {/* Book Details and Recommendation */}
+        <div className="flex-1 min-w-0 sm:pr-8">
+          {/* Book Info */}
+          <div className="mb-4 text-center sm:text-left">
+            <h3 className="heading-lg mb-2">
+              <button
+                onClick={onBookClick}
+                className="text-black hover:underline text-left transition-colors"
+              >
+                {recommendation.book.title}
+              </button>
+            </h3>
+            <p className="text-body text-gray-600 mb-2">by {recommendation.book.author}</p>
+            
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-4 text-sm text-gray-500">
+              {recommendation.book.genre && (
+                <Badge variant="default" size="sm">
+                  {recommendation.book.genre}
+                </Badge>
+              )}
+              {recommendation.book.publication_year && (
+                <span>{recommendation.book.publication_year}</span>
+              )}
+              <div className="flex items-center">
+                <Star className="h-4 w-4 text-yellow-400 mr-1" />
+                <span>{Math.round(recommendation.confidence_score * 100)}% match</span>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Explanation */}
+          <Card variant="flat" padding="md" className="mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-start space-y-2 sm:space-y-0 sm:space-x-2">
+              <Brain className="h-5 w-5 text-black flex-shrink-0 mx-auto sm:mx-0 sm:mt-0.5" />
+              <div className="text-center sm:text-left">
+                <h4 className="heading-sm text-black mb-2">Why we recommend this book:</h4>
+                <p className="text-caption text-gray-600">
+                  {recommendation.reason}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Book Description - Only show if different from AI reason */}
+          {recommendation.book.description && 
+           recommendation.book.description !== recommendation.reason && (
+            <div className="mb-4">
+              <h4 className="heading-sm text-black mb-2">About this book:</h4>
+              <p className="text-caption text-gray-600 line-clamp-4">
+                {recommendation.book.description}
+              </p>
+            </div>
           )}
-          
-          <div className="flex items-center space-x-2">
-            <Badge
-              variant="rating"
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button
+              onClick={onAddToLibrary}
+              variant="primary"
               size="sm"
-              color="black"
-              icon={<Star className="h-3 w-3" />}
+              disabled={isAddingToLibrary}
+              loading={isAddingToLibrary}
+              className="w-full sm:w-auto"
             >
-              {Math.round(recommendation.confidence_score * 100)}% MATCH
-            </Badge>
+              {isAddingToLibrary ? 'Adding...' : 'Add to Library'}
+            </Button>
+            <Button
+              onClick={onDismiss}
+              variant="secondary"
+              size="sm"
+              disabled={isDismissing}
+              loading={isDismissing}
+              className="w-full sm:w-auto"
+            >
+              {isDismissing ? 'Dismissing...' : 'Not Interested'}
+            </Button>
           </div>
         </div>
       </div>
@@ -95,4 +154,5 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
   )
 }
 
-export default RecommendationCard 
+export default RecommendationCard
+export { RecommendationCard } 

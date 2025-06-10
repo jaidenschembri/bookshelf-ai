@@ -125,7 +125,9 @@ export default function BookModal({ isOpen, onClose, book, bookId }: BookModalPr
 
   if (!isOpen) return null
 
-  const isLoading = isLoadingBook || isLoadingLibrary
+  // Only show loading if we're actually waiting for book data
+  // Don't block on library loading since we can show the book and loading state for library check
+  const isLoading = isLoadingBook && (!book || !currentBook)
   const canAddToLibrary = session?.user?.id && !isInLibrary && !addToLibraryMutation.isLoading
 
   return (
@@ -256,7 +258,15 @@ export default function BookModal({ isOpen, onClose, book, bookId }: BookModalPr
               <div className="border-t-2 border-black pt-6">
                 <div className="flex flex-col sm:flex-row gap-3">
                   {session?.user?.id ? (
-                    isInLibrary ? (
+                    isLoadingLibrary ? (
+                      <button 
+                        disabled 
+                        className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>CHECKING LIBRARY...</span>
+                      </button>
+                    ) : isInLibrary ? (
                       <div className="btn-ghost bg-green-50 border-green-600 text-green-800 cursor-default flex items-center space-x-2">
                         <Check className="h-4 w-4" />
                         <span>ADDED TO LIBRARY</span>

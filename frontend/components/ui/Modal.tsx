@@ -41,27 +41,19 @@ const Modal: React.FC<ModalProps> = ({
     className
   )
   
-  // Handle ESC key and click outside
+  // Handle ESC key
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }
     
-    const handleClickOutside = (e: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-        onClose()
-      }
-    }
-    
     if (isOpen) {
       document.addEventListener('keydown', handleEsc)
-      document.addEventListener('mousedown', handleClickOutside)
       document.body.style.overflow = 'hidden'
     }
     
     return () => {
       document.removeEventListener('keydown', handleEsc)
-      document.removeEventListener('mousedown', handleClickOutside)
       document.body.style.overflow = 'unset'
     }
   }, [isOpen, onClose])
@@ -71,12 +63,16 @@ const Modal: React.FC<ModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {overlay && (
-        <div className="absolute inset-0 bg-black bg-opacity-50" />
+        <div 
+          className="absolute inset-0 bg-black bg-opacity-50"
+          onClick={onClose}
+        />
       )}
       
       <div
         ref={modalRef}
-        className={modalClasses}
+        className={cn(modalClasses, 'relative z-10')}
+        onClick={(e) => e.stopPropagation()}
         {...props}
       >
         {/* Header */}

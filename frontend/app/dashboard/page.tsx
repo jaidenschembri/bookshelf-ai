@@ -137,7 +137,7 @@ export default function DashboardPage() {
                       progress_pages: reading.progress_pages,
                       total_pages: reading.total_pages
                     }}
-                    onClick={() => openBookModal(null, reading.book.id)}
+                        onClick={() => openBookModal(null, reading.book.id)}
                     variant="compact"
                   />
                 ))}
@@ -145,12 +145,12 @@ export default function DashboardPage() {
             ) : (
               <Card variant="flat" padding="lg">
                 <div className="text-center">
-                  <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-6" />
-                  <p className="text-body text-gray-500 mb-4">No books currently being read</p>
+                <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-6" />
+                <p className="text-body text-gray-500 mb-4">No books currently being read</p>
                   <Button variant="ghost" size="sm">
                     <Link href="/search">Find a book to read</Link>
                   </Button>
-                </div>
+              </div>
               </Card>
             )}
           </div>
@@ -169,22 +169,22 @@ export default function DashboardPage() {
                   <RecommendationCard
                     key={rec.id}
                     recommendation={rec}
-                    onClick={() => openBookModal(null, rec.book.id)}
+                          onClick={() => openBookModal(null, rec.book.id)}
                   />
                 ))}
               </div>
             ) : (
               <Card variant="flat" padding="lg">
                 <div className="text-center">
-                  <Star className="h-16 w-16 text-gray-400 mx-auto mb-6" />
-                  <p className="text-body text-gray-500 mb-2">No recommendations yet</p>
-                  <p className="text-caption text-gray-400 mb-6">
-                    Add and rate some books to get AI recommendations
-                  </p>
+                <Star className="h-16 w-16 text-gray-400 mx-auto mb-6" />
+                <p className="text-body text-gray-500 mb-2">No recommendations yet</p>
+                <p className="text-caption text-gray-400 mb-6">
+                  Add and rate some books to get AI recommendations
+                </p>
                   <Button variant="ghost" size="sm">
                     <Link href="/search">Add books to your library</Link>
                   </Button>
-                </div>
+              </div>
               </Card>
             )}
           </div>
@@ -229,13 +229,13 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-                      ) : (
+          ) : (
               <Card variant="flat" padding="lg">
                 <div className="text-center">
-                  <p className="text-body text-gray-500">No recent activity</p>
-                </div>
+              <p className="text-body text-gray-500">No recent activity</p>
+            </div>
               </Card>
-            )}
+          )}
           </Card>
       </div>
     </Layout>

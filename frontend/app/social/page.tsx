@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { useAuthRefresh } from '@/lib/auth-utils'
 import { useBookModal } from '@/contexts/BookModalContext'
+import { Button, Card, Input, LoadingSpinner } from '@/components/ui'
 
 export default function SocialPage() {
   const { needsAuth, isRefreshing, hasValidAuth, session, status } = useAuthRefresh()
@@ -34,7 +35,7 @@ export default function SocialPage() {
     {
       enabled: hasValidAuth && activeTab === 'feed',
       refetchOnWindowFocus: false,
-      retry: false, // Don't retry on auth errors
+      retry: false,
     }
   )
 
@@ -45,7 +46,7 @@ export default function SocialPage() {
     {
       enabled: searchQuery.length > 2 && activeTab === 'discover' && hasValidAuth,
       refetchOnWindowFocus: false,
-      retry: false, // Don't retry on auth errors
+      retry: false,
     }
   )
 
@@ -78,11 +79,7 @@ export default function SocialPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-96">
-          <div className="loading-brutalist">
-            <div className="w-32 h-32 border-8 border-black bg-white flex items-center justify-center">
-              <Users className="h-16 w-16 text-black" />
-            </div>
-          </div>
+          <LoadingSpinner size="lg" />
         </div>
       </Layout>
     )
@@ -93,53 +90,47 @@ export default function SocialPage() {
     if (isRefreshing) {
       return (
         <Layout>
-          <div className="text-center py-20">
-            <div className="max-w-md mx-auto">
-              <div className="w-24 h-24 bg-blue-500 flex items-center justify-center mx-auto mb-8">
-                <Users className="h-12 w-12 text-white animate-pulse" />
-              </div>
-              <h3 className="heading-sm mb-4">REFRESHING AUTHENTICATION</h3>
-              <p className="text-body text-gray-600 mb-8">
-                Please wait while we refresh your session...
-              </p>
-              <div className="loading-brutalist">
-                <div className="w-16 h-16 border-4 border-black bg-white flex items-center justify-center">
-                  <Users className="h-8 w-8 text-black" />
-                </div>
-              </div>
+          <Card variant="flat" className="text-center py-20 max-w-md mx-auto">
+            <div className="w-24 h-24 bg-black flex items-center justify-center mx-auto mb-8">
+              <Users className="h-12 w-12 text-white animate-pulse" />
             </div>
-          </div>
+            <h3 className="heading-lg text-black mb-4">REFRESHING AUTHENTICATION</h3>
+            <p className="text-body text-gray-600 mb-8">
+              Please wait while we refresh your session...
+            </p>
+            <LoadingSpinner />
+          </Card>
         </Layout>
       )
     }
 
     return (
       <Layout>
-        <div className="text-center py-20">
-          <div className="max-w-md mx-auto">
-            <div className="w-24 h-24 bg-red-500 flex items-center justify-center mx-auto mb-8">
-              <Users className="h-12 w-12 text-white" />
-            </div>
-            <h3 className="heading-sm mb-4">AUTHENTICATION REQUIRED</h3>
-            <p className="text-body text-gray-600 mb-8">
-              Your session has expired. Please sign in again to access social features.
-            </p>
-            <div className="space-y-4">
-              <button
-                onClick={() => signIn('google')}
-                className="btn-primary w-full"
-              >
-                Sign In with Google
-              </button>
-              <button
-                onClick={() => router.push('/')}
-                className="btn-secondary w-full"
-              >
-                Go to Home
-              </button>
-            </div>
+        <Card variant="flat" className="text-center py-20 max-w-md mx-auto">
+          <div className="w-24 h-24 bg-red-500 flex items-center justify-center mx-auto mb-8">
+            <Users className="h-12 w-12 text-white" />
           </div>
-        </div>
+          <h3 className="heading-lg text-black mb-4">AUTHENTICATION REQUIRED</h3>
+          <p className="text-body text-gray-600 mb-8">
+            Your session has expired. Please sign in again to access social features.
+          </p>
+          <div className="space-y-4">
+            <Button
+              onClick={() => signIn('google')}
+              variant="primary"
+              fullWidth
+            >
+              Sign In with Google
+            </Button>
+            <Button
+              onClick={() => router.push('/')}
+              variant="secondary"
+              fullWidth
+            >
+              Go to Home
+            </Button>
+          </div>
+        </Card>
       </Layout>
     )
   }
@@ -149,69 +140,57 @@ export default function SocialPage() {
       <div>
         {/* Header */}
         <div className="mb-8">
-          <h1 className="heading-lg mb-4">SOCIAL FEED</h1>
+          <h1 className="heading-xl text-black mb-4">SOCIAL FEED</h1>
           <p className="text-body text-gray-600">Connect with other readers and discover new books</p>
         </div>
 
         {/* Tabs */}
         <div className="flex space-x-4 mb-8">
-          <button
+          <Button
             onClick={() => setActiveTab('feed')}
-            className={`px-6 py-3 font-bold border-2 border-black transition-all duration-200 ${
-              activeTab === 'feed'
-                ? 'bg-black text-white'
-                : 'bg-white text-black hover:bg-gray-100'
-            }`}
+            variant={activeTab === 'feed' ? 'primary' : 'secondary'}
           >
             FEED
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setActiveTab('discover')}
-            className={`px-6 py-3 font-bold border-2 border-black transition-all duration-200 ${
-              activeTab === 'discover'
-                ? 'bg-black text-white'
-                : 'bg-white text-black hover:bg-gray-100'
-            }`}
+            variant={activeTab === 'discover' ? 'primary' : 'secondary'}
           >
             DISCOVER USERS
-          </button>
+          </Button>
         </div>
 
         {/* Feed Tab */}
         {activeTab === 'feed' && (
           <div>
             {feedError ? (
-              <div className="text-center py-20">
+              <Card variant="flat" className="text-center py-20">
                 <div className="max-w-md mx-auto">
                   <div className="w-24 h-24 bg-red-500 flex items-center justify-center mx-auto mb-8">
                     <Users className="h-12 w-12 text-white" />
                   </div>
-                  <h3 className="heading-sm mb-4">UNABLE TO LOAD FEED</h3>
+                  <h3 className="heading-lg text-black mb-4">UNABLE TO LOAD FEED</h3>
                   <p className="text-body text-gray-600 mb-8">
                     There was an error loading your social feed. Please try signing out and signing in again.
                   </p>
-                  <button
+                  <Button
                     onClick={() => router.push('/')}
-                    className="btn-primary"
+                    variant="primary"
                   >
                     Go to Sign In
-                  </button>
+                  </Button>
                 </div>
-              </div>
+              </Card>
             ) : feedLoading ? (
               <div className="text-center py-12">
-                <div className="loading-brutalist">
-                  <div className="w-16 h-16 border-4 border-black bg-white flex items-center justify-center">
-                    <Users className="h-8 w-8 text-black" />
-                  </div>
-                </div>
+                <LoadingSpinner />
               </div>
             ) : feed && (feed.activities.length > 0 || feed.recent_reviews.length > 0) ? (
               <div className="space-y-8">
                 {/* Recent Reviews */}
                 {feed.recent_reviews.length > 0 && (
                   <div>
-                    <h3 className="heading-sm mb-6">RECENT REVIEWS</h3>
+                    <h3 className="heading-lg text-black mb-6">RECENT REVIEWS</h3>
                     <div className="space-y-6">
                       {feed.recent_reviews.map((reading) => (
                         <ReviewCard key={reading.id} reading={reading} openBookModal={openBookModal} />
@@ -223,7 +202,7 @@ export default function SocialPage() {
                 {/* Activities */}
                 {feed.activities.length > 0 && (
                   <div>
-                    <h3 className="heading-sm mb-6">RECENT ACTIVITY</h3>
+                    <h3 className="heading-lg text-black mb-6">RECENT ACTIVITY</h3>
                     <div className="space-y-4">
                       {feed.activities.map((activity) => (
                         <ActivityCard key={activity.id} activity={activity} openBookModal={openBookModal} />
@@ -233,23 +212,23 @@ export default function SocialPage() {
                 )}
               </div>
             ) : (
-              <div className="text-center py-20">
+              <Card variant="flat" className="text-center py-20">
                 <div className="max-w-md mx-auto">
                   <div className="w-24 h-24 bg-black flex items-center justify-center mx-auto mb-8">
                     <Users className="h-12 w-12 text-white" />
                   </div>
-                  <h3 className="heading-sm mb-4">NO ACTIVITY YET</h3>
+                  <h3 className="heading-lg text-black mb-4">NO ACTIVITY YET</h3>
                   <p className="text-body text-gray-600 mb-8">
                     Follow other users to see their reading activity and reviews in your feed.
                   </p>
-                  <button
+                  <Button
                     onClick={() => setActiveTab('discover')}
-                    className="btn-primary"
+                    variant="primary"
                   >
                     Discover Users
-                  </button>
+                  </Button>
                 </div>
-              </div>
+              </Card>
             )}
           </div>
         )}
@@ -259,16 +238,13 @@ export default function SocialPage() {
           <div>
             {/* Search */}
             <div className="mb-8">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search for users..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border-2 border-black focus:outline-none focus:ring-0"
-                />
-              </div>
+              <Input
+                type="text"
+                placeholder="Search for users..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                icon={<Search className="h-5 w-5" />}
+              />
             </div>
 
             {/* Search Results */}
@@ -276,11 +252,7 @@ export default function SocialPage() {
               <div>
                 {searchLoading ? (
                   <div className="text-center py-12">
-                    <div className="loading-brutalist">
-                      <div className="w-16 h-16 border-4 border-black bg-white flex items-center justify-center">
-                        <Search className="h-8 w-8 text-black" />
-                      </div>
-                    </div>
+                    <LoadingSpinner />
                   </div>
                 ) : searchResults && searchResults.length > 0 ? (
                   <div className="space-y-4">
@@ -294,30 +266,28 @@ export default function SocialPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12">
+                  <Card variant="flat" className="text-center py-12">
                     <p className="text-body text-gray-600">No users found matching "{searchQuery}"</p>
-                  </div>
+                  </Card>
                 )}
               </div>
             )}
 
             {searchQuery.length <= 2 && (
-              <div className="text-center py-20">
+              <Card variant="flat" className="text-center py-20">
                 <div className="max-w-md mx-auto">
                   <div className="w-24 h-24 bg-black flex items-center justify-center mx-auto mb-8">
                     <Search className="h-12 w-12 text-white" />
                   </div>
-                  <h3 className="heading-sm mb-4">DISCOVER READERS</h3>
+                  <h3 className="heading-lg text-black mb-4">DISCOVER READERS</h3>
                   <p className="text-body text-gray-600">
                     Search for other users to follow and see their reading activity.
                   </p>
                 </div>
-              </div>
+              </Card>
             )}
           </div>
         )}
-
-
       </div>
     </Layout>
   )
@@ -334,13 +304,12 @@ function UserCard({
   isLoading: boolean
 }) {
   return (
-    <div className="card-flat p-6">
+    <Card variant="flat" padding="lg">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="w-16 h-16 bg-gray-200 border-2 border-black flex items-center justify-center">
             {user.profile_picture_url ? (
               user.profile_picture_url.includes('supabase.co') ? (
-                // Use Next.js Image for Supabase URLs (they're optimized and reliable)
                 <Image
                   src={user.profile_picture_url}
                   alt={user.name}
@@ -349,7 +318,6 @@ function UserCard({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                // Use Next.js Image for external URLs (Google profile pics)
                 <Image
                   src={user.profile_picture_url}
                   alt={user.name}
@@ -364,7 +332,7 @@ function UserCard({
           </div>
           <div>
             <Link href={`/user/${user.id}`}>
-              <h4 className="font-serif font-bold text-lg hover:text-blue-600 cursor-pointer transition-colors">{user.name}</h4>
+              <h4 className="heading-lg text-black hover:underline cursor-pointer transition-colors">{user.name}</h4>
             </Link>
             {user.username && (
               <p className="text-caption text-gray-600">@{user.username}</p>
@@ -379,36 +347,23 @@ function UserCard({
             </div>
           </div>
         </div>
-        <button
+        <Button
           onClick={() => onFollow(user.id, user.is_following)}
+          variant={user.is_following ? 'primary' : 'secondary'}
           disabled={isLoading}
-          className={`px-4 py-2 font-bold border-2 border-black transition-all duration-200 ${
-            user.is_following
-              ? 'bg-black text-white hover:bg-gray-800'
-              : 'bg-white text-black hover:bg-gray-100'
-          } disabled:opacity-50`}
+          icon={user.is_following ? <UserMinus className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
         >
-          {user.is_following ? (
-            <>
-              <UserMinus className="h-4 w-4 inline mr-2" />
-              UNFOLLOW
-            </>
-          ) : (
-            <>
-              <UserPlus className="h-4 w-4 inline mr-2" />
-              FOLLOW
-            </>
-          )}
-        </button>
+          {user.is_following ? 'UNFOLLOW' : 'FOLLOW'}
+        </Button>
       </div>
-    </div>
+    </Card>
   )
 }
 
 // Review Card Component
 function ReviewCard({ reading, openBookModal }: { reading: Reading; openBookModal: (book: any, bookId?: number) => void }) {
   return (
-    <div className="card p-6">
+    <Card padding="lg">
       <div className="flex items-start space-x-4">
         <div className="flex-shrink-0">
           {reading.book.cover_url ? (
@@ -430,7 +385,7 @@ function ReviewCard({ reading, openBookModal }: { reading: Reading; openBookModa
           <div className="flex items-center justify-between mb-2">
             <button
               onClick={() => openBookModal(null, reading.book.id)}
-              className="font-serif font-bold text-lg text-black hover:text-blue-600 hover:underline text-left transition-colors"
+              className="heading-lg text-black hover:underline text-left transition-colors"
             >
               {reading.book.title}
             </button>
@@ -450,7 +405,7 @@ function ReviewCard({ reading, openBookModal }: { reading: Reading; openBookModa
           <p className="text-caption text-gray-600 mb-3">by {reading.book.author}</p>
           {reading.user && (
             <Link href={`/user/${reading.user.id}`}>
-              <p className="text-caption text-blue-600 hover:text-blue-800 cursor-pointer mb-2">
+              <p className="text-caption text-black hover:underline cursor-pointer mb-2">
                 Review by {reading.user.name}
               </p>
             </Link>
@@ -470,7 +425,7 @@ function ReviewCard({ reading, openBookModal }: { reading: Reading; openBookModa
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   )
 }
 
@@ -479,7 +434,7 @@ function ActivityCard({ activity, openBookModal }: { activity: any; openBookModa
   const getActivityMessage = () => {
     const userName = (
       <Link href={`/user/${activity.user.id}`}>
-        <span className="font-bold text-blue-600 hover:text-blue-800 cursor-pointer">{activity.user.name}</span>
+        <span className="font-bold text-black hover:underline cursor-pointer">{activity.user.name}</span>
       </Link>
     )
 
@@ -546,12 +501,11 @@ function ActivityCard({ activity, openBookModal }: { activity: any; openBookModa
   }
 
   return (
-    <div className="card-flat p-4">
+    <Card variant="flat" padding="md">
       <div className="flex items-center space-x-3">
         <div className="w-10 h-10 bg-gray-200 border-2 border-black flex items-center justify-center">
           {activity.user.profile_picture_url ? (
             activity.user.profile_picture_url.includes('supabase.co') ? (
-              // Use Next.js Image for Supabase URLs (they're optimized and reliable)
               <Image
                 src={activity.user.profile_picture_url}
                 alt={activity.user.name}
@@ -560,7 +514,6 @@ function ActivityCard({ activity, openBookModal }: { activity: any; openBookModa
                 className="w-full h-full object-cover"
               />
             ) : (
-              // Use Next.js Image for external URLs (Google profile pics)
               <Image
                 src={activity.user.profile_picture_url}
                 alt={activity.user.name}
@@ -582,7 +535,7 @@ function ActivityCard({ activity, openBookModal }: { activity: any; openBookModa
           </p>
         </div>
       </div>
-    </div>
+    </Card>
   )
 }
 

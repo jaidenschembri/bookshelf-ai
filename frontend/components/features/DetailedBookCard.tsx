@@ -224,4 +224,5 @@ const DetailedBookCard: React.FC<DetailedBookCardProps> = ({
   )
 }
 
-export default DetailedBookCard 
+export default DetailedBookCard
+export { DetailedBookCard } 

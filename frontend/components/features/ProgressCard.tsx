@@ -33,4 +33,5 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
   )
 }
 
-export default ProgressCard 
+export default ProgressCard
+export { ProgressCard } 

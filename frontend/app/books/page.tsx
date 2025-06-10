@@ -232,112 +232,112 @@ function ReviewEditModal({
       onClose={onClose}
       title={reading.review ? 'EDIT REVIEW' : 'ADD REVIEW'}
       size="lg"
-    >
+            >
       <div className="space-y-6">
-        {/* Book Info */}
+            {/* Book Info */}
         <Card variant="flat" padding="md">
           <div className="flex items-center space-x-4">
-            {reading.book.cover_url ? (
+              {reading.book.cover_url ? (
               <img
-                src={reading.book.cover_url}
-                alt={reading.book.title}
+                  src={reading.book.cover_url}
+                  alt={reading.book.title}
                 className="w-12 h-16 object-cover book-cover"
-              />
-            ) : (
+                />
+              ) : (
               <div className="w-12 h-16 bg-gray-200 border-4 border-black flex items-center justify-center">
                 <BookOpen className="h-5 w-5 text-gray-600" />
-              </div>
-            )}
-            <div>
+                </div>
+              )}
+              <div>
               <h4 className="heading-sm">{reading.book.title}</h4>
               <p className="text-body text-gray-600">by {reading.book.author}</p>
             </div>
           </div>
         </Card>
 
-        {/* Rating */}
-        <div>
+            {/* Rating */}
+            <div>
           <label className="block text-caption text-gray-600 mb-3">
             RATING
-          </label>
-          <div className="flex justify-center sm:justify-start space-x-1">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                onClick={() => setRating(star)}
+              </label>
+              <div className="flex justify-center sm:justify-start space-x-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setRating(star)}
                 className={cn(
                   'transition-colors',
-                  star <= rating
+                      star <= rating
                     ? 'text-black'
                     : 'text-gray-300 hover:text-black'
                 )}
-              >
+                  >
                 <Star className="h-7 w-7 fill-current" />
-              </button>
-            ))}
-          </div>
-          {rating > 0 && (
+                  </button>
+                ))}
+              </div>
+              {rating > 0 && (
             <p className="text-caption text-gray-600 mt-2">{rating} out of 5 stars</p>
-          )}
-        </div>
+              )}
+            </div>
 
-        {/* Review Text */}
-        <div>
+            {/* Review Text */}
+            <div>
           <label className="block text-caption text-gray-600 mb-3">
             REVIEW
-          </label>
-          <textarea
-            value={review}
-            onChange={(e) => setReview(e.target.value)}
-            placeholder="Share your thoughts about this book..."
-            rows={4}
+              </label>
+              <textarea
+                value={review}
+                onChange={(e) => setReview(e.target.value)}
+                placeholder="Share your thoughts about this book..."
+                rows={4}
             className="input-field w-full"
-          />
-        </div>
+              />
+            </div>
 
-        {/* Privacy Setting */}
+            {/* Privacy Setting */}
         <Card variant="flat" padding="md">
           <div className="flex items-center justify-between">
             <div>
               <h4 className="heading-sm mb-1">MAKE REVIEW PUBLIC</h4>
               <p className="text-caption text-gray-600">
-                Other users will be able to see your review and rating
-              </p>
-            </div>
-            <button
-              onClick={() => setIsPublic(!isPublic)}
+                  Other users will be able to see your review and rating
+                </p>
+              </div>
+              <button
+                onClick={() => setIsPublic(!isPublic)}
               className={cn(
                 'relative inline-flex h-6 w-11 items-center border-2 border-black transition-colors',
                 isPublic ? 'bg-black' : 'bg-white'
               )}
-            >
-              <span
+              >
+                <span
                 className={cn(
                   'inline-block h-4 w-4 transform transition-transform border-2 border-black',
                   isPublic 
                     ? 'translate-x-6 bg-white' 
                     : 'translate-x-1 bg-black'
                 )}
-              />
-            </button>
-          </div>
+                />
+              </button>
+            </div>
         </Card>
-      </div>
+          </div>
 
-      {/* Actions */}
+          {/* Actions */}
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-8">
         <Button
           variant="secondary"
-          onClick={onClose}
+              onClick={onClose}
           className="order-2 sm:order-1"
-        >
+            >
           CANCEL
         </Button>
         <Button
           variant="primary"
-          onClick={handleSave}
+              onClick={handleSave}
           className="order-1 sm:order-2"
-        >
+            >
           {reading.review ? 'UPDATE REVIEW' : 'SAVE REVIEW'}
         </Button>
       </div>

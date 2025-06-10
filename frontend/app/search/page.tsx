@@ -5,10 +5,11 @@ import { useSession } from 'next-auth/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Layout from '@/components/Layout'
 import { bookApi, readingApi, BookSearch } from '@/lib/api'
-import { Search, BookOpen, Plus, Check } from 'lucide-react'
-import Image from 'next/image'
+import { Search, BookOpen } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useBookModal } from '@/contexts/BookModalContext'
+import { Input, Button, Card } from '@/components/ui'
+import { SearchBookCard } from '@/components/features'
 
 export default function SearchPage() {
   const { data: session } = useSession()
@@ -81,145 +82,52 @@ export default function SearchPage() {
       <div className="px-4 sm:px-0">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Search Books</h1>
-          <p className="text-gray-600 mt-2">Find books to add to your library</p>
+          <h1 className="heading-xl text-black">Search Books</h1>
+          <p className="text-body text-gray-600 mt-2">Find books to add to your library</p>
         </div>
 
         {/* Search Form */}
-        <div className="card mb-8">
+        <Card className="mb-8">
           <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search for books by title, author, or ISBN..."
-                  className="input-field pl-10 w-full"
-                />
-              </div>
+              <Input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search for books by title, author, or ISBN..."
+                icon={<Search className="h-5 w-5" />}
+              />
             </div>
-            <button
+            <Button
               type="submit"
+              variant="primary"
               disabled={isSearching || !query.trim()}
-              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+              loading={isSearching}
+              className="w-full sm:w-auto"
             >
               {isSearching ? 'Searching...' : 'Search'}
-            </button>
+            </Button>
           </form>
-        </div>
+        </Card>
 
         {/* Search Results */}
         {results.length > 0 && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="heading-lg text-black">
               Search Results ({results.length})
             </h2>
             
             <div className="grid gap-6">
               {results.map((book, index) => (
-                <div key={`${book.title}-${index}`} className="card">
-                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-                    {/* Book Cover */}
-                    <div className="flex-shrink-0 mx-auto sm:mx-0">
-                      {book.cover_url ? (
-                        <Image
-                          src={book.cover_url}
-                          alt={book.title}
-                          width={120}
-                          height={160}
-                          className="rounded-lg object-cover shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                          style={{ width: '120px', height: 'auto' }}
-                          sizes="120px"
-                        />
-                      ) : (
-                        <div className="w-30 h-40 bg-gray-200 rounded-lg flex items-center justify-center">
-                          <BookOpen className="h-12 w-12 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Book Details */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold mb-2">
-                        <button
-                          onClick={() => openBookModal({
-                            id: 0, // Temporary ID for search results
-                            title: book.title,
-                            author: book.author,
-                            isbn: book.isbn,
-                            cover_url: book.cover_url,
-                            description: book.description,
-                            publication_year: book.publication_year,
-                            created_at: new Date().toISOString(),
-                            genre: undefined,
-                            total_pages: undefined,
-                          })}
-                          className="text-gray-900 hover:text-blue-600 hover:underline text-left transition-colors"
-                        >
-                          {book.title}
-                        </button>
-                      </h3>
-                      <p className="text-gray-600 mb-2">by {book.author}</p>
-                      
-                      {book.publication_year && (
-                        <p className="text-sm text-gray-500 mb-2">
-                          Published: {book.publication_year}
-                        </p>
-                      )}
-                      
-                      {book.isbn && (
-                        <p className="text-sm text-gray-500 mb-4">
-                          ISBN: {book.isbn}
-                        </p>
-                      )}
-
-                      {book.description && (
-                        <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                          {book.description}
-                        </p>
-                      )}
-
-                      {/* Action Buttons */}
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        {addedBooks.has(book.title) ? (
-                          <div className="flex items-center text-green-600 text-sm">
-                            <Check className="h-4 w-4 mr-1" />
-                            Added to library
-                          </div>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => handleAddBook(book, 'want_to_read')}
-                              disabled={addBookMutation.isLoading}
-                              className="btn-secondary text-sm disabled:opacity-50"
-                            >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Want to Read
-                            </button>
-                            <button
-                              onClick={() => handleAddBook(book, 'currently_reading')}
-                              disabled={addBookMutation.isLoading}
-                              className="btn-primary text-sm disabled:opacity-50"
-                            >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Currently Reading
-                            </button>
-                            <button
-                              onClick={() => handleAddBook(book, 'finished')}
-                              disabled={addBookMutation.isLoading}
-                              className="btn-secondary text-sm disabled:opacity-50"
-                            >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Finished
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <SearchBookCard
+                  key={`${book.title}-${index}`}
+                  book={book}
+                  index={index}
+                  isAdded={addedBooks.has(book.title)}
+                  isLoading={addBookMutation.isLoading}
+                  onAddBook={handleAddBook}
+                  onOpenModal={openBookModal}
+                />
               ))}
             </div>
           </div>
@@ -227,26 +135,26 @@ export default function SearchPage() {
 
         {/* Empty State */}
         {!isSearching && results.length === 0 && query && (
-          <div className="text-center py-12">
+          <Card variant="flat" className="text-center py-12">
             <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No books found</h3>
-            <p className="text-gray-600">
+            <h3 className="heading-lg text-black mb-2">No books found</h3>
+            <p className="text-body text-gray-600">
               Try searching with different keywords or check your spelling.
             </p>
-          </div>
+          </Card>
         )}
 
         {/* Initial State */}
         {!query && results.length === 0 && (
-          <div className="text-center py-12">
+          <Card variant="flat" className="text-center py-12">
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="heading-lg text-black mb-2">
               Search for books to add to your library
             </h3>
-            <p className="text-gray-600">
+            <p className="text-body text-gray-600">
               Enter a book title, author name, or ISBN to get started.
             </p>
-          </div>
+          </Card>
         )}
       </div>
     </Layout>
