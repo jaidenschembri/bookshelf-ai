@@ -503,11 +503,7 @@ function ActivityCard({ activity, openBookModal }: { activity: any; openBookModa
     // Create clickable book title if available
     const clickableBookTitle = bookTitle && bookId ? (
       <button
-        onClick={() => openBookModal({ 
-          id: bookId, 
-          title: bookTitle, 
-          author: activity.activity_data?.book_author || 'Unknown Author' 
-        }, bookId)}
+        onClick={() => openBookModal(null, bookId)}
         className="font-semibold text-black hover:underline cursor-pointer"
       >
         "{bookTitle}"
