@@ -8,7 +8,7 @@ import Layout from '@/components/Layout'
 import { userApi, socialApi, UserPublicProfile, Reading } from '@/lib/api'
 import { 
   Users, UserPlus, UserMinus, BookOpen, Star, Calendar, MapPin, 
-  Eye, MessageCircle, Heart, User 
+  Eye, MessageCircle, Heart, User, Settings 
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -23,6 +23,7 @@ export default function UserProfilePage() {
   const userId = parseInt(id as string)
   const [activeTab, setActiveTab] = useState<'library' | 'reviews'>('library')
   const [libraryFilter, setLibraryFilter] = useState<string>('all')
+  const [isEditing, setIsEditing] = useState(false)
   const { openBookModal } = useBookModal()
 
   // Get user profile
@@ -134,18 +135,6 @@ export default function UserProfilePage() {
     return null
   }
 
-  // TEMP: Test the new ownership flags
-  console.log('🔍 Profile Data:', {
-    userId,
-    userProfile: {
-      id: userProfile.id,
-      name: userProfile.name,
-      is_own_profile: userProfile.is_own_profile,
-      can_edit: userProfile.can_edit,
-      is_following: userProfile.is_following
-    }
-  })
-
   const libraryStatusOptions = [
     { value: 'all', label: 'All Books' },
     { value: 'want_to_read', label: 'Want to Read' },
@@ -184,28 +173,38 @@ export default function UserProfilePage() {
                   )}
                 </div>
                 
-                {/* Follow Button */}
-                <button
-                  onClick={handleFollow}
-                  disabled={followMutation.isLoading || unfollowMutation.isLoading}
-                  className={`px-6 py-3 font-bold border-2 border-black transition-all duration-200 ${
-                    userProfile.is_following
-                      ? 'bg-black text-white hover:bg-gray-800'
-                      : 'bg-white text-black hover:bg-gray-100'
-                  } disabled:opacity-50`}
-                >
-                  {userProfile.is_following ? (
-                    <>
-                      <UserMinus className="h-4 w-4 inline mr-2" />
-                      UNFOLLOW
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="h-4 w-4 inline mr-2" />
-                      FOLLOW
-                    </>
-                  )}
-                </button>
+                {/* Edit Profile / Follow Button */}
+                {userProfile.can_edit ? (
+                  <button
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="px-6 py-3 font-bold border-2 border-black transition-all duration-200 bg-white text-black hover:bg-gray-100"
+                  >
+                    <Settings className="h-4 w-4 inline mr-2" />
+                    {isEditing ? 'CANCEL EDIT' : 'EDIT PROFILE'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleFollow}
+                    disabled={followMutation.isLoading || unfollowMutation.isLoading}
+                    className={`px-6 py-3 font-bold border-2 border-black transition-all duration-200 ${
+                      userProfile.is_following
+                        ? 'bg-black text-white hover:bg-gray-800'
+                        : 'bg-white text-black hover:bg-gray-100'
+                    } disabled:opacity-50`}
+                  >
+                    {userProfile.is_following ? (
+                      <>
+                        <UserMinus className="h-4 w-4 inline mr-2" />
+                        UNFOLLOW
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="h-4 w-4 inline mr-2" />
+                        FOLLOW
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
 
               {/* Bio */}
