@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { X, BookOpen, Calendar, Hash, Users, Star, Plus, Check } from 'lucide-react'
@@ -28,19 +28,43 @@ export default function BookModal({ isOpen, onClose, book, bookId }: BookModalPr
     }
   )
 
-  // Check if book is in user's library - TEMPORARILY DISABLED
-  // const { data: userLibrary, isLoading: isLoadingLibrary } = useQuery(
-  //   ['user-library', session?.user?.id],
-  //   () => session?.user?.id ? bookApi.getUserBooks(parseInt(session.user.id)) : [],
-  //   {
-  //     enabled: !!session?.user?.id && isOpen,
-  //   }
-  // )
-  const userLibrary: any[] = []
-  const isLoadingLibrary = false
+  // Check if book is in user's library
+  const { data: userReadings, isLoading: isLoadingLibrary } = useQuery(
+    ['user-readings', session?.user?.id],
+    () => session?.user?.id ? readingApi.getUserReadings(parseInt(session.user.id)) : [],
+    {
+      enabled: !!session?.user?.id && isOpen,
+      refetchOnWindowFocus: false,
+      retry: 1, // Only retry once to avoid infinite loops
+      onError: (error) => {
+        console.warn('Failed to load user library:', error)
+      }
+    }
+  )
 
   const currentBook = book || fetchedBook
-  const isInLibrary = false // Temporarily disabled library check
+  
+  // Check if current book is in user's library by comparing book IDs
+  const isInLibrary = useMemo(() => {
+    if (!currentBook || !userReadings) return false
+    
+    // Check by book ID if available
+    if (currentBook.id) {
+      return userReadings.some(reading => reading.book.id === currentBook.id)
+    }
+    
+    // Fallback: check by title + author combination for books from search
+    const currentTitle = currentBook.title?.toLowerCase().trim()
+    const currentAuthor = currentBook.author?.toLowerCase().trim()
+    
+    if (!currentTitle || !currentAuthor) return false
+    
+    return userReadings.some(reading => {
+      const readingTitle = reading.book.title?.toLowerCase().trim()
+      const readingAuthor = reading.book.author?.toLowerCase().trim()
+      return readingTitle === currentTitle && readingAuthor === currentAuthor
+    })
+  }, [currentBook, userReadings])
 
   // Add to library mutation
   const addToLibraryMutation = useMutation(
@@ -70,7 +94,7 @@ export default function BookModal({ isOpen, onClose, book, bookId }: BookModalPr
     {
       onSuccess: () => {
         toast.success(`Added "${currentBook?.title}" to your library!`)
-        queryClient.invalidateQueries(['user-library'])
+        queryClient.invalidateQueries(['user-readings'])
         queryClient.invalidateQueries(['dashboard'])
         queryClient.invalidateQueries(['readings'])
       },
