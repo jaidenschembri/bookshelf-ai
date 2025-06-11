@@ -28,23 +28,23 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white border-8 border-black max-w-md w-full">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-xl max-w-md w-full">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b-4 border-black">
-          <h2 className="heading-sm">SIGN IN TO BOOKSHELF AI</h2>
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+          <h2 className="text-lg font-semibold font-serif text-gray-900">Sign in to Bookshelf AI</h2>
           <button
             onClick={onClose}
-            className="p-2 border-2 border-black hover:bg-black hover:text-white transition-all duration-200"
+            className="w-8 h-8 border border-gray-300 rounded bg-white hover:bg-gray-100 flex items-center justify-center transition-colors"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         <div className="p-6">
           {/* Welcome Message */}
           <div className="text-center mb-8">
-            <h3 className="heading-xs mb-4">Welcome to Your Personal Library</h3>
-            <p className="text-body text-gray-600">
+            <h3 className="text-lg font-semibold font-serif mb-4">Welcome to Your Personal Library</h3>
+            <p className="text-gray-600">
               Track your reading, discover new books, and get AI-powered recommendations.
             </p>
           </div>
@@ -53,7 +53,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
           <button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className="w-full btn-primary mb-6 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gray-900 text-white px-4 py-3 rounded text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-6 flex items-center justify-center space-x-3"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -74,15 +74,15 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
           {/* Features */}
           <div className="space-y-3 text-sm text-gray-600">
             <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-black"></div>
+              <div className="w-2 h-2 bg-gray-900 rounded-full"></div>
               <span>Track your reading progress</span>
             </div>
             <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-black"></div>
+              <div className="w-2 h-2 bg-gray-900 rounded-full"></div>
               <span>Get AI-powered book recommendations</span>
             </div>
             <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-black"></div>
+              <div className="w-2 h-2 bg-gray-900 rounded-full"></div>
               <span>Connect with other readers</span>
             </div>
           </div>

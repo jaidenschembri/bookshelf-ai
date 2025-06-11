@@ -139,13 +139,13 @@ export default function BookModal({ isOpen, onClose, book, bookId }: BookModalPr
       />
       
       {/* Modal */}
-      <div className="relative bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white border border-gray-200 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b-4 border-black bg-gray-50">
-          <h2 className="text-xl font-bold text-gray-900">BOOK DETAILS</h2>
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+          <h2 className="text-xl font-semibold font-serif text-gray-900">Book Details</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 border-2 border-black bg-white hover:bg-gray-100 flex items-center justify-center"
+            className="w-8 h-8 border border-gray-300 rounded bg-white hover:bg-gray-100 flex items-center justify-center transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
@@ -155,17 +155,15 @@ export default function BookModal({ isOpen, onClose, book, bookId }: BookModalPr
         <div className="p-6">
           {isLoading ? (
             <div className="text-center py-12">
-              <div className="loading-brutalist">
-                <div className="w-16 h-16 border-4 border-black bg-white flex items-center justify-center">
-                  <BookOpen className="h-8 w-8 text-black" />
-                </div>
+              <div className="w-16 h-16 bg-gray-900 rounded flex items-center justify-center mx-auto">
+                <BookOpen className="h-8 w-8 text-white animate-pulse" />
               </div>
               <p className="text-gray-600 mt-4">Loading book details...</p>
             </div>
           ) : !currentBook ? (
             <div className="text-center py-12">
               <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Book not found</h3>
+              <h3 className="text-lg font-semibold font-serif text-gray-900 mb-2">Book not found</h3>
               <p className="text-gray-600">Unable to load book details.</p>
             </div>
           ) : (
@@ -180,11 +178,11 @@ export default function BookModal({ isOpen, onClose, book, bookId }: BookModalPr
                       alt={currentBook.title}
                       width={200}
                       height={300}
-                      className="border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] object-cover"
+                      className="border border-gray-200 rounded shadow-lg object-cover"
                       style={{ width: '200px', height: 'auto' }}
                     />
                   ) : (
-                    <div className="w-48 h-64 bg-gray-200 border-2 border-black flex items-center justify-center">
+                    <div className="w-48 h-64 bg-gray-200 border border-gray-200 rounded flex items-center justify-center">
                       <BookOpen className="h-16 w-16 text-gray-400" />
                     </div>
                   )}
@@ -193,7 +191,7 @@ export default function BookModal({ isOpen, onClose, book, bookId }: BookModalPr
                 {/* Basic Info */}
                 <div className="flex-1 space-y-4">
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-2xl font-bold font-serif text-gray-900 mb-2">
                       {currentBook.title}
                     </h1>
                     <p className="text-lg text-gray-700 mb-4">
@@ -246,8 +244,8 @@ export default function BookModal({ isOpen, onClose, book, bookId }: BookModalPr
 
               {/* Description */}
               {currentBook.description && (
-                <div className="border-t-2 border-black pt-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3">DESCRIPTION</h3>
+                <div className="border-t border-gray-200 pt-6">
+                  <h3 className="text-lg font-semibold font-serif text-gray-900 mb-3">Description</h3>
                   <div className="prose prose-sm max-w-none text-gray-700">
                     <p className="whitespace-pre-line">{currentBook.description}</p>
                   </div>
@@ -255,37 +253,37 @@ export default function BookModal({ isOpen, onClose, book, bookId }: BookModalPr
               )}
 
               {/* Actions */}
-              <div className="border-t-2 border-black pt-6">
+              <div className="border-t border-gray-200 pt-6">
                 <div className="flex flex-col sm:flex-row gap-3">
                   {session?.user?.id ? (
                     isLoadingLibrary ? (
                       <button 
                         disabled 
-                        className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                       >
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>CHECKING LIBRARY...</span>
+                        <span>Checking Library...</span>
                       </button>
                     ) : isInLibrary ? (
-                      <div className="btn-ghost bg-green-50 border-green-600 text-green-800 cursor-default flex items-center space-x-2">
+                      <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-2 rounded text-sm font-medium cursor-default flex items-center space-x-2">
                         <Check className="h-4 w-4" />
-                        <span>ADDED TO LIBRARY</span>
+                        <span>Added to Library</span>
                       </div>
                     ) : (
                       <button
                         onClick={() => addToLibraryMutation.mutate()}
                         disabled={!canAddToLibrary}
-                        className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                       >
                         {addToLibraryMutation.isLoading ? (
                           <>
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            <span>ADDING...</span>
+                            <span>Adding...</span>
                           </>
                         ) : (
                           <>
                             <Plus className="h-4 w-4" />
-                            <span>ADD TO LIBRARY</span>
+                            <span>Add to Library</span>
                           </>
                         )}
                       </button>

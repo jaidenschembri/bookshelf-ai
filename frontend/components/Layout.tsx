@@ -176,12 +176,30 @@ export default function Layout({ children }: LayoutProps) {
                 {session?.user && (
                   <div className="border-t border-gray-200 pt-4 mt-4">
                     <div className="flex items-center space-x-2 px-4 py-2 mb-2">
-                      <User className="h-4 w-4" />
+                      {session.user.image ? (
+                        <Image
+                          src={session.user.image}
+                          alt={session.user.name || 'Profile'}
+                          width={16}
+                          height={16}
+                          className="w-4 h-4 rounded-full object-cover"
+                        />
+                      ) : (
+                        <User className="h-4 w-4" />
+                      )}
                       <span className="text-sm font-medium">{session.user.name}</span>
                     </div>
+                    <Link
+                      href={`/user/${session.user.id}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center space-x-2 w-full px-4 py-2 text-sm font-medium text-gray-600 hover:text-black hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      <User className="h-4 w-4" />
+                      <span>Profile</span>
+                    </Link>
                     <button
                       onClick={handleSignOut}
-                      className="flex items-center space-x-2 w-full px-4 py-2 text-sm font-medium text-gray-600 hover:text-black transition-colors duration-200"
+                      className="flex items-center space-x-2 w-full px-4 py-2 text-sm font-medium text-gray-600 hover:text-black hover:bg-gray-50 transition-colors duration-200"
                     >
                       <LogOut className="h-4 w-4" />
                       <span>Sign Out</span>
