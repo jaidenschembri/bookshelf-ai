@@ -173,11 +173,11 @@ export default function BooksPage() {
               {selectedStatus === 'all' ? 'No books in your library' : `No ${selectedStatus.replace('_', ' ')} books`}
             </h3>
             <p className="text-sm text-gray-600 mb-6">
-              Start building your personal library by searching for books.
+              Start building your personal library by using the search bar above to find books.
             </p>
-            <a href="/search" className="inline-flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors">
-              <span>Search for Books</span>
-            </a>
+            <div className="inline-flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium">
+              <span>Use the search bar above to find books</span>
+            </div>
           </div>
         )}
       </div>

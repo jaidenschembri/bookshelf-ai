@@ -221,9 +221,9 @@ export default function RecommendationsPage() {
               Add and rate some books in your library first, then we can suggest books you'll love!
             </p>
             <div className="flex gap-4 justify-center">
-              <Link href="/search" className="inline-flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors">
-                <span>Search for Books</span>
-              </Link>
+              <div className="inline-flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium">
+                <span>Use the search bar above to find books</span>
+              </div>
               <Link href="/books" className="inline-flex items-center space-x-2 border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm font-medium hover:bg-gray-50 transition-colors">
                 <span>View My Library</span>
               </Link>
@@ -239,9 +239,9 @@ export default function RecommendationsPage() {
               Add and rate some books to get personalized AI recommendations!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/search" className="inline-flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors">
-                <span>Search for Books</span>
-              </Link>
+              <div className="inline-flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium">
+                <span>Use the search bar above to find books</span>
+              </div>
               <button
                 onClick={handleRefresh}
                 disabled={refreshMutation.isLoading}

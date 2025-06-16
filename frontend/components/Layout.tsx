@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { BookOpen, Home, Search, Star, Users } from 'lucide-react'
+import { BookOpen, Home, Star, Users } from 'lucide-react'
 import Header from './layout/Header'
 import Footer from './layout/Footer'
 import type { NavigationItem } from './layout/NavigationLinks'
@@ -18,7 +18,6 @@ export default function Layout({ children }: LayoutProps) {
   const navigation: NavigationItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'My Books', href: '/books', icon: BookOpen },
-    { name: 'Search Books', href: '/search', icon: Search },
     { name: 'Recommendations', href: '/recommendations', icon: Star },
     { name: 'Social', href: '/social', icon: Users },
   ]

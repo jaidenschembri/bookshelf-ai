@@ -4,6 +4,7 @@ import Logo from './Logo'
 import NavigationLinks, { NavigationItem } from './NavigationLinks'
 import ProfileDropdown, { ProfileUser } from './ProfileDropdown'
 import MobileMenu from './MobileMenu'
+import GlobalSearch from './GlobalSearch'
 
 export interface HeaderProps {
   navigationItems: NavigationItem[]
@@ -38,8 +39,13 @@ const Header: React.FC<HeaderProps> = ({
               <Logo />
             </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-8">
+            {/* Desktop Navigation - Center Search Bar */}
+            <div className="hidden lg:flex items-center flex-1 max-w-2xl mx-8">
+              <GlobalSearch />
+            </div>
+
+            {/* Desktop Navigation - Right Side */}
+            <div className="hidden lg:flex items-center space-x-6">
               {/* Navigation Links */}
               <NavigationLinks items={navigationItems} />
 

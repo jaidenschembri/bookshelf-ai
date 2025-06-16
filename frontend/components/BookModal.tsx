@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { useSession } from 'next-auth/react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { X, BookOpen } from 'lucide-react'
-import toast from 'react-hot-toast'
-import { Book, bookApi, readingApi, Reading } from '@/lib/api'
-import { Modal, ReviewEditor, BookDetails, UserReviewDisplay, BookModalActions } from '@/components/ui'
+import { Book, Reading } from '@/lib/api'
+import { 
+  Modal, 
+  useBookModalData, 
+  BookModalStates, 
+  BookModalContent, 
+  useModalKeyboard 
+} from '@/components/ui'
 
 interface BookModalProps {
   isOpen: boolean
@@ -18,235 +19,79 @@ interface BookModalProps {
 }
 
 export default function BookModal({ isOpen, onClose, book, bookId, editMode = 'view', reading }: BookModalProps) {
-  const { data: session } = useSession()
-  const queryClient = useQueryClient()
+  // Use the custom hook for all data management
+  const {
+    currentBook,
+    userReading,
+    session,
+    isInLibrary,
+    isLoadingBook,
+    isLoadingLibrary,
+    review,
+    rating,
+    isPublic,
+    isEditingReview,
+    setReview,
+    setRating,
+    setIsPublic,
+    setIsEditingReview,
+    addToLibraryMutation,
+    updateReadingMutation,
+    handleSaveReview,
+    handleEditReview,
+    handleCancelReview,
+  } = useBookModalData({ book, bookId, reading, isOpen, editMode })
 
-  // Review editing state
-  const [review, setReview] = useState('')
-  const [rating, setRating] = useState(0)
-  const [isPublic, setIsPublic] = useState(false)
-  const [isEditingReview, setIsEditingReview] = useState(editMode === 'review')
-
-  // Fetch book details if we only have an ID
-  const { data: fetchedBook, isLoading: isLoadingBook } = useQuery(
-    ['book', bookId],
-    () => bookApi.getBook(bookId!),
-    {
-      enabled: !!bookId && !book,
-    }
-  )
-
-  // Check if book is in user's library and get reading details
-  const { data: userReadings, isLoading: isLoadingLibrary } = useQuery(
-    ['user-readings', session?.user?.id],
-    () => session?.user?.id ? readingApi.getUserReadings(parseInt(session.user.id)) : [],
-    {
-      enabled: !!session?.user?.id && isOpen,
-      refetchOnWindowFocus: false,
-      retry: 1,
-      onError: (error) => {
-        console.warn('Failed to load user library:', error)
-      }
-    }
-  )
-
-  const currentBook = book || fetchedBook
-  
-  // Find the user's reading for this book
-  const userReading = useMemo(() => {
-    if (reading) return reading // If reading is passed directly, use it
-    if (!currentBook || !userReadings) return null
-    
-    // Check by book ID if available
-    if (currentBook.id) {
-      return userReadings.find(r => r.book.id === currentBook.id) || null
-    }
-    
-    // Fallback: check by title + author combination for books from search
-    const currentTitle = currentBook.title?.toLowerCase().trim()
-    const currentAuthor = currentBook.author?.toLowerCase().trim()
-    
-    if (!currentTitle || !currentAuthor) return null
-    
-    return userReadings.find(r => {
-      const readingTitle = r.book.title?.toLowerCase().trim()
-      const readingAuthor = r.book.author?.toLowerCase().trim()
-      return readingTitle === currentTitle && readingAuthor === currentAuthor
-    }) || null
-  }, [currentBook, userReadings, reading])
-
-  const isInLibrary = !!userReading
-
-  // Initialize review state when we have reading data
-  useEffect(() => {
-    if (userReading) {
-      setReview(userReading.review || '')
-      setRating(userReading.rating || 0)
-      setIsPublic(userReading.is_review_public || false)
-    }
-  }, [userReading])
-
-  // Add to library mutation
-  const addToLibraryMutation = useMutation(
-    async () => {
-      if (!currentBook) throw new Error('No book selected')
-      
-      const addedBook = await bookApi.add({
-        title: currentBook.title,
-        author: currentBook.author,
-        isbn: currentBook.isbn,
-        cover_url: currentBook.cover_url,
-        description: currentBook.description,
-        publication_year: currentBook.publication_year,
-        genre: currentBook.genre,
-        total_pages: currentBook.total_pages,
-      })
-
-      await readingApi.create({
-        book_id: addedBook.id,
-        status: 'want_to_read',
-      })
-
-      return addedBook
-    },
-    {
-      onSuccess: () => {
-        toast.success(`Added "${currentBook?.title}" to your library!`)
-        queryClient.invalidateQueries(['user-readings'])
-        queryClient.invalidateQueries(['dashboard'])
-        queryClient.invalidateQueries(['readings'])
-      },
-      onError: (error: any) => {
-        toast.error(error.response?.data?.detail || 'Failed to add book to library')
-      },
-    }
-  )
-
-  // Update reading/review mutation
-  const updateReadingMutation = useMutation(
-    async (updates: Partial<Reading>) => {
-      if (!userReading) throw new Error('No reading found')
-      return readingApi.update(userReading.id, updates)
-    },
-    {
-      onSuccess: () => {
-        toast.success('Review updated successfully!')
-        queryClient.invalidateQueries(['user-readings'])
-        queryClient.invalidateQueries(['dashboard'])
-        queryClient.invalidateQueries(['readings'])
-        setIsEditingReview(false)
-      },
-      onError: (error: any) => {
-        toast.error(error.response?.data?.detail || 'Failed to update review')
-      },
-    }
-  )
-
-  const handleSaveReview = () => {
-    updateReadingMutation.mutate({
-      review: review.trim() || undefined,
-      rating: rating || undefined,
-      is_review_public: isPublic
-    })
-  }
-
-  const handleEditReview = () => {
-    setIsEditingReview(true)
-  }
-
-  const handleCancelReview = () => {
-    setIsEditingReview(false)
-    // Reset to original values
-    if (userReading) {
-      setReview(userReading.review || '')
-      setRating(userReading.rating || 0)
-      setIsPublic(userReading.is_review_public || false)
-    }
-  }
-
-  // Close modal on escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        if (isEditingReview) {
-          setIsEditingReview(false)
-        } else {
-          onClose()
-        }
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'hidden'
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen, onClose, isEditingReview])
+  // Use the keyboard hook for modal controls
+  const { handleModalClose } = useModalKeyboard({
+    isOpen,
+    isEditingReview,
+    onClose,
+    setIsEditingReview
+  })
 
   if (!isOpen) return null
 
   const isLoading = isLoadingBook && (!book || !currentBook)
   const canAddToLibrary = session?.user?.id && !isInLibrary && !addToLibraryMutation.isLoading
 
+  const modalTitle = isEditingReview 
+    ? (userReading?.review ? 'Edit Review' : 'Add Review') 
+    : 'Book Details'
+
   return (
     <Modal
       isOpen={isOpen}
-      onClose={() => isEditingReview ? setIsEditingReview(false) : onClose()}
-      title={isEditingReview ? (userReading?.review ? 'Edit Review' : 'Add Review') : 'Book Details'}
+      onClose={handleModalClose}
+      title={modalTitle}
       size="lg"
     >
-      {isLoading ? (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-900 rounded flex items-center justify-center mx-auto">
-            <BookOpen className="h-8 w-8 text-white animate-pulse" />
-          </div>
-          <p className="text-gray-600 mt-4">Loading book details...</p>
-        </div>
-      ) : !currentBook ? (
-        <div className="text-center py-12">
-          <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold font-serif text-gray-900 mb-2">Book not found</h3>
-          <p className="text-gray-600">Unable to load book details.</p>
-        </div>
-      ) : isEditingReview ? (
-        <ReviewEditor
-          book={currentBook}
-          reading={userReading || undefined}
+      <BookModalStates
+        isLoading={isLoading}
+        currentBook={currentBook}
+      />
+      
+      {currentBook && (
+        <BookModalContent
+          currentBook={currentBook}
+          userReading={userReading}
+          isEditingReview={isEditingReview}
+          isSignedIn={!!session?.user?.id}
+          isInLibrary={isInLibrary}
+          isLoadingLibrary={isLoadingLibrary}
+          canAddToLibrary={!!canAddToLibrary}
           review={review}
           rating={rating}
           isPublic={isPublic}
-          isLoading={updateReadingMutation.isLoading}
+          isLoadingUpdate={updateReadingMutation.isLoading}
+          onEditReview={handleEditReview}
+          onAddToLibrary={() => addToLibraryMutation.mutate()}
           onReviewChange={setReview}
           onRatingChange={setRating}
           onPublicToggle={setIsPublic}
-          onSave={handleSaveReview}
-          onCancel={handleCancelReview}
+          onSaveReview={handleSaveReview}
+          onCancelReview={handleCancelReview}
         />
-      ) : (
-        <div className="space-y-6">
-          <BookDetails book={currentBook} />
-          
-          {userReading && (
-            <UserReviewDisplay 
-              reading={userReading} 
-              onEditClick={handleEditReview} 
-            />
-          )}
-          
-          <BookModalActions
-            isSignedIn={!!session?.user?.id}
-            isInLibrary={isInLibrary}
-            isLoading={isLoadingLibrary}
-            canAddToLibrary={!!canAddToLibrary}
-            reading={userReading || undefined}
-            onAddToLibrary={() => addToLibraryMutation.mutate()}
-            onEditReview={handleEditReview}
-          />
-        </div>
       )}
     </Modal>
   )

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { User, LogOut } from 'lucide-react'
 import Image from 'next/image'
 import NavigationLinks, { NavigationItem } from './NavigationLinks'
+import GlobalSearch from './GlobalSearch'
 
 export interface MobileMenuUser {
   id: string | number
@@ -32,7 +33,12 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   return (
     <div className={`lg:hidden border-t border-gray-200 bg-white ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="space-y-2">
+        <div className="space-y-4">
+          {/* Mobile Search */}
+          <div className="pb-2">
+            <GlobalSearch className="max-w-none" />
+          </div>
+          
           {/* Navigation Links */}
           <NavigationLinks
             items={navigationItems}

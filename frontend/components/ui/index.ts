@@ -24,6 +24,12 @@ export { default as BookDetails } from '../modal/BookDetails'
 export { default as UserReviewDisplay } from '../modal/UserReviewDisplay'
 export { default as BookModalActions } from '../modal/BookModalActions'
 
+// Modal Support Components
+export { useBookModalData } from '../modal/BookModalData'
+export { BookModalStates, BookModalLoading, BookModalError } from '../modal/BookModalStates'
+export { BookModalContent } from '../modal/BookModalContent'
+export { useModalKeyboard } from '../modal/useModalKeyboard'
+
 // Feature Components (Book-related)
 export { default as BookCard } from '../features/BookCard'
 export { default as StatCard } from '../features/StatCard'
@@ -80,6 +86,12 @@ export type { ReviewEditorProps } from '../modal/ReviewEditor'
 export type { BookDetailsProps } from '../modal/BookDetails'
 export type { UserReviewDisplayProps } from '../modal/UserReviewDisplay'
 export type { BookModalActionsProps } from '../modal/BookModalActions'
+
+// Modal Support Component Types
+export type { UseBookModalDataProps } from '../modal/BookModalData'
+export type { BookModalStatesProps, BookModalLoadingProps, BookModalErrorProps } from '../modal/BookModalStates'
+export type { BookModalContentProps } from '../modal/BookModalContent'
+export type { UseModalKeyboardProps } from '../modal/useModalKeyboard'
 
 // Feature Component Types (from individual files)
 export type { BookCardProps } from '../features/BookCard'

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Layout from '@/components/Layout'
 import { dashboardApi, Dashboard, bookApi, readingApi, recommendationApi, Recommendation } from '@/lib/api'
-import { BookOpen, ArrowRight } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { useBookModal } from '@/contexts/BookModalContext'
@@ -219,10 +219,9 @@ export default function DashboardPage() {
                    Try Again
                  </Button>
                ) : null}
-              <Link href="/search" className="inline-flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors">
-                <span>Search for Books</span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              <div className="inline-flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium">
+                <span>Use the search bar above to find books</span>
+              </div>
             </div>
           </div>
         </div>
@@ -275,11 +274,10 @@ export default function DashboardPage() {
                 <BookOpen className="h-8 w-8 text-white" />
               </div>
               <h2 className="text-2xl font-semibold font-serif tracking-tight mb-4">Start Your Reading Journey</h2>
-              <p className="text-sm text-gray-600 mb-6">Add some books to your library to see personalized recommendations and track your progress.</p>
-              <Link href="/search" className="inline-flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors">
-                <span>Search for Books</span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              <p className="text-sm text-gray-600 mb-6">Add some books to your library using the search bar above to see personalized recommendations and track your progress.</p>
+              <div className="inline-flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium">
+                <span>Use the search bar above to find books</span>
+              </div>
             </div>
           </div>
         )}
