@@ -29,7 +29,7 @@ export { default as BookCard } from '../features/BookCard'
 export { default as StatCard } from '../features/StatCard'
 export { default as ProgressCard } from '../features/ProgressCard'
 export { default as RecommendationCard } from '../features/RecommendationCard'
-export { default as DetailedBookCard } from '../features/DetailedBookCard'
+
 export { SearchBookCard } from '../features/SearchBookCard'
 
 // ============================================================================
@@ -86,7 +86,7 @@ export type { BookCardProps } from '../features/BookCard'
 export type { StatCardProps } from '../features/StatCard'
 export type { ProgressCardProps } from '../features/ProgressCard'
 export type { RecommendationCardProps } from '../features/RecommendationCard'
-export type { DetailedBookCardProps } from '../features/DetailedBookCard'
+
 
 // ============================================================================
 // USAGE EXAMPLES

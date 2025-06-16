@@ -29,7 +29,7 @@ const DashboardCurrentBooks: React.FC<DashboardCurrentBooksProps> = ({
               book={reading.book}
               reading={reading}
               onClick={() => onBookClick(reading.book, reading.book.id)}
-              variant="default"
+              mode="card"
               showProgress={true}
             />
           ))}

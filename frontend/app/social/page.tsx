@@ -386,7 +386,7 @@ function ReviewCard({ reading, openBookModal }: { reading: Reading; openBookModa
               total_pages: reading.total_pages
             }}
             onClick={() => openBookModal(null, reading.book.id)}
-            variant="compact"
+            mode="compact"
           />
         </div>
         <div className="flex-1 min-w-0">

@@ -15,9 +15,9 @@ import {
   LoadingSpinner,
   Modal,
   Input,
-  DetailedBookCard,
   TabNavigation
 } from '@/components/ui'
+import { BookCard } from '@/components/features'
 import { cn } from '@/lib/utils'
 
 export default function BooksPage() {
@@ -150,9 +150,13 @@ export default function BooksPage() {
         {readings && readings.length > 0 ? (
           <div className="grid gap-6">
             {readings.map((reading) => (
-              <DetailedBookCard
+              <BookCard
                 key={reading.id}
+                book={reading.book}
                 reading={reading}
+                mode="detailed"
+                interactive={true}
+                showControls={true}
                 onStatusChange={(status) => handleStatusChange(reading, status)}
                 onRatingChange={(rating) => handleRatingChange(reading, rating)}
                 onProgressUpdate={(pages) => handleProgressUpdate(reading, pages)}

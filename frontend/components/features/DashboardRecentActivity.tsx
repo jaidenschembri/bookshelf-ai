@@ -40,7 +40,7 @@ const DashboardRecentActivity: React.FC<DashboardRecentActivityProps> = ({
               book={reading.book}
               reading={reading}
               onClick={() => onBookClick(reading.book, reading.book.id)}
-              variant="compact"
+              mode="compact"
               showRating={true}
             />
           ))}
