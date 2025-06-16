@@ -39,13 +39,13 @@ const Input: React.FC<InputProps> = ({
   iconPosition = 'left',
   ...props
 }) => {
-  const baseClasses = 'w-full bg-white text-black font-mono text-sm placeholder:text-gray-500 transition-all duration-200 focus:outline-none'
+  const baseClasses = 'w-full bg-white text-gray-900 text-sm placeholder:text-gray-500 transition-colors focus:outline-none rounded'
   
   const variantClasses = {
-    default: 'px-4 py-3 border-4 border-black focus:bg-gray-100',
-    large: 'px-6 py-4 border-4 border-black focus:bg-gray-100 text-base',
-    error: 'px-4 py-3 border-4 border-red-600 bg-red-50 focus:bg-red-100',
-    success: 'px-4 py-3 border-4 border-green-600 bg-green-50 focus:bg-green-100'
+    default: 'px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:border-transparent',
+    large: 'px-4 py-3 border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:border-transparent text-base',
+    error: 'px-3 py-2 border border-red-300 bg-red-50 focus:ring-2 focus:ring-red-500 focus:border-transparent',
+    success: 'px-3 py-2 border border-green-300 bg-green-50 focus:ring-2 focus:ring-green-500 focus:border-transparent'
   }
   
   const stateClasses = error || errorMessage ? variantClasses.error : 
@@ -58,14 +58,14 @@ const Input: React.FC<InputProps> = ({
     baseClasses,
     stateClasses,
     disabledClasses,
-    icon ? (iconPosition === 'left' ? 'pl-12' : 'pr-12') : '',
+    icon ? (iconPosition === 'left' ? 'pl-10' : 'pr-10') : '',
     className
   )
   
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-caption text-black mb-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
           {label}
           {required && <span className="text-red-600 ml-1">*</span>}
         </label>
@@ -73,7 +73,7 @@ const Input: React.FC<InputProps> = ({
       
       <div className="relative">
         {icon && iconPosition === 'left' && (
-          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600">
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
             {icon}
           </div>
         )}
@@ -92,21 +92,21 @@ const Input: React.FC<InputProps> = ({
         />
         
         {icon && iconPosition === 'right' && (
-          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600">
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
             {icon}
           </div>
         )}
         
         {loading && (
-          <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-            <div className="loading-brutalist w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
           </div>
         )}
       </div>
       
       {(helperText || errorMessage) && (
         <p className={cn(
-          'text-xs font-mono uppercase tracking-wider mt-2',
+          'text-xs mt-2',
           errorMessage ? 'text-red-600' : 'text-gray-600'
         )}>
           {errorMessage || helperText}

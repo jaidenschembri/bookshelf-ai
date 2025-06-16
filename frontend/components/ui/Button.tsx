@@ -26,20 +26,20 @@ const Button: React.FC<ButtonProps> = ({
   iconPosition = 'left',
   ...props
 }) => {
-  const baseClasses = 'font-bold uppercase tracking-wider transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2'
+  const baseClasses = 'font-medium transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 rounded'
   
   const variantClasses = {
-    primary: 'bg-black text-white border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]',
-    secondary: 'bg-white text-black border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]',
-    ghost: 'bg-transparent text-black border-2 border-black hover:bg-gray-100',
-    danger: 'bg-red-600 text-white border-4 border-red-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]',
-    success: 'bg-green-600 text-white border-4 border-green-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]'
+    primary: 'bg-gray-900 text-white hover:bg-gray-800',
+    secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50',
+    ghost: 'bg-transparent text-gray-700 hover:bg-gray-100',
+    danger: 'bg-red-600 text-white hover:bg-red-700',
+    success: 'bg-green-600 text-white hover:bg-green-700'
   }
   
   const sizeClasses = {
-    sm: 'px-4 py-2 text-xs',
-    md: 'px-6 py-3 text-sm',
-    lg: 'px-8 py-4 text-base'
+    sm: 'px-3 py-2 text-sm',
+    md: 'px-4 py-2 text-sm',
+    lg: 'px-6 py-3 text-base'
   }
   
   const widthClasses = fullWidth ? 'w-full' : ''
@@ -56,7 +56,7 @@ const Button: React.FC<ButtonProps> = ({
     if (loading) {
       return (
         <>
-          <div className="loading-brutalist w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
           <span>Loading...</span>
         </>
       )

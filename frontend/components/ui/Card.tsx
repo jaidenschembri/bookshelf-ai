@@ -22,14 +22,14 @@ const Card: React.FC<CardProps> = ({
   onClick,
   ...props
 }) => {
-  const baseClasses = 'bg-white border-black transition-all duration-200'
+  const baseClasses = 'bg-white border border-gray-200 rounded transition-colors'
   
   const variantClasses = {
-    default: 'border-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]',
-    flat: 'border-2',
-    hover: 'border-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]',
-    compact: 'border-2',
-    featured: 'border-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
+    default: '',
+    flat: 'border-gray-200',
+    hover: 'hover:border-gray-300 hover:shadow-sm',
+    compact: 'border-gray-200',
+    featured: 'border-gray-300 shadow-sm'
   }
   
   const paddingClasses = {
@@ -39,7 +39,7 @@ const Card: React.FC<CardProps> = ({
     lg: 'p-8'
   }
   
-  const clickableClasses = clickable ? 'cursor-pointer' : ''
+  const clickableClasses = clickable ? 'cursor-pointer hover:bg-gray-50' : ''
   
   const cardClasses = cn(
     baseClasses,
@@ -58,7 +58,7 @@ const Card: React.FC<CardProps> = ({
       {...props}
     >
       {header && (
-        <div className="mb-6 pb-4 border-b-2 border-black">
+        <div className="mb-4 pb-4 border-b border-gray-200">
           {header}
         </div>
       )}
@@ -68,7 +68,7 @@ const Card: React.FC<CardProps> = ({
       </div>
       
       {footer && (
-        <div className="mt-6 pt-4 border-t-2 border-black">
+        <div className="mt-4 pt-4 border-t border-gray-200">
           {footer}
         </div>
       )}

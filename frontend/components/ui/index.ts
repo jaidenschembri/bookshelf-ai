@@ -1,4 +1,9 @@
-// Barrel exports for all UI components
+// ============================================================================
+// BOOKSHELF AI UI COMPONENT LIBRARY
+// ============================================================================
+// Barrel exports for all UI components with comprehensive type definitions
+
+// Base UI Components
 export { default as Button } from './Button'
 export { default as Card } from './Card'
 export { default as Input } from './Input'
@@ -7,22 +12,131 @@ export { default as Modal } from './Modal'
 export { default as LoadingSpinner } from './LoadingSpinner'
 export { default as TabNavigation } from './TabNavigation'
 
-// Feature components
+// New Reusable Components
+export { default as StarRating } from './StarRating'
+export { default as BookCover } from './BookCover'
+export { default as ToggleSwitch } from './ToggleSwitch'
+
+// Modal Components
+export { default as BookMetadata } from '../modal/BookMetadata'
+export { default as ReviewEditor } from '../modal/ReviewEditor'
+export { default as BookDetails } from '../modal/BookDetails'
+export { default as UserReviewDisplay } from '../modal/UserReviewDisplay'
+export { default as BookModalActions } from '../modal/BookModalActions'
+
+// Feature Components (Book-related)
 export { default as BookCard } from '../features/BookCard'
 export { default as StatCard } from '../features/StatCard'
 export { default as ProgressCard } from '../features/ProgressCard'
 export { default as RecommendationCard } from '../features/RecommendationCard'
 export { default as DetailedBookCard } from '../features/DetailedBookCard'
+export { SearchBookCard } from '../features/SearchBookCard'
 
-// Re-export types
-export type { ButtonProps } from './Button'
-export type { CardProps } from './Card'
-export type { InputProps } from './Input'
-export type { BadgeProps } from './Badge'
-export type { ModalProps } from './Modal'
-export type { TabNavigationProps, TabOption } from './TabNavigation'
+// ============================================================================
+// TYPE EXPORTS
+// ============================================================================
+
+// Design System Types
+export type {
+  BaseComponentProps,
+  ComponentStates,
+  ColorVariant,
+  TextSize,
+  FontWeight,
+  SpacingSize,
+  BorderRadius
+} from '@/types/ui'
+
+// Component-specific Types (from design system)
+export type {
+  ButtonProps,
+  ButtonVariant,
+  ButtonSize,
+  CardProps,
+  CardVariant,
+  CardPadding,
+  InputProps,
+  InputVariant,
+  BadgeProps,
+  BadgeVariant,
+  BadgeSize,
+  BadgeColor,
+  ModalProps,
+  ModalSize,
+  TabNavigationProps,
+  TabOption,
+  LoadingSpinnerProps,
+  LoadingSize
+} from '@/types/ui'
+
+// New Component Types
+export type { StarRatingProps } from './StarRating'
+export type { BookCoverProps } from './BookCover'
+export type { ToggleSwitchProps } from './ToggleSwitch'
+
+// Modal Component Types
+export type { BookMetadataProps } from '../modal/BookMetadata'
+export type { ReviewEditorProps } from '../modal/ReviewEditor'
+export type { BookDetailsProps } from '../modal/BookDetails'
+export type { UserReviewDisplayProps } from '../modal/UserReviewDisplay'
+export type { BookModalActionsProps } from '../modal/BookModalActions'
+
+// Feature Component Types (from individual files)
 export type { BookCardProps } from '../features/BookCard'
 export type { StatCardProps } from '../features/StatCard'
 export type { ProgressCardProps } from '../features/ProgressCard'
 export type { RecommendationCardProps } from '../features/RecommendationCard'
-export type { DetailedBookCardProps } from '../features/DetailedBookCard' 
+export type { DetailedBookCardProps } from '../features/DetailedBookCard'
+
+// ============================================================================
+// USAGE EXAMPLES
+// ============================================================================
+
+/*
+IMPORT PATTERNS:
+
+// Individual components
+import { Button, Card, Input, StarRating, BookCover } from '@/components/ui'
+
+// Modal components
+import { ReviewEditor, BookDetails, UserReviewDisplay, BookModalActions } from '@/components/ui'
+
+// With types
+import { Button, type ButtonProps, StarRating, type StarRatingProps } from '@/components/ui'
+
+COMPONENT USAGE:
+
+✅ Correct Usage:
+<ReviewEditor
+  book={book}
+  reading={reading}
+  review={review}
+  rating={rating}
+  isPublic={isPublic}
+  isLoading={isLoading}
+  onReviewChange={setReview}
+  onRatingChange={setRating}
+  onPublicToggle={setIsPublic}
+  onSave={handleSave}
+  onCancel={handleCancel}
+/>
+
+<BookDetails book={book} />
+
+<UserReviewDisplay reading={reading} onEditClick={handleEdit} />
+
+<BookModalActions
+  isSignedIn={!!session}
+  isInLibrary={isInLibrary}
+  isLoading={isLoadingLibrary}
+  canAddToLibrary={canAddToLibrary}
+  reading={reading}
+  onAddToLibrary={handleAddToLibrary}
+  onEditReview={handleEditReview}
+/>
+
+❌ Common Mistakes:
+<Card padding="xl"> // Build error - 'xl' not valid
+<Badge variant="default"> // Build error - 'default' not valid
+<StarRating rating="high"> // Type error - rating must be number
+*/ 

@@ -36,7 +36,7 @@ const Modal: React.FC<ModalProps> = ({
   }
   
   const modalClasses = cn(
-    'bg-white border-8 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] w-full mx-4',
+    'bg-white border border-gray-200 rounded-lg shadow-lg w-full mx-4',
     sizeClasses[size],
     className
   )
@@ -77,9 +77,9 @@ const Modal: React.FC<ModalProps> = ({
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b-4 border-black">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
             {title && (
-              <h2 className="heading-sm text-black">{title}</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
             )}
             {showCloseButton && (
               <Button
@@ -100,7 +100,7 @@ const Modal: React.FC<ModalProps> = ({
         
         {/* Footer */}
         {footer && (
-          <div className="p-6 border-t-4 border-black">
+          <div className="p-6 border-t border-gray-200">
             {footer}
           </div>
         )}
