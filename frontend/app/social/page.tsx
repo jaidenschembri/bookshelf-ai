@@ -13,6 +13,7 @@ import { signIn } from 'next-auth/react'
 import { useAuthRefresh } from '@/lib/auth-utils'
 import { useBookModal } from '@/contexts/BookModalContext'
 import { Button, Card, Input, LoadingSpinner, TabNavigation, Badge, BookCard } from '@/components/ui'
+import { UserCard, ReviewCard, ActivityCard } from '@/components/social'
 
 export default function SocialPage() {
   const { needsAuth, isRefreshing, hasValidAuth, session, status } = useAuthRefresh()
@@ -190,7 +191,11 @@ export default function SocialPage() {
                     <h3 className="text-lg font-semibold font-serif mb-4">Recent Reviews</h3>
                     <div className="space-y-4">
                       {feed.recent_reviews.map((reading) => (
-                        <ReviewCard key={reading.id} reading={reading} openBookModal={openBookModal} />
+                        <ReviewCard 
+                          key={reading.id} 
+                          reading={reading} 
+                          onBookClick={openBookModal} 
+                        />
                       ))}
                     </div>
                   </div>
@@ -202,7 +207,11 @@ export default function SocialPage() {
                     <h3 className="text-lg font-semibold font-serif mb-4">Recent Activity</h3>
                     <div className="space-y-3">
                       {feed.activities.map((activity) => (
-                        <ActivityCard key={activity.id} activity={activity} openBookModal={openBookModal} />
+                        <ActivityCard 
+                          key={activity.id} 
+                          activity={activity} 
+                          onBookClick={openBookModal} 
+                        />
                       ))}
                     </div>
                   </div>
@@ -264,15 +273,14 @@ export default function SocialPage() {
                   </div>
                 ) : searchResults && searchResults.length > 0 ? (
                   <div className="grid gap-6">
-                    {searchResults.map((user, index) => (
-                      <UserCard
-                        key={user.id}
-                        user={user}
-                        index={index}
-                        onFollow={handleFollow}
-                        isLoading={followMutation.isLoading || unfollowMutation.isLoading}
-                      />
-                    ))}
+                                      {searchResults.map((user) => (
+                    <UserCard 
+                      key={user.id}
+                      user={user}
+                      onFollow={handleFollow}
+                      isLoading={followMutation.isLoading || unfollowMutation.isLoading}
+                    />
+                  ))}
                   </div>
                 ) : (
                   <div className="text-center py-16">
@@ -305,209 +313,7 @@ export default function SocialPage() {
   )
 }
 
-// User Card Component - matching dashboard styling
-function UserCard({ 
-  user, 
-  index,
-  onFollow, 
-  isLoading 
-}: { 
-  user: UserPublicProfile
-  index: number
-  onFollow: (userId: number, isFollowing: boolean) => void
-  isLoading: boolean
-}) {
-  return (
-    <div key={`${user.name}-${index}`} className="border border-gray-200 p-4 rounded">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
-            {user.profile_picture_url ? (
-              <Image
-                src={user.profile_picture_url}
-                alt={user.name}
-                width={48}
-                height={48}
-                className="w-full h-full object-cover rounded"
-              />
-            ) : (
-              <Users className="h-6 w-6 text-gray-400" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <Link href={`/user/${user.id}`}>
-              <h4 className="text-lg font-semibold font-serif hover:underline cursor-pointer transition-colors">
-                {user.name}
-              </h4>
-            </Link>
-            {user.username && (
-              <p className="text-sm text-gray-600">@{user.username}</p>
-            )}
-            {user.bio && (
-              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{user.bio}</p>
-            )}
-            <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-              <span>{user.follower_count} followers</span>
-              <span>{user.following_count} following</span>
-              <span>Goal: {user.reading_goal} books</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex-shrink-0 ml-4">
-          <button
-            onClick={() => onFollow(user.id, user.is_following)}
-            disabled={isLoading}
-            className={`px-3 py-1.5 text-sm font-medium rounded transition-colors ${
-              user.is_following
-                ? 'bg-gray-900 text-white hover:bg-gray-800'
-                : 'bg-white text-gray-900 border border-gray-300 hover:bg-gray-50'
-            } disabled:opacity-50`}
-          >
-            {user.is_following ? 'Following' : 'Follow'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
-// Review Card Component - using existing BookCard
-function ReviewCard({ reading, openBookModal }: { reading: Reading; openBookModal: (book: any, bookId?: number) => void }) {
-  return (
-    <div className="border-b border-gray-100 pb-4 last:border-b-0">
-      <div className="flex items-start space-x-4">
-        <div className="flex-shrink-0">
-          <BookCard
-            book={reading.book}
-            reading={{
-              status: reading.status,
-              rating: reading.rating,
-              progress_pages: reading.progress_pages,
-              total_pages: reading.total_pages
-            }}
-            onClick={() => openBookModal(null, reading.book.id)}
-            mode="compact"
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          {reading.user && (
-            <Link href={`/user/${reading.user.id}`}>
-              <p className="text-sm font-medium text-gray-900 hover:underline cursor-pointer mb-2">
-                Review by {reading.user.name}
-              </p>
-            </Link>
-          )}
-          {reading.rating && (
-            <div className="flex items-center mb-2">
-              <Badge variant="rating" size="sm" color="gray" rating={reading.rating} />
-            </div>
-          )}
-          {reading.review && (
-            <p className="text-sm text-gray-600 mb-3">
-              {reading.review}
-            </p>
-          )}
-          <div className="flex items-center space-x-4 text-xs text-gray-500">
-            <button className="flex items-center space-x-1 hover:text-red-500 transition-colors">
-              <Heart className="h-4 w-4" />
-              <span>Like</span>
-            </button>
-            <button className="flex items-center space-x-1 hover:text-blue-500 transition-colors">
-              <MessageCircle className="h-4 w-4" />
-              <span>Comment</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Activity Card Component - matching dashboard style
-function ActivityCard({ activity, openBookModal }: { activity: any; openBookModal: (book: any, bookId?: number) => void }) {
-  const getActivityIcon = () => {
-    switch (activity.activity_type) {
-      case 'finished_book':
-        return <CheckCircle className="h-4 w-4 text-gray-600" />
-      case 'started_book':
-        return <Clock className="h-4 w-4 text-gray-600" />
-      case 'rated_book':
-        return <Star className="h-4 w-4 text-gray-600" />
-      case 'reviewed_book':
-      case 'added_review':
-        return <MessageCircle className="h-4 w-4 text-gray-600" />
-      default:
-        return <BookOpen className="h-4 w-4 text-gray-600" />
-    }
-  }
-
-  const renderActivityMessage = () => {
-    const bookTitle = activity.activity_data?.book_title
-    const bookId = activity.activity_data?.book_id
-    const bookAuthor = activity.activity_data?.book_author || 'Unknown Author'
-
-    // Create clickable book title if available
-    const clickableBookTitle = bookTitle && bookId ? (
-      <button
-        onClick={() => openBookModal(null, bookId)}
-        className="font-serif font-medium hover:underline transition-colors"
-      >
-        {bookTitle}
-      </button>
-    ) : (
-      <span>a book</span>
-    )
-
-    return (
-      <>
-        {clickableBookTitle} by {bookAuthor}
-      </>
-    )
-  }
-
-  const getActivityText = () => {
-    switch (activity.activity_type) {
-      case 'finished_book':
-        return 'Finished reading'
-      case 'started_book':
-        return 'Started reading'
-      case 'rated_book':
-        return 'Rated'
-      case 'reviewed_book':
-      case 'added_review':
-        return 'Reviewed'
-      default:
-        return 'Activity with'
-    }
-  }
-
-  return (
-    <div className="flex items-center space-x-3 py-3 border-b border-gray-100 last:border-b-0">
-      <div className="flex-shrink-0">
-        <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-          {getActivityIcon()}
-        </div>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-900">
-          <Link href={`/user/${activity.user.id}`}>
-            <span className="font-medium hover:underline cursor-pointer">
-              {activity.user.name}
-            </span>
-          </Link>
-          {' '}{getActivityText().toLowerCase()}{' '}
-          {renderActivityMessage()}
-        </p>
-        <p className="text-xs text-gray-500">
-          {new Date(activity.created_at).toLocaleDateString()}
-        </p>
-      </div>
-      {activity.activity_data?.rating && (
-        <Badge variant="rating" size="sm" color="gray" rating={activity.activity_data.rating} />
-      )}
-    </div>
-  )
-}
 
  
  
