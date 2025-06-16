@@ -165,7 +165,7 @@ const BookCard: React.FC<BookCardProps> = ({
           size="sm"
           color="gray"
         >
-          {reading.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+          {reading.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
         </Badge>
       )}
       
