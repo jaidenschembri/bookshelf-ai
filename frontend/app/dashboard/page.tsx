@@ -6,20 +6,20 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Layout from '@/components/Layout'
 import { dashboardApi, Dashboard, bookApi, readingApi, recommendationApi, Recommendation } from '@/lib/api'
-import { BookOpen, Target, Clock, CheckCircle, ArrowRight } from 'lucide-react'
+import { BookOpen, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { useBookModal } from '@/contexts/BookModalContext'
 import { 
   Button, 
-  Card, 
-  Badge, 
-  LoadingSpinner,
-  BookCard,
-  StatCard,
-  ProgressCard,
-  RecommendationCard
+  LoadingSpinner
 } from '@/components/ui'
+import {
+  DashboardStats,
+  DashboardRecommendations,
+  DashboardCurrentBooks,
+  DashboardRecentActivity
+} from '@/components/features'
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
 import { useErrorHandler, errorRecovery } from '@/lib/error-handling'
 
@@ -241,129 +241,29 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-600">Here's your reading progress and personalized recommendations</p>
         </div>
 
-        {/* Stats Grid - Wrapped in error boundary */}
-        <ComponentErrorBoundary componentName="Stats Grid">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <StatCard
-              icon={BookOpen}
-              label="Books Read"
-              value={stats.total_books}
-            />
-            
-            <StatCard
-              icon={Target}
-              label="Reading Goal"
-              value={`${stats.goal_progress}%`}
-              subtitle={`${stats.books_this_year} of ${stats.reading_goal} books`}
-            />
-            
-            <StatCard
-              icon={Clock}
-              label="Currently Reading"
-              value={stats.currently_reading}
-            />
-            
-            <StatCard
-              icon={CheckCircle}
-              label="Want to Read"
-              value={stats.want_to_read}
-            />
-          </div>
-        </ComponentErrorBoundary>
-
-        {/* Reading Progress */}
-        {stats.reading_goal > 0 && (
-          <ComponentErrorBoundary componentName="Reading Progress">
-            <div className="mb-8">
-                             <ProgressCard
-                 title="Reading Goal Progress"
-                 progress={stats.goal_progress}
-                 description={`${stats.books_this_year} of ${stats.reading_goal} books read this year`}
-               />
-            </div>
-          </ComponentErrorBoundary>
-        )}
+        {/* Dashboard Statistics */}
+        <DashboardStats stats={stats} />
 
         {/* Current Books */}
-        {current_books && current_books.length > 0 && (
-          <ComponentErrorBoundary componentName="Current Books">
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold font-serif tracking-tight mb-4">Currently Reading</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                 {current_books.map((reading) => (
-                   <BookCard
-                     key={reading.id}
-                     book={reading.book}
-                     reading={reading}
-                     onClick={() => openBookModal(reading.book, reading.book.id)}
-                     variant="default"
-                     showProgress={true}
-                   />
-                 ))}
-              </div>
-            </div>
-          </ComponentErrorBoundary>
-        )}
+        <DashboardCurrentBooks 
+          currentBooks={current_books || []}
+          onBookClick={openBookModal}
+        />
 
         {/* AI Recommendations */}
-        {recent_recommendations && recent_recommendations.length > 0 && (
-          <ComponentErrorBoundary componentName="AI Recommendations">
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold font-serif tracking-tight">AI Recommendations</h2>
-                <Link 
-                  href="/recommendations" 
-                  className="text-sm text-gray-600 hover:text-black transition-colors"
-                >
-                  View all →
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {recent_recommendations.slice(0, 4).map((recommendation) => (
-                  <RecommendationCard
-                    key={recommendation.id}
-                    recommendation={recommendation}
-                    onBookClick={() => openBookModal(null, recommendation.book.id)}
-                    onAddToLibrary={() => handleAddToLibrary(recommendation)}
-                    onDismiss={() => handleDismiss(recommendation.id)}
-                    isAddingToLibrary={loadingStates.adding.has(recommendation.id)}
-                    isDismissing={loadingStates.dismissing.has(recommendation.id)}
-                    variant="compact"
-                  />
-                ))}
-              </div>
-            </div>
-          </ComponentErrorBoundary>
-        )}
+        <DashboardRecommendations
+          recommendations={recent_recommendations || []}
+          onBookClick={openBookModal}
+          onAddToLibrary={handleAddToLibrary}
+          onDismiss={handleDismiss}
+          loadingStates={loadingStates}
+        />
 
         {/* Recent Activity */}
-        {recent_readings && recent_readings.length > 0 && (
-          <ComponentErrorBoundary componentName="Recent Activity">
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold font-serif tracking-tight">Recent Activity</h2>
-                <Link 
-                  href="/books" 
-                  className="text-sm text-gray-600 hover:text-black transition-colors"
-                >
-                  View all →
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                 {recent_readings.slice(0, 6).map((reading) => (
-                   <BookCard
-                     key={reading.id}
-                     book={reading.book}
-                     reading={reading}
-                     onClick={() => openBookModal(reading.book, reading.book.id)}
-                     variant="compact"
-                     showRating={true}
-                   />
-                 ))}
-              </div>
-            </div>
-          </ComponentErrorBoundary>
-        )}
+        <DashboardRecentActivity
+          recentReadings={recent_readings || []}
+          onBookClick={openBookModal}
+        />
 
         {/* Empty State */}
         {(!current_books || current_books.length === 0) && 
