@@ -1,10 +1,11 @@
 import NextAuth from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import type { NextAuthOptions } from 'next-auth'
+import { API_CONFIG } from '../../../../constants/api'
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 
-// Debug environment variables only in development
+// Log environment check only once during module initialization
 if (isDevelopment) {
   console.log('NextAuth Environment Check:')
   console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Missing')
@@ -43,7 +44,7 @@ const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       if (account?.provider === 'google') {
         try {
-          let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+          let apiUrl = API_CONFIG.BASE_URL
           
           // Force HTTPS for Railway URLs - robust enforcement
           if (apiUrl.includes('railway.app')) {

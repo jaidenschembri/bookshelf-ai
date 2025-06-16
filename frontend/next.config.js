@@ -1,21 +1,42 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [
-      'covers.openlibrary.org', 
-      'lh3.googleusercontent.com',
-      'localhost:8000',
-      'bookshelf-ai-production.up.railway.app',
-      // Supabase Storage domains - replace with your actual Supabase URL
-      'your-project.supabase.co',
-      'supabase.co'
-    ],
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'covers.openlibrary.org',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8000',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'bookshelf-ai-production.up.railway.app',
+        port: '',
+        pathname: '/**',
+      },
       {
         protocol: 'https',
         hostname: '*.supabase.co',
         port: '',
         pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'supabase.co',
+        port: '',
+        pathname: '/**',
       },
     ],
   },

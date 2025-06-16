@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { BookOpen, Plus, Check } from 'lucide-react'
-import { Card, Button } from '@/components/ui'
 import { BookSearch } from '@/lib/api'
+import { cn } from '@/lib/utils'
 
 interface SearchBookCardProps {
   book: BookSearch
@@ -36,98 +36,94 @@ export function SearchBookCard({
   }
 
   return (
-    <Card key={`${book.title}-${index}`}>
-      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+    <div className="border border-gray-200 p-6 rounded">
+      <div className="flex flex-col sm:flex-row gap-6">
         {/* Book Cover */}
         <div className="flex-shrink-0 mx-auto sm:mx-0">
           {book.cover_url ? (
             <Image
               src={book.cover_url}
               alt={book.title}
-              width={120}
-              height={160}
-              className="rounded-lg object-cover shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-              style={{ width: '120px', height: 'auto' }}
-              sizes="120px"
+              width={96}
+              height={128}
+              className="object-cover rounded border border-gray-200"
+              style={{ width: '96px', height: 'auto' }}
+              sizes="96px"
             />
           ) : (
-            <div className="w-30 h-40 bg-gray-200 rounded-lg flex items-center justify-center">
-              <BookOpen className="h-12 w-12 text-gray-400" />
+            <div className="w-24 h-32 bg-gray-50 border border-gray-200 rounded flex items-center justify-center">
+              <BookOpen className="h-8 w-8 text-gray-400" />
             </div>
           )}
         </div>
 
         {/* Book Details */}
         <div className="flex-1 min-w-0">
-          <h3 className="heading-lg mb-2">
-            <button
-              onClick={handleOpenModal}
-              className="text-black hover:underline text-left transition-all"
-            >
-              {book.title}
-            </button>
-          </h3>
-          <p className="text-body text-gray-600 mb-2">by {book.author}</p>
-          
-          {book.publication_year && (
-            <p className="text-caption text-gray-500 mb-2">
-              Published: {book.publication_year}
-            </p>
-          )}
-          
-          {book.isbn && (
-            <p className="text-caption text-gray-500 mb-4">
-              ISBN: {book.isbn}
-            </p>
-          )}
+          <div className="text-center sm:text-left mb-4">
+            <h3 className="text-lg font-semibold font-serif mb-1">
+              <button
+                onClick={handleOpenModal}
+                className="text-gray-900 hover:underline transition-colors text-left"
+              >
+                {book.title}
+              </button>
+            </h3>
+            <p className="text-sm text-gray-600 mb-3">by {book.author}</p>
+            
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-sm text-gray-500 mb-3">
+              {book.publication_year && (
+                <span className="text-xs text-gray-500">Published: {book.publication_year}</span>
+              )}
+              {book.isbn && (
+                <span className="text-xs text-gray-500">ISBN: {book.isbn}</span>
+              )}
+            </div>
+          </div>
 
           {book.description && (
-            <p className="text-caption text-gray-600 mb-4 line-clamp-3">
+            <p className="text-sm text-gray-600 mb-4 line-clamp-3 leading-relaxed text-center sm:text-left">
               {book.description}
             </p>
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 justify-center sm:justify-start">
             {isAdded ? (
-              <div className="flex items-center text-black text-caption">
-                <Check className="h-4 w-4 mr-1" />
+              <div className="flex items-center justify-center text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded border border-gray-200">
+                <Check className="h-4 w-4 mr-2 text-green-600" />
                 Added to library
               </div>
             ) : (
               <>
-                <Button
-                  variant="secondary"
-                  size="sm"
+                <button
                   onClick={() => onAddBook(book, 'want_to_read')}
                   disabled={isLoading}
-                  icon={<Plus className="h-4 w-4" />}
+                  className="inline-flex items-center space-x-2 bg-white text-gray-700 border border-gray-300 px-3 py-2 rounded text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Want to Read
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
+                  <Plus className="h-4 w-4" />
+                  <span>Want to Read</span>
+                </button>
+                <button
                   onClick={() => onAddBook(book, 'currently_reading')}
                   disabled={isLoading}
-                  icon={<Plus className="h-4 w-4" />}
+                  className="inline-flex items-center space-x-2 bg-gray-900 text-white px-3 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Currently Reading
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
+                  <Plus className="h-4 w-4" />
+                  <span>Currently Reading</span>
+                </button>
+                <button
                   onClick={() => onAddBook(book, 'finished')}
                   disabled={isLoading}
-                  icon={<Plus className="h-4 w-4" />}
+                  className="inline-flex items-center space-x-2 bg-white text-gray-700 border border-gray-300 px-3 py-2 rounded text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Finished
-                </Button>
+                  <Plus className="h-4 w-4" />
+                  <span>Finished</span>
+                </button>
               </>
             )}
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   )
 } 

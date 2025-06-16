@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Layout from '@/components/Layout'
 import { dashboardApi, Dashboard, bookApi, readingApi, recommendationApi, Recommendation } from '@/lib/api'
-import { BookOpen, Target, TrendingUp, Star, Clock, CheckCircle, ArrowRight } from 'lucide-react'
-import Image from 'next/image'
+import { BookOpen, Target, Clock, CheckCircle, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { useBookModal } from '@/contexts/BookModalContext'
@@ -21,12 +20,15 @@ import {
   ProgressCard,
   RecommendationCard
 } from '@/components/ui'
+import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
+import { useErrorHandler, errorRecovery } from '@/lib/error-handling'
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const { openBookModal } = useBookModal()
   const queryClient = useQueryClient()
+  const handleError = useErrorHandler()
   const [loadingStates, setLoadingStates] = useState<{
     adding: Set<number>
     dismissing: Set<number>
@@ -41,12 +43,28 @@ export default function DashboardPage() {
     }
   }, [status, router])
 
-  const { data: dashboard, isLoading, error } = useQuery<Dashboard>(
+  const { data: dashboard, isLoading, error, refetch } = useQuery<Dashboard>(
     ['dashboard', session?.user?.id],
     () => dashboardApi.get(),
     {
       enabled: !!session?.user?.id && !!session?.accessToken,
       refetchOnWindowFocus: false,
+      retry: (failureCount, error) => {
+        // Custom retry logic - don't retry auth errors
+        if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as any
+          if (axiosError.response?.status === 401 || axiosError.response?.status === 403) {
+            return false
+          }
+        }
+        return failureCount < 3
+      },
+      onError: (error) => {
+        handleError(error, { 
+          context: 'dashboard_fetch',
+          userId: session?.user?.id 
+        })
+      }
     }
   )
 
@@ -70,8 +88,11 @@ export default function DashboardPage() {
           return { ...prev, dismissing: newDismissing }
         })
       },
-      onError: (_, recommendationId) => {
-        toast.error('Failed to dismiss recommendation')
+      onError: (error, recommendationId) => {
+        handleError(error, { 
+          context: 'dismiss_recommendation',
+          recommendationId 
+        })
         setLoadingStates(prev => {
           const newDismissing = new Set(prev.dismissing)
           newDismissing.delete(recommendationId)
@@ -85,25 +106,34 @@ export default function DashboardPage() {
     async (recommendation: Recommendation) => {
       const userId = parseInt(session?.user?.id || '1')
       
-      const book = await bookApi.add({
-        title: recommendation.book.title,
-        author: recommendation.book.author,
-        isbn: recommendation.book.isbn,
-        cover_url: recommendation.book.cover_url,
-        description: recommendation.book.description || recommendation.reason,
-        genre: recommendation.book.genre,
-        publication_year: recommendation.book.publication_year,
-        total_pages: recommendation.book.total_pages,
-      })
+      // Use error recovery with retry logic
+      const result = await errorRecovery.retry(async () => {
+        const book = await bookApi.add({
+          title: recommendation.book.title,
+          author: recommendation.book.author,
+          isbn: recommendation.book.isbn,
+          cover_url: recommendation.book.cover_url,
+          description: recommendation.book.description || recommendation.reason,
+          genre: recommendation.book.genre,
+          publication_year: recommendation.book.publication_year,
+          total_pages: recommendation.book.total_pages,
+        })
+        
+        const reading = await readingApi.create({
+          book_id: book.id,
+          status: 'want_to_read'
+        })
+        
+        await recommendationApi.dismiss(recommendation.id)
+        
+        return { book, reading, recommendationId: recommendation.id }
+      }, 2) // Retry up to 2 times
       
-      const reading = await readingApi.create({
-        book_id: book.id,
-        status: 'want_to_read'
-      })
+      if (!result) {
+        throw new Error('Failed to add book after retries')
+      }
       
-      await recommendationApi.dismiss(recommendation.id)
-      
-      return { book, reading, recommendationId: recommendation.id }
+      return result
     },
     {
       onMutate: (recommendation) => {
@@ -126,12 +156,11 @@ export default function DashboardPage() {
         })
       },
       onError: (error: any, recommendation) => {
-        console.error('Add to library error:', error)
-        if (error.response?.status === 409) {
-          toast.error('Book is already in your library')
-        } else {
-          toast.error('Failed to add book to library')
-        }
+        handleError(error, { 
+          context: 'add_to_library',
+          recommendationId: recommendation.id,
+          bookTitle: recommendation.book.title 
+        })
         setLoadingStates(prev => {
           const newAdding = new Set(prev.adding)
           newAdding.delete(recommendation.id)
@@ -147,6 +176,10 @@ export default function DashboardPage() {
 
   const handleAddToLibrary = (recommendation: Recommendation) => {
     addToLibraryMutation.mutate(recommendation)
+  }
+
+  const handleRetryDashboard = () => {
+    refetch()
   }
 
   if (status === 'loading' || isLoading) {
@@ -167,12 +200,30 @@ export default function DashboardPage() {
             <div className="w-16 h-16 bg-gray-900 rounded flex items-center justify-center mx-auto mb-6">
               <BookOpen className="h-8 w-8 text-white" />
             </div>
-            <h2 className="text-2xl font-semibold font-serif tracking-tight mb-4">Welcome to Bookshelf AI!</h2>
-            <p className="text-sm text-gray-600 mb-6">Start by adding some books to your library to see your personalized dashboard.</p>
-            <Link href="/search" className="inline-flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors">
-              <span>Search for Books</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            <h2 className="text-2xl font-semibold font-serif tracking-tight mb-4">
+              {error ? 'Unable to load dashboard' : 'Welcome to Bookshelf AI!'}
+            </h2>
+            <p className="text-sm text-gray-600 mb-6">
+              {error 
+                ? 'We encountered an issue loading your dashboard. Please try again.' 
+                : 'Start by adding some books to your library to see your personalized dashboard.'
+              }
+            </p>
+                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
+               {error ? (
+                 <Button
+                   onClick={handleRetryDashboard}
+                   variant="primary"
+                   loading={isLoading}
+                 >
+                   Try Again
+                 </Button>
+               ) : null}
+              <Link href="/search" className="inline-flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors">
+                <span>Search for Books</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </Layout>
@@ -190,161 +241,148 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-600">Here's your reading progress and personalized recommendations</p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard
-            icon={BookOpen}
-            label="Books Read"
-            value={stats.total_books}
-          />
-          
-          <StatCard
-            icon={Target}
-            label="This Year"
-            value={stats.books_this_year}
-            subtitle={`Goal: ${stats.reading_goal}`}
-          />
-          
-          <StatCard
-            icon={Clock}
-            label="Currently Reading"
-            value={stats.currently_reading}
-          />
-          
-          <StatCard
-            icon={Star}
-            label="Avg Rating"
-            value={stats.average_rating ? `${stats.average_rating}★` : 'N/A'}
-          />
-        </div>
+        {/* Stats Grid - Wrapped in error boundary */}
+        <ComponentErrorBoundary componentName="Stats Grid">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <StatCard
+              icon={BookOpen}
+              label="Books Read"
+              value={stats.total_books}
+            />
+            
+            <StatCard
+              icon={Target}
+              label="Reading Goal"
+              value={`${stats.goal_progress}%`}
+              subtitle={`${stats.books_this_year} of ${stats.reading_goal} books`}
+            />
+            
+            <StatCard
+              icon={Clock}
+              label="Currently Reading"
+              value={stats.currently_reading}
+            />
+            
+            <StatCard
+              icon={CheckCircle}
+              label="Want to Read"
+              value={stats.want_to_read}
+            />
+          </div>
+        </ComponentErrorBoundary>
 
-        {/* Reading Goal Progress */}
-        <ProgressCard
-          title="Reading Goal Progress"
-          progress={stats.goal_progress}
-          description={`${stats.books_this_year} of ${stats.reading_goal} books read this year`}
-          className="mb-8"
-        />
-
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Currently Reading */}
-          <div className="border border-gray-200 p-4 rounded">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold font-serif">Currently Reading</h3>
-              <Link href="/books" className="text-sm text-gray-600 hover:text-gray-900 font-mono uppercase tracking-wide">
-                View All
-              </Link>
+        {/* Reading Progress */}
+        {stats.reading_goal > 0 && (
+          <ComponentErrorBoundary componentName="Reading Progress">
+            <div className="mb-8">
+                             <ProgressCard
+                 title="Reading Goal Progress"
+                 progress={stats.goal_progress}
+                 description={`${stats.books_this_year} of ${stats.reading_goal} books read this year`}
+               />
             </div>
-            {current_books.length > 0 ? (
-              <div className="space-y-4">
-                {current_books.slice(0, 3).map((reading) => (
-                  <BookCard
-                    key={reading.id}
-                    book={reading.book}
-                    reading={{
-                      status: reading.status,
-                      progress_pages: reading.progress_pages,
-                      total_pages: reading.total_pages
-                    }}
-                        onClick={() => openBookModal(null, reading.book.id)}
-                    variant="compact"
-                  />
-                ))}
+          </ComponentErrorBoundary>
+        )}
+
+        {/* Current Books */}
+        {current_books && current_books.length > 0 && (
+          <ComponentErrorBoundary componentName="Current Books">
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold font-serif tracking-tight mb-4">Currently Reading</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                 {current_books.map((reading) => (
+                   <BookCard
+                     key={reading.id}
+                     book={reading.book}
+                     reading={reading}
+                     onClick={() => openBookModal(reading.book, reading.book.id)}
+                     variant="default"
+                     showProgress={true}
+                   />
+                 ))}
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-sm text-gray-500 mb-4">No books currently being read</p>
-                <Link href="/search" className="text-sm text-gray-600 hover:text-gray-900 underline">
-                  Find a book to read
+            </div>
+          </ComponentErrorBoundary>
+        )}
+
+        {/* AI Recommendations */}
+        {recent_recommendations && recent_recommendations.length > 0 && (
+          <ComponentErrorBoundary componentName="AI Recommendations">
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold font-serif tracking-tight">AI Recommendations</h2>
+                <Link 
+                  href="/recommendations" 
+                  className="text-sm text-gray-600 hover:text-black transition-colors"
+                >
+                  View all →
                 </Link>
               </div>
-            )}
-          </div>
-
-          {/* AI Recommendations */}
-          <div className="border border-gray-200 p-4 rounded">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold font-serif">AI Recommendations</h3>
-              <Link href="/recommendations" className="text-sm text-gray-600 hover:text-gray-900 font-mono uppercase tracking-wide">
-                View All
-              </Link>
-            </div>
-            {recent_recommendations.length > 0 ? (
-              <div className="space-y-4">
-                {recent_recommendations.slice(0, 2).map((rec) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {recent_recommendations.slice(0, 4).map((recommendation) => (
                   <RecommendationCard
-                    key={rec.id}
-                    recommendation={rec}
-                    onBookClick={() => openBookModal(null, rec.book.id)}
-                    onAddToLibrary={() => handleAddToLibrary(rec)}
-                    onDismiss={() => handleDismiss(rec.id)}
-                    isAddingToLibrary={loadingStates.adding.has(rec.id)}
-                    isDismissing={loadingStates.dismissing.has(rec.id)}
+                    key={recommendation.id}
+                    recommendation={recommendation}
+                    onBookClick={() => openBookModal(null, recommendation.book.id)}
+                    onAddToLibrary={() => handleAddToLibrary(recommendation)}
+                    onDismiss={() => handleDismiss(recommendation.id)}
+                    isAddingToLibrary={loadingStates.adding.has(recommendation.id)}
+                    isDismissing={loadingStates.dismissing.has(recommendation.id)}
                     variant="compact"
                   />
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <Star className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-sm text-gray-500 mb-2">No recommendations yet</p>
-                <p className="text-xs text-gray-400 mb-4">
-                  Add and rate some books to get AI recommendations
-                </p>
-                <Link href="/search" className="text-sm text-gray-600 hover:text-gray-900 underline">
-                  Add books to your library
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
+            </div>
+          </ComponentErrorBoundary>
+        )}
 
         {/* Recent Activity */}
-        <div className="border border-gray-200 p-4 rounded mt-8">
-          <h3 className="text-lg font-semibold font-serif mb-4">Recent Activity</h3>
-          {recent_readings.length > 0 ? (
-            <div className="space-y-3">
-              {recent_readings.slice(0, 5).map((reading) => (
-                <div key={reading.id} className="flex items-center space-x-3 py-3 border-b border-gray-100 last:border-b-0">
-                  <div className="flex-shrink-0">
-                    <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-                      {reading.status === 'finished' ? (
-                        <CheckCircle className="h-4 w-4 text-gray-600" />
-                      ) : reading.status === 'currently_reading' ? (
-                        <Clock className="h-4 w-4 text-gray-600" />
-                      ) : (
-                        <BookOpen className="h-4 w-4 text-gray-600" />
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900">
-                      <button
-                        onClick={() => openBookModal(null, reading.book.id)}
-                        className="font-serif font-medium hover:underline transition-colors"
-                      >
-                        {reading.book.title}
-                      </button> by {reading.book.author}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {reading.status === 'finished' ? 'Finished reading' : 
-                       reading.status === 'currently_reading' ? 'Started reading' : 
-                       'Added to want to read'}
-                    </p>
-                  </div>
-                  {reading.rating && (
-                    <Badge variant="rating" size="sm" color="gray" rating={reading.rating} />
-                  )}
-                </div>
-              ))}
+        {recent_readings && recent_readings.length > 0 && (
+          <ComponentErrorBoundary componentName="Recent Activity">
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold font-serif tracking-tight">Recent Activity</h2>
+                <Link 
+                  href="/books" 
+                  className="text-sm text-gray-600 hover:text-black transition-colors"
+                >
+                  View all →
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                 {recent_readings.slice(0, 6).map((reading) => (
+                   <BookCard
+                     key={reading.id}
+                     book={reading.book}
+                     reading={reading}
+                     onClick={() => openBookModal(reading.book, reading.book.id)}
+                     variant="compact"
+                     showRating={true}
+                   />
+                 ))}
+              </div>
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-sm text-gray-500">No recent activity</p>
+          </ComponentErrorBoundary>
+        )}
+
+        {/* Empty State */}
+        {(!current_books || current_books.length === 0) && 
+         (!recent_readings || recent_readings.length === 0) && 
+         (!recent_recommendations || recent_recommendations.length === 0) && (
+          <div className="text-center py-16">
+            <div className="max-w-md mx-auto">
+              <div className="w-16 h-16 bg-gray-900 rounded flex items-center justify-center mx-auto mb-6">
+                <BookOpen className="h-8 w-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-semibold font-serif tracking-tight mb-4">Start Your Reading Journey</h2>
+              <p className="text-sm text-gray-600 mb-6">Add some books to your library to see personalized recommendations and track your progress.</p>
+              <Link href="/search" className="inline-flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors">
+                <span>Search for Books</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </Layout>
   )

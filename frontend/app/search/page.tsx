@@ -8,8 +8,8 @@ import { bookApi, readingApi, BookSearch } from '@/lib/api'
 import { Search, BookOpen } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useBookModal } from '@/contexts/BookModalContext'
-import { Input, Button, Card } from '@/components/ui'
 import { SearchBookCard } from '@/components/features'
+import { useErrorHandler } from '@/lib/error-handling'
 
 export default function SearchPage() {
   const { data: session } = useSession()
@@ -19,6 +19,7 @@ export default function SearchPage() {
   const [addedBooks, setAddedBooks] = useState<Set<string>>(new Set())
   const queryClient = useQueryClient()
   const { openBookModal } = useBookModal()
+  const handleError = useErrorHandler()
 
   const addBookMutation = useMutation(
     async ({ book, status }: { book: BookSearch; status: string }) => {
@@ -47,8 +48,11 @@ export default function SearchPage() {
         queryClient.invalidateQueries(['dashboard'])
         queryClient.invalidateQueries(['readings'])
       },
-      onError: (error: any) => {
-        toast.error(error.response?.data?.detail || 'Failed to add book')
+      onError: (error: any, variables) => {
+        handleError(error, {
+          context: 'add_book_from_search',
+          bookTitle: variables.book.title
+        })
       },
     }
   )
@@ -62,7 +66,10 @@ export default function SearchPage() {
       const searchResults = await bookApi.search(query, 20)
       setResults(searchResults)
     } catch (error) {
-      toast.error('Failed to search books. Please try again.')
+      handleError(error, {
+        context: 'search_books',
+        query: query
+      })
     } finally {
       setIsSearching(false)
     }
@@ -87,24 +94,24 @@ export default function SearchPage() {
         </div>
 
         {/* Search Form */}
-        <div className="border border-gray-200 p-4 rounded mb-8">
+        <div className="border border-gray-200 p-6 rounded mb-8">
           <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search for books by title, author, or ISBN..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                />
+            <div className="flex-1 relative">
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <Search className="h-4 w-4" />
               </div>
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search for books by title, author, or ISBN..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+              />
             </div>
             <button
               type="submit"
               disabled={isSearching || !query.trim()}
-              className="bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSearching ? 'Searching...' : 'Search'}
             </button>
@@ -114,11 +121,16 @@ export default function SearchPage() {
         {/* Search Results */}
         {results.length > 0 && (
           <div className="space-y-6">
-            <h2 className="text-lg font-semibold font-serif">
-              Search Results ({results.length})
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold font-serif tracking-tight">
+                Search Results
+              </h2>
+              <span className="text-sm text-gray-500">
+                {results.length} book{results.length !== 1 ? 's' : ''} found
+              </span>
+            </div>
             
-            <div className="grid gap-6">
+            <div className="space-y-4">
               {results.map((book, index) => (
                 <SearchBookCard
                   key={`${book.title}-${index}`}
@@ -139,7 +151,7 @@ export default function SearchPage() {
           <div className="text-center py-16">
             <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold font-serif mb-2">No books found</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 max-w-md mx-auto">
               Try searching with different keywords or check your spelling.
             </p>
           </div>
@@ -152,7 +164,7 @@ export default function SearchPage() {
             <h3 className="text-lg font-semibold font-serif mb-2">
               Search for books to add to your library
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 max-w-md mx-auto">
               Enter a book title, author name, or ISBN to get started.
             </p>
           </div>

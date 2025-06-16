@@ -1,9 +1,10 @@
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
+import { API_CONFIG } from '../constants/api'
 
 // Function to get the correct API URL with HTTPS enforcement
 function getApiBaseUrl(): string {
-  let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+  let apiUrl = API_CONFIG.BASE_URL
   
   // Force HTTPS for any Railway URLs - multiple safety checks
   if (apiUrl.includes('railway.app')) {
