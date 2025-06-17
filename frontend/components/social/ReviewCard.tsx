@@ -10,6 +10,7 @@ export interface ReviewCardProps {
   onBookClick: (book: any, bookId?: number) => void
   onLike?: (readingId: number) => void
   onComment?: (readingId: number) => void
+  priority?: boolean
   className?: string
 }
 
@@ -18,6 +19,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   onBookClick,
   onLike,
   onComment,
+  priority = false,
   className = ''
 }) => {
   return (
@@ -34,6 +36,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
             }}
             onClick={() => onBookClick(null, reading.book.id)}
             mode="compact"
+            priority={priority}
           />
         </div>
         <div className="flex-1 min-w-0">

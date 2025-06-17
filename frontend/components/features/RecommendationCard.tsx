@@ -1,7 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { BookOpen, Star, X, Brain } from 'lucide-react'
-import { Badge } from '@/components/ui'
+import { Badge, BookCover } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
 export interface RecommendationCardProps {
@@ -25,6 +25,7 @@ export interface RecommendationCardProps {
   isAddingToLibrary: boolean
   isDismissing: boolean
   variant?: 'default' | 'compact'
+  priority?: boolean
   className?: string
 }
 
@@ -36,6 +37,7 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
   isAddingToLibrary,
   isDismissing,
   variant = 'default',
+  priority = false,
   className
 }) => {
   const isCompact = variant === 'compact'
@@ -54,29 +56,18 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
       <div className="flex gap-4">
         {/* Book Cover */}
         <div className="flex-shrink-0">
-          {recommendation.book.cover_url ? (
-            <Image
-              src={recommendation.book.cover_url}
-              alt={recommendation.book.title}
-              width={isCompact ? 48 : 80}
-              height={isCompact ? 64 : 112}
-              className={cn(
-                'object-cover rounded border border-gray-200',
-                isCompact ? 'w-12 h-16' : 'w-20 h-28'
-              )}
-              sizes={isCompact ? '48px' : '80px'}
-            />
-          ) : (
-            <div className={cn(
-              'bg-gray-50 border border-gray-200 rounded flex items-center justify-center',
+          <BookCover
+            src={recommendation.book.cover_url}
+            alt={recommendation.book.title}
+            width={isCompact ? 48 : 80}
+            height={isCompact ? 64 : 112}
+            rounded={true}
+            lazy={!priority}
+            priority={priority}
+            className={cn(
               isCompact ? 'w-12 h-16' : 'w-20 h-28'
-            )}>
-              <BookOpen className={cn(
-                'text-gray-400',
-                isCompact ? 'h-4 w-4' : 'h-6 w-6'
-              )} />
-            </div>
-          )}
+            )}
+          />
         </div>
 
         {/* Book Details and Recommendation */}

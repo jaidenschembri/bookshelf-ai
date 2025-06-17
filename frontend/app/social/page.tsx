@@ -190,11 +190,12 @@ export default function SocialPage() {
                   <div className="border border-gray-200 p-4 rounded">
                     <h3 className="text-lg font-semibold font-serif mb-4">Recent Reviews</h3>
                     <div className="space-y-4">
-                      {feed.recent_reviews.map((reading) => (
+                      {feed.recent_reviews.map((reading, index) => (
                         <ReviewCard 
                           key={reading.id} 
                           reading={reading} 
-                          onBookClick={openBookModal} 
+                          onBookClick={openBookModal}
+                          priority={index < 3} // Priority loading for first 3 reviews
                         />
                       ))}
                     </div>

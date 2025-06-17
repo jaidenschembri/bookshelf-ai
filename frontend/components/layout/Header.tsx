@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
-import { Menu, X } from 'lucide-react'
+import Link from 'next/link'
+import { Menu, X, BookOpen } from 'lucide-react'
 import Logo from './Logo'
 import NavigationLinks, { NavigationItem } from './NavigationLinks'
 import ProfileDropdown, { ProfileUser } from './ProfileDropdown'
 import MobileMenu from './MobileMenu'
 import GlobalSearch from './GlobalSearch'
+import MobileSearchBar from './MobileSearchBar'
 
 export interface HeaderProps {
   navigationItems: NavigationItem[]
@@ -33,19 +35,20 @@ const Header: React.FC<HeaderProps> = ({
     <>
       <nav className={`bg-white border-b border-gray-200 ${className}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          {/* Desktop Header */}
+          <div className="hidden lg:flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
               <Logo />
             </div>
 
             {/* Desktop Navigation - Center Search Bar */}
-            <div className="hidden lg:flex items-center flex-1 max-w-2xl mx-8">
+            <div className="flex items-center flex-1 max-w-2xl mx-8">
               <GlobalSearch />
             </div>
 
             {/* Desktop Navigation - Right Side */}
-            <div className="hidden lg:flex items-center space-x-6">
+            <div className="flex items-center space-x-6">
               {/* Navigation Links */}
               <NavigationLinks items={navigationItems} />
 
@@ -57,14 +60,34 @@ const Header: React.FC<HeaderProps> = ({
                 />
               )}
             </div>
+          </div>
 
-            {/* Mobile menu button */}
-            <button
-              onClick={handleMobileMenuToggle}
-              className="lg:hidden p-2 text-gray-600 hover:text-black transition-colors duration-200"
-            >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+          {/* Mobile Header */}
+          <div className="lg:hidden">
+            {/* Mobile Header: Logo Icon + Search + Menu Button */}
+            <div className="flex items-center justify-between h-12 gap-3">
+              {/* Logo Icon Only */}
+              <div className="flex items-center flex-shrink-0">
+                <Link href="/dashboard" className="flex items-center group focus:outline-none">
+                  <div className="p-2 border-4 border-black bg-black text-white group-hover:bg-white group-hover:text-black transition-all duration-200">
+                    <BookOpen className="h-4 w-4" />
+                  </div>
+                </Link>
+              </div>
+
+              {/* Search Bar - Takes up remaining space */}
+              <div className="flex-1 py-2">
+                <MobileSearchBar />
+              </div>
+
+              {/* Menu Button */}
+              <button
+                onClick={handleMobileMenuToggle}
+                className="p-2 text-gray-600 hover:text-black transition-colors duration-200 flex-shrink-0"
+              >
+                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
           </div>
         </div>
       </nav>

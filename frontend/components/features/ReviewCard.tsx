@@ -1,37 +1,33 @@
 import React from 'react'
-import Image from 'next/image'
-import { BookOpen, Star, Heart, MessageCircle } from 'lucide-react'
+import { Star, Heart, MessageCircle } from 'lucide-react'
+import { BookCover } from '@/components/ui'
 import { Reading } from '@/lib/api'
 
 export interface ReviewCardProps {
   reading: Reading
   onBookClick: (book: any, bookId?: number) => void
+  priority?: boolean
   className?: string
 }
 
 const ReviewCard: React.FC<ReviewCardProps> = ({
   reading,
   onBookClick,
+  priority = false,
   className = ''
 }) => {
   return (
     <div className={`border border-gray-200 p-6 rounded bg-white ${className}`}>
       <div className="flex space-x-4">
         <div className="flex-shrink-0">
-          {reading.book.cover_url ? (
-            <Image
-              src={reading.book.cover_url}
-              alt={reading.book.title}
-              width={80}
-              height={120}
-              className="object-cover border border-gray-200 rounded"
-              style={{ width: '80px', height: 'auto' }}
-            />
-          ) : (
-            <div className="w-20 h-28 bg-gray-200 border border-gray-200 rounded flex items-center justify-center">
-              <BookOpen className="h-8 w-8 text-gray-600" />
-            </div>
-          )}
+          <BookCover
+            src={reading.book.cover_url}
+            alt={reading.book.title}
+            width={80}
+            height={120}
+            priority={priority}
+            className="border border-gray-200 rounded"
+          />
         </div>
         <div className="flex-1">
           <div className="flex items-center justify-between mb-2">

@@ -68,4 +68,118 @@
   body {
     @apply text-black bg-white;
   }
+}
+
+/* Brutalist text styles */
+.heading-xs { @apply text-xs font-bold tracking-wider uppercase; }
+.heading-sm { @apply text-sm font-bold tracking-wider uppercase; }
+.heading-md { @apply text-base font-bold tracking-wider uppercase; }
+.heading-lg { @apply text-lg font-bold tracking-wider uppercase; }
+.heading-xl { @apply text-xl font-bold tracking-wider uppercase; }
+.heading-2xl { @apply text-2xl font-bold tracking-wider uppercase; }
+
+.text-body { @apply text-sm leading-relaxed; }
+.text-body-lg { @apply text-base leading-relaxed; }
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Mobile optimizations */
+@media (max-width: 1024px) {
+  /* Prevent iOS zoom on input focus */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+  
+  /* Improve touch targets on mobile */
+  button,
+  a,
+  input,
+  textarea {
+    min-height: 44px;
+  }
+  
+  /* Smooth scrolling for mobile */
+  html {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Better focus states for mobile */
+  *:focus {
+    outline: 2px solid #6b7280;
+    outline-offset: 2px;
+  }
+}
+
+/* Custom scrollbar for search results */
+.search-results::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-results::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.search-results::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.search-results::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Mobile search backdrop blur */
+@supports (backdrop-filter: blur(8px)) {
+  .mobile-search-backdrop {
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* Touch feedback animations */
+.touch-feedback {
+  transition: transform 0.1s ease-out;
+}
+
+.touch-feedback:active {
+  transform: scale(0.98);
+}
+
+/* Loading spinner for mobile */
+@keyframes mobile-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mobile-loading {
+  animation: mobile-spin 1s linear infinite;
 } 

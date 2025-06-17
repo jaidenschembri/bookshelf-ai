@@ -287,8 +287,13 @@ export default function UserProfilePage() {
               </div>
             ) : userLibrary && userLibrary.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {userLibrary.map((reading) => (
-                  <LibraryCard key={reading.id} reading={reading} onBookClick={openBookModal} />
+                {userLibrary.map((reading, index) => (
+                  <LibraryCard 
+                    key={reading.id} 
+                    reading={reading} 
+                    onBookClick={openBookModal}
+                    priority={index < 6} // Priority loading for first 6 books (visible in initial grid)
+                  />
                 ))}
               </div>
             ) : (
@@ -317,8 +322,13 @@ export default function UserProfilePage() {
               </div>
             ) : userReviews && userReviews.length > 0 ? (
               <div className="space-y-6">
-                {userReviews.map((reading) => (
-                  <ReviewCard key={reading.id} reading={reading} onBookClick={openBookModal} />
+                {userReviews.map((reading, index) => (
+                  <ReviewCard 
+                    key={reading.id} 
+                    reading={reading} 
+                    onBookClick={openBookModal}
+                    priority={index < 3} // Priority loading for first 3 reviews
+                  />
                 ))}
               </div>
             ) : (

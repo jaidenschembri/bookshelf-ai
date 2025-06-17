@@ -34,7 +34,7 @@ const DashboardRecentActivity: React.FC<DashboardRecentActivityProps> = ({
           </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {recentReadings.slice(0, maxItems).map((reading) => (
+          {recentReadings.slice(0, maxItems).map((reading, index) => (
             <BookCard
               key={reading.id}
               book={reading.book}
@@ -42,6 +42,7 @@ const DashboardRecentActivity: React.FC<DashboardRecentActivityProps> = ({
               onClick={() => onBookClick(reading.book, reading.book.id)}
               mode="compact"
               showRating={true}
+              priority={index < 3} // Priority loading for first 3 recent activities
             />
           ))}
         </div>

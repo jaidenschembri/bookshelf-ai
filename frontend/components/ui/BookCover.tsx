@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Image from 'next/image'
 import { BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -12,6 +12,8 @@ export interface BookCoverProps {
   className?: string
   rounded?: boolean
   shadow?: boolean
+  lazy?: boolean
+  priority?: boolean
 }
 
 const BookCover: React.FC<BookCoverProps> = ({
@@ -22,8 +24,12 @@ const BookCover: React.FC<BookCoverProps> = ({
   size = 'md',
   className,
   rounded = true,
-  shadow = false
+  shadow = false,
+  lazy = true,
+  priority = false
 }) => {
+  const [isLoading, setIsLoading] = useState(!!src)
+  const [hasError, setHasError] = useState(false)
   // Size presets
   const sizePresets = {
     sm: { width: 48, height: 64, iconSize: 'h-5 w-5' },
@@ -37,23 +43,52 @@ const BookCover: React.FC<BookCoverProps> = ({
   const finalHeight = height || preset.height
 
   const containerClasses = cn(
-    'border border-gray-200 flex items-center justify-center overflow-hidden',
+    'border border-gray-200 flex items-center justify-center overflow-hidden relative',
     rounded && 'rounded',
     shadow && 'shadow-lg',
     className
   )
 
-  if (src) {
+  // Skeleton loader component
+  const SkeletonLoader = () => (
+    <div 
+      className={cn(
+        'absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center',
+        rounded && 'rounded'
+      )}
+    >
+      <BookOpen className={cn('text-gray-300', preset.iconSize)} />
+    </div>
+  )
+
+  const handleImageLoad = () => {
+    setIsLoading(false)
+  }
+
+  const handleImageError = () => {
+    setIsLoading(false)
+    setHasError(true)
+  }
+
+  if (src && !hasError) {
     return (
-      <div className={containerClasses} style={{ width: finalWidth, height: 'auto' }}>
+      <div className={containerClasses} style={{ width: finalWidth, height: finalHeight }}>
+        {isLoading && <SkeletonLoader />}
         <Image
           src={src}
           alt={alt}
           width={finalWidth}
           height={finalHeight}
-          className="object-cover w-full h-auto"
-          style={{ width: `${finalWidth}px`, height: 'auto' }}
+          className={cn(
+            'object-cover transition-opacity duration-300',
+            isLoading ? 'opacity-0' : 'opacity-100'
+          )}
+          style={{ width: `${finalWidth}px`, height: `${finalHeight}px` }}
           sizes={`${finalWidth}px`}
+          loading={lazy ? 'lazy' : priority ? 'eager' : undefined}
+          priority={priority}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
         />
       </div>
     )

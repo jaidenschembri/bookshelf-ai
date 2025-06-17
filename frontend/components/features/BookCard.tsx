@@ -1,7 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { BookOpen, Star, Clock, CheckCircle, Edit3, Trash2, MessageSquare, Eye, EyeOff } from 'lucide-react'
-import { Badge } from '@/components/ui'
+import { Badge, BookCover } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
 export type BookCardMode = 'compact' | 'card' | 'detailed'
@@ -30,6 +30,7 @@ export interface BookCardProps {
   showProgress?: boolean
   showRating?: boolean
   showControls?: boolean
+  priority?: boolean
   onClick?: () => void
   onStatusChange?: (status: string) => void
   onRatingChange?: (rating: number) => void
@@ -48,6 +49,7 @@ const BookCard: React.FC<BookCardProps> = ({
   showProgress = true,
   showRating = true,
   showControls = false,
+  priority = false,
   onClick,
   onStatusChange,
   onRatingChange,
@@ -77,38 +79,29 @@ const BookCard: React.FC<BookCardProps> = ({
 
   const renderCover = () => {
     const coverSizes = {
-      compact: { width: 40, height: 56, class: 'w-10 h-14' },
-      card: { width: 64, height: 88, class: 'w-16 h-22' },
-      detailed: { width: 96, height: 128, class: 'w-24 h-32' }
+      compact: { width: 40, height: 56 },
+      card: { width: 64, height: 88 },
+      detailed: { width: 96, height: 128 }
     }
 
     const size = coverSizes[mode]
 
     return (
       <div className={cn('flex-shrink-0', isDetailed ? 'mx-auto sm:mx-0' : '')}>
-        {book.cover_url ? (
-          <Image
-            src={book.cover_url}
-            alt={book.title}
-            width={size.width}
-            height={size.height}
-            className={cn(
-              'object-cover rounded border border-gray-200',
-              size.class
-            )}
-            sizes={`${size.width}px`}
-          />
-        ) : (
-          <div className={cn(
-            'bg-gray-50 border border-gray-200 rounded flex items-center justify-center',
-            size.class
-          )}>
-            <BookOpen className={cn(
-              'text-gray-400',
-              isCompact ? 'h-4 w-4' : isDetailed ? 'h-8 w-8' : 'h-6 w-6'
-            )} />
-          </div>
-        )}
+        <BookCover
+          src={book.cover_url}
+          alt={book.title}
+          width={size.width}
+          height={size.height}
+          rounded={true}
+          lazy={!priority}
+          priority={priority}
+          className={cn(
+            isCompact ? 'w-10 h-14' : 
+            isDetailed ? 'w-24 h-32' : 
+            'w-16 h-22'
+          )}
+        />
       </div>
     )
   }

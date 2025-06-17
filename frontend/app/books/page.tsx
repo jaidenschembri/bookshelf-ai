@@ -149,7 +149,7 @@ export default function BooksPage() {
         {/* Books Grid */}
         {readings && readings.length > 0 ? (
           <div className="grid gap-6">
-            {readings.map((reading) => (
+            {readings.map((reading, index) => (
               <BookCard
                 key={reading.id}
                 book={reading.book}
@@ -157,6 +157,7 @@ export default function BooksPage() {
                 mode="detailed"
                 interactive={true}
                 showControls={true}
+                priority={index < 3} // Priority loading for first 3 books
                 onStatusChange={(status) => handleStatusChange(reading, status)}
                 onRatingChange={(rating) => handleRatingChange(reading, rating)}
                 onProgressUpdate={(pages) => handleProgressUpdate(reading, pages)}

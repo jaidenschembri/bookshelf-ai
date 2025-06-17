@@ -199,7 +199,7 @@ export default function RecommendationsPage() {
         {/* Recommendations */}
         {recommendations && recommendations.length > 0 ? (
           <div className="space-y-6">
-            {recommendations.map((recommendation) => (
+            {recommendations.map((recommendation, index) => (
               <RecommendationCard
                 key={recommendation.id}
                 recommendation={recommendation}
@@ -208,6 +208,7 @@ export default function RecommendationsPage() {
                 onBookClick={() => openBookModal(null, recommendation.book.id)}
                 isAddingToLibrary={loadingStates.adding.has(recommendation.id)}
                 isDismissing={loadingStates.dismissing.has(recommendation.id)}
+                priority={index < 2} // Priority loading for first 2 recommendations
               />
             ))}
           </div>

@@ -23,7 +23,7 @@ const DashboardCurrentBooks: React.FC<DashboardCurrentBooksProps> = ({
       <div className={`mb-8 ${className}`}>
         <h2 className="text-lg font-semibold font-serif tracking-tight mb-4">Currently Reading</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {currentBooks.map((reading) => (
+          {currentBooks.map((reading, index) => (
             <BookCard
               key={reading.id}
               book={reading.book}
@@ -31,6 +31,7 @@ const DashboardCurrentBooks: React.FC<DashboardCurrentBooksProps> = ({
               onClick={() => onBookClick(reading.book, reading.book.id)}
               mode="card"
               showProgress={true}
+              priority={index < 3} // Priority loading for first 3 currently reading books
             />
           ))}
         </div>

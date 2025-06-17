@@ -43,7 +43,7 @@ const DashboardRecommendations: React.FC<DashboardRecommendationsProps> = ({
           </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {recommendations.slice(0, maxItems).map((recommendation) => (
+          {recommendations.slice(0, maxItems).map((recommendation, index) => (
             <RecommendationCard
               key={recommendation.id}
               recommendation={recommendation}
@@ -53,6 +53,7 @@ const DashboardRecommendations: React.FC<DashboardRecommendationsProps> = ({
               isAddingToLibrary={loadingStates.adding.has(recommendation.id)}
               isDismissing={loadingStates.dismissing.has(recommendation.id)}
               variant="compact"
+              priority={index < 2} // Priority loading for first 2 recommendations
             />
           ))}
         </div>
