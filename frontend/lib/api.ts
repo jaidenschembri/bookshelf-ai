@@ -205,7 +205,7 @@ export interface UserActivity {
   activity_type: string
   activity_data: any
   created_at: string
-  user: User
+  user: UserPublicProfile
 }
 
 export interface SocialFeed {

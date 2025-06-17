@@ -1,6 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
-import { CheckCircle, Clock, Star, MessageCircle, BookOpen } from 'lucide-react'
+import Image from 'next/image'
+import { User } from 'lucide-react'
 import { Badge } from '@/components/ui'
 
 export interface ActivityData {
@@ -18,6 +19,7 @@ export interface Activity {
   user: {
     id: number
     name: string
+    profile_picture_url?: string
   }
 }
 
@@ -32,21 +34,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
   onBookClick,
   className = ''
 }) => {
-  const getActivityIcon = () => {
-    switch (activity.activity_type) {
-      case 'finished_book':
-        return <CheckCircle className="h-4 w-4 text-gray-600" />
-      case 'started_book':
-        return <Clock className="h-4 w-4 text-gray-600" />
-      case 'rated_book':
-        return <Star className="h-4 w-4 text-gray-600" />
-      case 'reviewed_book':
-      case 'added_review':
-        return <MessageCircle className="h-4 w-4 text-gray-600" />
-      default:
-        return <BookOpen className="h-4 w-4 text-gray-600" />
-    }
-  }
+
 
   const renderActivityMessage = () => {
     const bookTitle = activity.activity_data?.book_title
@@ -91,9 +79,21 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
   return (
     <div className={`flex items-center space-x-3 py-3 border-b border-gray-100 last:border-b-0 ${className}`}>
       <div className="flex-shrink-0">
-        <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-          {getActivityIcon()}
-        </div>
+        <Link href={`/user/${activity.user.id}`} className="block">
+          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+            {activity.user.profile_picture_url ? (
+              <Image
+                src={activity.user.profile_picture_url}
+                alt={activity.user.name}
+                width={32}
+                height={32}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <User className="h-4 w-4 text-gray-400" />
+            )}
+          </div>
+        </Link>
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm text-gray-900">
