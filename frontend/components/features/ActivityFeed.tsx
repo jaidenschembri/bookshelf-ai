@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { socialApi, SocialFeed, Reading } from '@/lib/api'
 import { LoadingSpinner, BookCover } from '@/components/ui'
 import { ActivityCard } from '@/components/social'
 import { useSession } from 'next-auth/react'
-import { Star, Heart, MessageCircle, MoreHorizontal } from 'lucide-react'
+import { Star, Heart, MessageCircle, MoreHorizontal, ChevronDown, ChevronUp, User } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -12,6 +12,187 @@ export interface ActivityFeedProps {
   onBookClick: (book: any, bookId?: number) => void
   isMobile?: boolean
   className?: string
+}
+
+// Grouped Activity Card for similar actions
+interface GroupedActivityCardProps {
+  user: any
+  activities: any[]
+  onBookClick: (book: any, bookId?: number) => void
+}
+
+const GroupedActivityCard: React.FC<GroupedActivityCardProps> = ({
+  user,
+  activities,
+  onBookClick
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false)
+  
+  const getGroupedActivityText = () => {
+    const activityType = activities[0].activity_type
+    const count = activities.length
+    
+    switch (activityType) {
+      case 'finished_book':
+        return count === 1 ? 'finished reading' : `finished reading ${count} books`
+      case 'started_book':
+        return count === 1 ? 'started reading' : `started reading ${count} books`
+      case 'rated_book':
+        return count === 1 ? 'rated' : `rated ${count} books`
+      case 'want_to_read':
+        return count === 1 ? 'wants to read' : `added ${count} books to want to read`
+      default:
+        return count === 1 ? 'updated' : `made ${count} updates`
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffTime = Math.abs(now.getTime() - date.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    if (diffDays === 1) return '1 day ago'
+    if (diffDays < 7) return `${diffDays} days ago`
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
+    return date.toLocaleDateString()
+  }
+
+  const showFirstBook = activities[0]
+  const remainingCount = activities.length - 1
+
+  return (
+    <div className="border-b border-gray-100 pb-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+            {user.profile_picture_url ? (
+              <Image
+                src={user.profile_picture_url}
+                alt={user.name}
+                width={32}
+                height={32}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs font-medium">
+                  {user.name?.charAt(0) || 'U'}
+                </span>
+              </div>
+            )}
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-900">
+              <span className="font-medium">{user.name}</span> {getGroupedActivityText()}
+            </p>
+            <p className="text-xs text-gray-500">{formatDate(activities[0].created_at)}</p>
+          </div>
+        </div>
+        <button className="p-1 text-gray-400 hover:text-gray-600">
+          <MoreHorizontal className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* First Book */}
+      <div className="flex gap-3 mb-3">
+        <div className="flex-shrink-0 cursor-pointer" 
+             onClick={() => onBookClick(null, showFirstBook.activity_data.book_id)}>
+          <BookCover
+            src={showFirstBook.activity_data.book_cover_url}
+            alt={showFirstBook.activity_data.book_title}
+            width={48}
+            height={64}
+            className="rounded shadow-sm"
+          />
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <h3 
+            className="font-medium text-sm text-gray-900 line-clamp-1 leading-tight cursor-pointer hover:text-black"
+            onClick={() => onBookClick(null, showFirstBook.activity_data.book_id)}
+          >
+            {showFirstBook.activity_data.book_title}
+          </h3>
+          <p className="text-xs text-gray-600 mt-1">
+            by {showFirstBook.activity_data.book_author}
+          </p>
+          
+          {showFirstBook.activity_data.rating && (
+            <div className="flex items-center gap-1 mt-2">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`h-3 w-3 ${
+                    i < showFirstBook.activity_data.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                  }`}
+                />
+              ))}
+              <span className="text-xs text-gray-500 ml-1">{showFirstBook.activity_data.rating}/5</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Expand/Collapse Button */}
+      {remainingCount > 0 && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-3"
+        >
+          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          {isExpanded ? 'Show less' : `Show ${remainingCount} more`}
+        </button>
+      )}
+
+      {/* Expanded Books */}
+      {isExpanded && remainingCount > 0 && (
+        <div className="space-y-3 pl-4 border-l-2 border-gray-100">
+          {activities.slice(1).map((activity, index) => (
+            <div key={index} className="flex gap-3">
+              <div className="flex-shrink-0 cursor-pointer" 
+                   onClick={() => onBookClick(null, activity.activity_data.book_id)}>
+                <BookCover
+                  src={activity.activity_data.book_cover_url}
+                  alt={activity.activity_data.book_title}
+                  width={32}
+                  height={48}
+                  className="rounded shadow-sm"
+                />
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <h4 
+                  className="font-medium text-xs text-gray-900 line-clamp-1 cursor-pointer hover:text-black"
+                  onClick={() => onBookClick(null, activity.activity_data.book_id)}
+                >
+                  {activity.activity_data.book_title}
+                </h4>
+                <p className="text-xs text-gray-500">
+                  by {activity.activity_data.book_author}
+                </p>
+                
+                {activity.activity_data.rating && (
+                  <div className="flex items-center gap-1 mt-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-2 w-2 ${
+                          i < activity.activity_data.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
+                    <span className="text-xs text-gray-500 ml-1">{activity.activity_data.rating}/5</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 // Streamlined Review Card for Feed
@@ -176,29 +357,61 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
             </div>
           ) : socialFeed ? (
             <>
-              {/* Combine and sort all activities by date */}
-              {[
-                // Map reviews to activities
-                ...socialFeed.recent_reviews.map(reading => ({
-                  id: `review-${reading.id}`,
-                  type: 'review' as const,
-                  data: reading,
-                  timestamp: reading.updated_at
-                })),
-                // Map activities
-                ...socialFeed.activities.map(activity => ({
-                  id: `activity-${activity.id}`,
-                  type: 'activity' as const,
-                  data: activity,
-                  timestamp: activity.created_at
-                }))
-              ]
-                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-                .map((item) => (
+              {(() => {
+                // Group activities by user and activity type
+                const activitiesMap = new Map()
+                const reviewsArray: any[] = []
+                
+                // Add reviews
+                socialFeed.recent_reviews.forEach(reading => {
+                  reviewsArray.push({
+                    id: `review-${reading.id}`,
+                    type: 'review',
+                    data: reading,
+                    timestamp: reading.updated_at
+                  })
+                })
+                
+                // Group activities by user_id and activity_type
+                socialFeed.activities
+                  .filter(activity => 
+                    !['reviewed_book', 'added_review'].includes(activity.activity_type)
+                  )
+                  .forEach(activity => {
+                    const key = `${activity.user.id}-${activity.activity_type}`
+                    if (!activitiesMap.has(key)) {
+                      activitiesMap.set(key, {
+                        id: `grouped-${key}`,
+                        type: 'grouped_activity',
+                        user: activity.user,
+                        activities: [],
+                        timestamp: activity.created_at
+                      })
+                    }
+                    activitiesMap.get(key).activities.push(activity)
+                    // Update timestamp to latest activity
+                    if (new Date(activity.created_at) > new Date(activitiesMap.get(key).timestamp)) {
+                      activitiesMap.get(key).timestamp = activity.created_at
+                    }
+                  })
+                
+                // Combine reviews and grouped activities
+                const allItems = [
+                  ...reviewsArray,
+                  ...Array.from(activitiesMap.values())
+                ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                
+                return allItems.map((item) => (
                   <div key={item.id}>
                     {item.type === 'review' ? (
                       <FeedReviewCard 
                         reading={item.data} 
+                        onBookClick={onBookClick}
+                      />
+                    ) : item.type === 'grouped_activity' ? (
+                      <GroupedActivityCard 
+                        user={item.user}
+                        activities={item.activities}
                         onBookClick={onBookClick}
                       />
                     ) : (
@@ -208,7 +421,8 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
                       />
                     )}
                   </div>
-                ))}
+                ))
+              })()}
 
               {/* Empty state for social feed */}
               {socialFeed.activities.length === 0 && 
