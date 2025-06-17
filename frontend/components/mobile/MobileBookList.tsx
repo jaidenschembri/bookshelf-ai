@@ -8,7 +8,6 @@ export interface MobileBookListProps {
   onBookClick: (book: any, bookId?: number) => void
   onStatusChange: (reading: Reading, status: string) => void
   onRatingChange: (reading: Reading, rating: number) => void
-  onProgressUpdate: (reading: Reading, pages: number) => void
   onEdit: (reading: Reading) => void
   onDelete: (reading: Reading) => void
   loading?: boolean
@@ -21,7 +20,6 @@ const MobileBookList: React.FC<MobileBookListProps> = ({
   onBookClick,
   onStatusChange,
   onRatingChange,
-  onProgressUpdate,
   onEdit,
   onDelete,
   loading = false,
@@ -34,6 +32,7 @@ const MobileBookList: React.FC<MobileBookListProps> = ({
   const getCurrentReading = (readingId: number): Reading | null => {
     return readings.find(r => r.id === readingId) || null
   }
+
   if (loading) {
     return (
       <div className={`bg-white rounded-lg border border-gray-200 ${className}`}>
@@ -94,9 +93,6 @@ const MobileBookList: React.FC<MobileBookListProps> = ({
             }}
             onRatingChange={(rating) => {
               onRatingChange(currentReading, rating)
-            }}
-            onProgressUpdate={(pages) => {
-              onProgressUpdate(currentReading, pages)
             }}
             onEdit={() => {
               onEdit(currentReading)

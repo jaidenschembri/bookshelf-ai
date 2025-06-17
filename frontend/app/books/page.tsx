@@ -157,7 +157,6 @@ export default function BooksPage() {
                 onBookClick={(book, bookId) => openBookModal(null, bookId)}
                 onStatusChange={(reading, status) => handleStatusChange(reading, status)}
                 onRatingChange={(reading, rating) => handleRatingChange(reading, rating)}
-                onProgressUpdate={(reading, pages) => handleProgressUpdate(reading, pages)}
                 onEdit={(reading) => openReviewModal(reading)}
                 onDelete={(reading) => handleDelete(reading.id)}
                 loading={isLoading}
