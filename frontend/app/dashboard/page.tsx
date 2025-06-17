@@ -201,7 +201,7 @@ export default function DashboardPage() {
               <BookOpen className="h-8 w-8 text-white" />
             </div>
             <h2 className="text-2xl font-semibold font-serif tracking-tight mb-4">
-              {error ? 'Unable to load dashboard' : 'Welcome to Bookshelf AI!'}
+                              {error ? 'Unable to load dashboard' : 'Welcome to Libraria!'}
             </h2>
             <p className="text-sm text-gray-600 mb-6">
               {error 

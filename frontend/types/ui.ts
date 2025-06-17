@@ -1,5 +1,5 @@
 // ============================================================================
-// BOOKSHELF AI DESIGN SYSTEM
+// LIBRARIA DESIGN SYSTEM
 // ============================================================================
 // A comprehensive type-safe design system for consistent UI components
 

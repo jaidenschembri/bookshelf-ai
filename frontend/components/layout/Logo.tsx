@@ -17,20 +17,17 @@ const Logo: React.FC<LogoProps> = ({
     sm: {
       icon: 'h-4 w-4',
       iconPadding: 'p-2',
-      title: 'text-base',
-      subtitle: 'text-xs'
+      title: 'text-base'
     },
     md: {
       icon: 'h-6 w-6',
       iconPadding: 'p-3',
-      title: 'text-xl',
-      subtitle: 'text-xs'
+      title: 'text-xl'
     },
     lg: {
       icon: 'h-8 w-8',
       iconPadding: 'p-4',
-      title: 'text-2xl',
-      subtitle: 'text-sm'
+      title: 'text-2xl'
     }
   }
 
@@ -42,8 +39,7 @@ const Logo: React.FC<LogoProps> = ({
         <BookOpen className={sizes.icon} />
       </div>
       <div className="ml-3">
-        <span className={`${sizes.title} font-black font-serif tracking-tight`}>BOOKSHELF</span>
-        <div className={`${sizes.subtitle} font-mono uppercase tracking-ultra-wide text-gray-600`}>AI POWERED</div>
+        <span className={`${sizes.title} font-black font-serif tracking-tight`}>LIBRARIA</span>
       </div>
     </Link>
   )

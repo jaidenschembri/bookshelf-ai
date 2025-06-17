@@ -12,13 +12,13 @@ const Footer: React.FC<FooterProps> = ({ className = '' }) => {
         <div className="text-center">
           <div className="flex items-center justify-center mb-4">
             <BookOpen className="h-5 w-5 mr-2 text-gray-600" />
-            <span className="font-serif font-semibold text-lg text-gray-900">Bookshelf AI</span>
+            <span className="font-serif font-semibold text-lg text-gray-900">Libraria</span>
           </div>
           <p className="text-sm text-gray-600 mb-4">
             Discover your next favorite book with AI-powered personalized recommendations.
           </p>
           <p className="text-xs text-gray-400">
-            © 2024 Bookshelf AI • Literature Meets Technology
+            © 2024 Libraria • Literature Meets Technology
           </p>
         </div>
       </div>

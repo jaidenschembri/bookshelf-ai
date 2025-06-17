@@ -5,9 +5,9 @@ import { Toaster } from 'react-hot-toast'
 import { PageErrorBoundary } from '@/components/ErrorBoundary'
 
 export const metadata: Metadata = {
-  title: 'Bookshelf AI - Smart Book Recommendations',
+  title: 'Libraria - Smart Book Recommendations',
   description: 'Discover your next favorite book with AI-powered personalized recommendations',
-  keywords: ['books', 'reading', 'recommendations', 'AI', 'bookshelf'],
+  keywords: ['books', 'reading', 'recommendations', 'AI', 'library'],
 }
 
 export default function RootLayout({

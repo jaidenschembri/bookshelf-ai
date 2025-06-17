@@ -31,7 +31,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
       <div className="bg-white border border-gray-200 rounded-lg shadow-xl max-w-md w-full">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-          <h2 className="text-lg font-semibold font-serif text-gray-900">Sign in to Bookshelf AI</h2>
+                        <h2 className="text-lg font-semibold font-serif text-gray-900">Sign in to Libraria</h2>
           <button
             onClick={onClose}
             className="w-8 h-8 border border-gray-300 rounded bg-white hover:bg-gray-100 flex items-center justify-center transition-colors"

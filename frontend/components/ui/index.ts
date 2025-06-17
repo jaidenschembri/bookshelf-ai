@@ -1,5 +1,5 @@
 // ============================================================================
-// BOOKSHELF AI UI COMPONENT LIBRARY
+// LIBRARIA UI COMPONENT LIBRARY
 // ============================================================================
 // Barrel exports for all UI components with comprehensive type definitions
 

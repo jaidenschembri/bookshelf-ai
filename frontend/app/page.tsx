@@ -50,8 +50,7 @@ export default function HomePage() {
                 <BookOpen className="h-6 w-6 text-white" />
               </div>
               <div className="ml-3">
-                <span className="text-xl font-semibold font-serif tracking-tight">Bookshelf AI</span>
-                <div className="text-xs text-gray-500">AI-Powered Reading</div>
+                <span className="text-xl font-semibold font-serif tracking-tight">Libraria</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -87,13 +86,13 @@ export default function HomePage() {
           <div className="text-center">
             <div className="flex items-center justify-center mb-4">
               <BookOpen className="h-6 w-6 mr-3 text-gray-600" />
-              <span className="font-serif font-semibold text-xl">Bookshelf AI</span>
+                              <span className="font-serif font-semibold text-xl">Libraria</span>
             </div>
             <p className="text-sm text-gray-600 mb-4">
               Literature Meets Technology • Discover • Read • Repeat
             </p>
             <p className="text-xs text-gray-500">
-              © 2024 Bookshelf AI. All rights reserved.
+                              © 2024 Libraria. All rights reserved.
             </p>
           </div>
         </div>
