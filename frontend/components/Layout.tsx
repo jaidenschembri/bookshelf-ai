@@ -18,7 +18,7 @@ export default function Layout({ children }: LayoutProps) {
   const navigation: NavigationItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'My Books', href: '/books', icon: BookOpen },
-    { name: 'Recommendations', href: '/recommendations', icon: Star },
+    { name: 'Discover', href: '/discover', icon: Star },
     { name: 'Social', href: '/social', icon: Users },
   ]
 

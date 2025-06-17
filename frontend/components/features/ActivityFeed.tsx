@@ -4,7 +4,7 @@ import { socialApi, SocialFeed, Reading } from '@/lib/api'
 import { LoadingSpinner, BookCover } from '@/components/ui'
 import { ActivityCard } from '@/components/social'
 import { useSession } from 'next-auth/react'
-import { Star, Heart, MessageCircle, MoreHorizontal, ChevronDown, ChevronUp, User } from 'lucide-react'
+import { Star, Heart, MessageCircle, ChevronDown, ChevronUp, User } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -64,35 +64,30 @@ const GroupedActivityCard: React.FC<GroupedActivityCardProps> = ({
   return (
     <div className="border-b border-gray-100 pb-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-            {user.profile_picture_url ? (
-              <Image
-                src={user.profile_picture_url}
-                alt={user.name}
-                width={32}
-                height={32}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-medium">
-                  {user.name?.charAt(0) || 'U'}
-                </span>
-              </div>
-            )}
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900">
-              <span className="font-medium">{user.name}</span> {getGroupedActivityText()}
-            </p>
-            <p className="text-xs text-gray-500">{formatDate(activities[0].created_at)}</p>
-          </div>
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+          {user.profile_picture_url ? (
+            <Image
+              src={user.profile_picture_url}
+              alt={user.name}
+              width={32}
+              height={32}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs font-medium">
+                {user.name?.charAt(0) || 'U'}
+              </span>
+            </div>
+          )}
         </div>
-        <button className="p-1 text-gray-400 hover:text-gray-600">
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
+        <div>
+          <p className="text-sm font-medium text-gray-900">
+            <span className="font-medium">{user.name}</span> {getGroupedActivityText()}
+          </p>
+          <p className="text-xs text-gray-500">{formatDate(activities[0].created_at)}</p>
+        </div>
       </div>
 
       {/* First Book */}
@@ -205,6 +200,7 @@ const FeedReviewCard: React.FC<FeedReviewCardProps> = ({
   reading,
   onBookClick
 }) => {
+  const [isReviewExpanded, setIsReviewExpanded] = useState(false)
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
@@ -220,35 +216,30 @@ const FeedReviewCard: React.FC<FeedReviewCardProps> = ({
   return (
     <div className="border-b border-gray-100 pb-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-            {reading.user?.profile_picture_url ? (
-              <Image
-                src={reading.user.profile_picture_url}
-                alt={reading.user.name || 'User'}
-                width={32}
-                height={32}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-medium">
-                  {reading.user?.name?.charAt(0) || 'U'}
-                </span>
-              </div>
-            )}
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900">
-              Review by {reading.user?.name || 'Anonymous'}
-            </p>
-            <p className="text-xs text-gray-500">{formatDate(reading.updated_at)}</p>
-          </div>
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+          {reading.user?.profile_picture_url ? (
+            <Image
+              src={reading.user.profile_picture_url}
+              alt={reading.user.name || 'User'}
+              width={32}
+              height={32}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs font-medium">
+                {reading.user?.name?.charAt(0) || 'U'}
+              </span>
+            </div>
+          )}
         </div>
-        <button className="p-1 text-gray-400 hover:text-gray-600">
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
+        <div>
+          <p className="text-sm font-medium text-gray-900">
+            Review by {reading.user?.name || 'Anonymous'}
+          </p>
+          <p className="text-xs text-gray-500">{formatDate(reading.updated_at)}</p>
+        </div>
       </div>
 
       {/* Content */}
@@ -291,9 +282,21 @@ const FeedReviewCard: React.FC<FeedReviewCardProps> = ({
           
           {/* Review Text */}
           {reading.review && (
-            <p className="text-sm text-gray-700 mt-2 line-clamp-2 leading-relaxed">
-              {reading.review}
-            </p>
+            <div className="mt-2">
+              <p className={`text-sm text-gray-700 leading-relaxed ${
+                !isReviewExpanded && reading.review.length > 200 ? 'line-clamp-3' : ''
+              }`}>
+                {reading.review}
+              </p>
+              {reading.review.length > 200 && (
+                <button
+                  onClick={() => setIsReviewExpanded(!isReviewExpanded)}
+                  className="text-xs text-gray-500 hover:text-gray-700 mt-1 font-medium"
+                >
+                  {isReviewExpanded ? 'Show less' : 'Read more'}
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
