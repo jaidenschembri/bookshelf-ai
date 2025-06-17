@@ -6,7 +6,7 @@ import NavigationLinks, { NavigationItem } from './NavigationLinks'
 import ProfileDropdown, { ProfileUser } from './ProfileDropdown'
 import MobileMenu from './MobileMenu'
 import GlobalSearch from './GlobalSearch'
-import MobileSearchBar from './MobileSearchBar'
+import { MobileSearchBar } from '@/components/mobile'
 
 export interface HeaderProps {
   navigationItems: NavigationItem[]
