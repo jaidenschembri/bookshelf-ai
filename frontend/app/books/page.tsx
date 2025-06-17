@@ -18,6 +18,7 @@ import {
   TabNavigation
 } from '@/components/ui'
 import { BookCard } from '@/components/features'
+import { MobileBookList } from '@/components/mobile'
 import { cn } from '@/lib/utils'
 
 export default function BooksPage() {
@@ -146,27 +147,47 @@ export default function BooksPage() {
           />
         </div>
 
-        {/* Books Grid */}
+        {/* Books Content */}
         {readings && readings.length > 0 ? (
-          <div className="grid gap-6">
-            {readings.map((reading, index) => (
-              <BookCard
-                key={reading.id}
-                book={reading.book}
-                reading={reading}
-                mode="detailed"
-                interactive={true}
-                showControls={true}
-                priority={index < 3} // Priority loading for first 3 books
-                onStatusChange={(status) => handleStatusChange(reading, status)}
-                onRatingChange={(rating) => handleRatingChange(reading, rating)}
-                onProgressUpdate={(pages) => handleProgressUpdate(reading, pages)}
-                onEdit={() => openReviewModal(reading)}
-                onDelete={() => handleDelete(reading.id)}
-                onBookClick={() => openBookModal(null, reading.book.id)}
+          <>
+            {/* Mobile List View */}
+            <div className="block md:hidden">
+              <MobileBookList
+                readings={readings}
+                onBookClick={(book, bookId) => openBookModal(null, bookId)}
+                onStatusChange={(reading, status) => handleStatusChange(reading, status)}
+                onRatingChange={(reading, rating) => handleRatingChange(reading, rating)}
+                onProgressUpdate={(reading, pages) => handleProgressUpdate(reading, pages)}
+                onEdit={(reading) => openReviewModal(reading)}
+                onDelete={(reading) => handleDelete(reading.id)}
+                loading={isLoading}
+                emptyMessage={selectedStatus === 'all' ? 'No books in your library' : `No ${selectedStatus.replace('_', ' ')} books`}
               />
-            ))}
-          </div>
+            </div>
+
+            {/* Desktop Grid View */}
+            <div className="hidden md:block">
+              <div className="grid gap-6">
+                {readings.map((reading, index) => (
+                  <BookCard
+                    key={reading.id}
+                    book={reading.book}
+                    reading={reading}
+                    mode="detailed"
+                    interactive={true}
+                    showControls={true}
+                    priority={index < 3} // Priority loading for first 3 books
+                    onStatusChange={(status) => handleStatusChange(reading, status)}
+                    onRatingChange={(rating) => handleRatingChange(reading, rating)}
+                    onProgressUpdate={(pages) => handleProgressUpdate(reading, pages)}
+                    onEdit={() => openReviewModal(reading)}
+                    onDelete={() => handleDelete(reading.id)}
+                    onBookClick={() => openBookModal(null, reading.book.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
         ) : (
           <div className="text-center py-16">
             <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />

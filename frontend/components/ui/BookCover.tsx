@@ -85,8 +85,8 @@ const BookCover: React.FC<BookCoverProps> = ({
           )}
           style={{ width: `${finalWidth}px`, height: `${finalHeight}px` }}
           sizes={`${finalWidth}px`}
-          loading={lazy ? 'lazy' : priority ? 'eager' : undefined}
-          priority={priority}
+          {...(!priority && { loading: lazy ? 'lazy' : 'eager' })}
+          {...(priority && { priority: true })}
           onLoad={handleImageLoad}
           onError={handleImageError}
         />
