@@ -7,21 +7,13 @@ import { useEffect, useState } from 'react'
 import Layout from '@/components/Layout'
 import { dashboardApi, Dashboard, bookApi, readingApi, recommendationApi, Recommendation } from '@/lib/api'
 import { BookOpen } from 'lucide-react'
-import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { useBookModal } from '@/contexts/BookModalContext'
-import { 
-  Button, 
-  LoadingSpinner
-} from '@/components/ui'
-import {
-  DashboardStats,
-  DashboardRecommendations,
-  DashboardCurrentBooks,
-  DashboardRecentActivity
-} from '@/components/features'
+import { LoadingSpinner } from '@/components/ui'
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
 import { useErrorHandler, errorRecovery } from '@/lib/error-handling'
+import CurrentlyReadingPanel from '@/components/features/CurrentlyReadingPanel'
+import ActivityFeed from '@/components/features/ActivityFeed'
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()
@@ -50,7 +42,6 @@ export default function DashboardPage() {
       enabled: !!session?.user?.id && !!session?.accessToken,
       refetchOnWindowFocus: false,
       retry: (failureCount, error) => {
-        // Custom retry logic - don't retry auth errors
         if (error && typeof error === 'object' && 'response' in error) {
           const axiosError = error as any
           if (axiosError.response?.status === 401 || axiosError.response?.status === 403) {
@@ -104,9 +95,6 @@ export default function DashboardPage() {
 
   const addToLibraryMutation = useMutation(
     async (recommendation: Recommendation) => {
-      const userId = parseInt(session?.user?.id || '1')
-      
-      // Use error recovery with retry logic
       const result = await errorRecovery.retry(async () => {
         const book = await bookApi.add({
           title: recommendation.book.title,
@@ -127,7 +115,7 @@ export default function DashboardPage() {
         await recommendationApi.dismiss(recommendation.id)
         
         return { book, reading, recommendationId: recommendation.id }
-      }, 2) // Retry up to 2 times
+      }, 2)
       
       if (!result) {
         throw new Error('Failed to add book after retries')
@@ -178,10 +166,6 @@ export default function DashboardPage() {
     addToLibraryMutation.mutate(recommendation)
   }
 
-  const handleRetryDashboard = () => {
-    refetch()
-  }
-
   if (status === 'loading' || isLoading) {
     return (
       <Layout>
@@ -201,7 +185,7 @@ export default function DashboardPage() {
               <BookOpen className="h-8 w-8 text-white" />
             </div>
             <h2 className="text-2xl font-semibold font-serif tracking-tight mb-4">
-                              {error ? 'Unable to load dashboard' : 'Welcome to Libraria!'}
+              {error ? 'Unable to load dashboard' : 'Welcome to Libraria!'}
             </h2>
             <p className="text-sm text-gray-600 mb-6">
               {error 
@@ -209,19 +193,8 @@ export default function DashboardPage() {
                 : 'Start by adding some books to your library to see your personalized dashboard.'
               }
             </p>
-                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-               {error ? (
-                 <Button
-                   onClick={handleRetryDashboard}
-                   variant="primary"
-                   loading={isLoading}
-                 >
-                   Try Again
-                 </Button>
-               ) : null}
-              <div className="inline-flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium">
-                <span>Use the search bar above to find books</span>
-              </div>
+            <div className="inline-flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium">
+              <span>Use the search bar above to find books</span>
             </div>
           </div>
         </div>
@@ -229,58 +202,48 @@ export default function DashboardPage() {
     )
   }
 
-  const { user, stats, recent_readings, current_books, recent_recommendations } = dashboard
+  const { current_books = [], recent_readings = [], recent_recommendations = [] } = dashboard
 
   return (
     <Layout>
-      <div>
-        {/* Header - Minimalistic style matching main header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold font-serif tracking-tight mb-2">Welcome back, {user.name}!</h1>
-          <p className="text-sm text-gray-600">Here's your reading progress and personalized recommendations</p>
+      {/* Desktop Two-column layout */}
+      <div className="hidden lg:flex gap-8 h-full">
+        {/* Left Panel - Currently Reading (Fixed) */}
+        <div className="w-80 flex-shrink-0">
+          <ComponentErrorBoundary componentName="Currently Reading Panel">
+            <CurrentlyReadingPanel
+              currentBooks={current_books}
+              onBookClick={openBookModal}
+            />
+          </ComponentErrorBoundary>
         </div>
 
-        {/* Dashboard Statistics */}
-        <DashboardStats stats={stats} />
+        {/* Right Panel - Activity Feed (Scrollable) */}
+        <div className="flex-1 min-w-0">
+          <ComponentErrorBoundary componentName="Activity Feed">
+            <ActivityFeed
+              onBookClick={openBookModal}
+            />
+          </ComponentErrorBoundary>
+        </div>
+      </div>
 
-        {/* Current Books */}
-        <DashboardCurrentBooks 
-          currentBooks={current_books || []}
-          onBookClick={openBookModal}
-        />
-
-        {/* AI Recommendations */}
-        <DashboardRecommendations
-          recommendations={recent_recommendations || []}
-          onBookClick={openBookModal}
-          onAddToLibrary={handleAddToLibrary}
-          onDismiss={handleDismiss}
-          loadingStates={loadingStates}
-        />
-
-        {/* Recent Activity */}
-        <DashboardRecentActivity
-          recentReadings={recent_readings || []}
-          onBookClick={openBookModal}
-        />
-
-        {/* Empty State */}
-        {(!current_books || current_books.length === 0) && 
-         (!recent_readings || recent_readings.length === 0) && 
-         (!recent_recommendations || recent_recommendations.length === 0) && (
-          <div className="text-center py-16">
-            <div className="max-w-md mx-auto">
-              <div className="w-16 h-16 bg-gray-900 rounded flex items-center justify-center mx-auto mb-6">
-                <BookOpen className="h-8 w-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-semibold font-serif tracking-tight mb-4">Start Your Reading Journey</h2>
-              <p className="text-sm text-gray-600 mb-6">Add some books to your library using the search bar above to see personalized recommendations and track your progress.</p>
-              <div className="inline-flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium">
-                <span>Use the search bar above to find books</span>
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Mobile Layout - Single Column Stack */}
+      <div className="lg:hidden space-y-8">
+        <ComponentErrorBoundary componentName="Currently Reading Panel Mobile">
+          <CurrentlyReadingPanel
+            currentBooks={current_books}
+            onBookClick={openBookModal}
+            isMobile={true}
+          />
+        </ComponentErrorBoundary>
+        
+                  <ComponentErrorBoundary componentName="Activity Feed Mobile">
+            <ActivityFeed
+              onBookClick={openBookModal}
+              isMobile={true}
+            />
+          </ComponentErrorBoundary>
       </div>
     </Layout>
   )
