@@ -16,7 +16,12 @@ export interface ActivityFeedProps {
 
 // Grouped Activity Card for similar actions
 interface GroupedActivityCardProps {
-  user: any
+  user: {
+    id: number
+    name: string
+    username?: string
+    profile_picture_url?: string
+  }
   activities: any[]
   onBookClick: (book: any, bookId?: number) => void
 }
@@ -60,31 +65,38 @@ const GroupedActivityCard: React.FC<GroupedActivityCardProps> = ({
 
   const showFirstBook = activities[0]
   const remainingCount = activities.length - 1
+  
+  // Get display name - prefer username, fallback to name
+  const displayName = user.username || user.name
 
   return (
     <div className="border-b border-gray-100 pb-4">
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-          {user.profile_picture_url ? (
-            <Image
-              src={user.profile_picture_url}
-              alt={user.name}
-              width={32}
-              height={32}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-medium">
-                {user.name?.charAt(0) || 'U'}
-              </span>
-            </div>
-          )}
-        </div>
+        <Link href={`/user/${user.id}`} className="block">
+          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-gray-300 transition-all">
+            {user.profile_picture_url ? (
+              <Image
+                src={user.profile_picture_url}
+                alt={displayName}
+                width={32}
+                height={32}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs font-medium">
+                  {displayName?.charAt(0) || 'U'}
+                </span>
+              </div>
+            )}
+          </div>
+        </Link>
         <div>
           <p className="text-sm font-medium text-gray-900">
-            <span className="font-medium">{user.name}</span> {getGroupedActivityText()}
+            <Link href={`/user/${user.id}`} className="font-medium hover:underline transition-colors">
+              {displayName}
+            </Link> {getGroupedActivityText()}
           </p>
           <p className="text-xs text-gray-500">{formatDate(activities[0].created_at)}</p>
         </div>
@@ -213,30 +225,37 @@ const FeedReviewCard: React.FC<FeedReviewCardProps> = ({
     return date.toLocaleDateString()
   }
 
+  // Get display name - prefer username, fallback to name
+  const displayName = reading.user?.username || reading.user?.name || 'Anonymous'
+
   return (
     <div className="border-b border-gray-100 pb-4">
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-          {reading.user?.profile_picture_url ? (
-            <Image
-              src={reading.user.profile_picture_url}
-              alt={reading.user.name || 'User'}
-              width={32}
-              height={32}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-medium">
-                {reading.user?.name?.charAt(0) || 'U'}
-              </span>
-            </div>
-          )}
-        </div>
+        <Link href={`/user/${reading.user?.id}`} className="block">
+          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-gray-300 transition-all">
+            {reading.user?.profile_picture_url ? (
+              <Image
+                src={reading.user.profile_picture_url}
+                alt={displayName}
+                width={32}
+                height={32}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs font-medium">
+                  {displayName?.charAt(0) || 'U'}
+                </span>
+              </div>
+            )}
+          </div>
+        </Link>
         <div>
           <p className="text-sm font-medium text-gray-900">
-            Review by {reading.user?.name || 'Anonymous'}
+            Review by <Link href={`/user/${reading.user?.id}`} className="font-medium hover:underline transition-colors">
+              {displayName}
+            </Link>
           </p>
           <p className="text-xs text-gray-500">{formatDate(reading.updated_at)}</p>
         </div>

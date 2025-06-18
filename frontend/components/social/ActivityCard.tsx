@@ -19,6 +19,7 @@ export interface Activity {
   user: {
     id: number
     name: string
+    username?: string
     profile_picture_url?: string
   }
 }
@@ -76,15 +77,18 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
     }
   }
 
+  // Get display name - prefer username, fallback to name
+  const displayName = activity.user.username || activity.user.name
+
   return (
     <div className={`flex items-center space-x-3 py-3 border-b border-gray-100 last:border-b-0 ${className}`}>
       <div className="flex-shrink-0">
         <Link href={`/user/${activity.user.id}`} className="block">
-          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-gray-300 transition-all">
             {activity.user.profile_picture_url ? (
               <Image
                 src={activity.user.profile_picture_url}
-                alt={activity.user.name}
+                alt={displayName}
                 width={32}
                 height={32}
                 className="w-full h-full object-cover"
@@ -97,10 +101,8 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm text-gray-900">
-          <Link href={`/user/${activity.user.id}`}>
-            <span className="font-medium hover:underline cursor-pointer">
-              {activity.user.name}
-            </span>
+          <Link href={`/user/${activity.user.id}`} className="font-medium hover:underline transition-colors">
+            {displayName}
           </Link>
           {' '}{getActivityText().toLowerCase()}{' '}
           {renderActivityMessage()}

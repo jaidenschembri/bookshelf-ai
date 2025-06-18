@@ -25,7 +25,7 @@ const UserCard: React.FC<UserCardProps> = ({
             {user.profile_picture_url ? (
               <Image
                 src={user.profile_picture_url}
-                alt={user.name}
+                alt={user.username || user.name}
                 width={48}
                 height={48}
                 className="w-full h-full object-cover rounded"
@@ -37,11 +37,11 @@ const UserCard: React.FC<UserCardProps> = ({
           <div className="flex-1 min-w-0">
             <Link href={`/user/${user.id}`}>
               <h4 className="text-lg font-semibold font-serif hover:underline cursor-pointer transition-colors">
-                {user.name}
+                {user.username || user.name}
               </h4>
             </Link>
-            {user.username && (
-              <p className="text-sm text-gray-600">@{user.username}</p>
+            {user.username && user.name !== user.username && (
+              <p className="text-sm text-gray-600">{user.name}</p>
             )}
             {user.bio && (
               <p className="text-sm text-gray-600 mt-1 line-clamp-2">{user.bio}</p>

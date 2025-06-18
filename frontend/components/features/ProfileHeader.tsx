@@ -53,7 +53,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             {userProfile.profile_picture_url ? (
               <Image
                 src={userProfile.profile_picture_url}
-                alt={userProfile.name}
+                alt={userProfile.username || userProfile.name}
                 width={128}
                 height={128}
                 className="w-full h-full object-cover rounded"
@@ -91,33 +91,33 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         <div className="flex-1 text-center md:text-left">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
             <div>
-              {/* Name - Editable */}
+              {/* Username as Primary - Editable */}
               {isEditing && userProfile.can_edit ? (
                 <input
                   type="text"
-                  value={formData.name}
-                  onChange={(e) => onFormDataChange({ name: e.target.value })}
+                  value={formData.username}
+                  onChange={(e) => onFormDataChange({ username: e.target.value })}
                   className="text-3xl font-bold font-serif mb-2 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white"
-                  placeholder="Display name"
+                  placeholder="username"
                 />
               ) : (
-                <h1 className="text-3xl font-bold font-serif mb-2">{userProfile.name}</h1>
+                <h1 className="text-3xl font-bold font-serif mb-2">{userProfile.username || userProfile.name}</h1>
               )}
               
-              {/* Username - Editable */}
+              {/* Display Name as Secondary - Editable */}
               {isEditing && userProfile.can_edit ? (
                 <div className="mb-2">
                   <input
                     type="text"
-                    value={formData.username}
-                    onChange={(e) => onFormDataChange({ username: e.target.value })}
+                    value={formData.name}
+                    onChange={(e) => onFormDataChange({ name: e.target.value })}
                     className="text-sm text-gray-600 px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white"
-                    placeholder="@username"
+                    placeholder="Display name"
                   />
                 </div>
               ) : (
-                userProfile.username && (
-                  <p className="text-sm text-gray-600 mb-2">@{userProfile.username}</p>
+                userProfile.username && userProfile.name !== userProfile.username && (
+                  <p className="text-sm text-gray-600 mb-2">{userProfile.name}</p>
                 )
               )}
             </div>

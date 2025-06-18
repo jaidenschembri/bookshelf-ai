@@ -43,7 +43,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           {reading.user && (
             <Link href={`/user/${reading.user.id}`}>
               <p className="text-sm font-medium text-gray-900 hover:underline cursor-pointer mb-2">
-                Review by {reading.user.name}
+                Review by {reading.user.username || reading.user.name}
               </p>
             </Link>
           )}
