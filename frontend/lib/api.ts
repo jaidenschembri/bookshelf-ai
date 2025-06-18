@@ -312,8 +312,8 @@ export const socialApi = {
     api.delete(`/social/reviews/comments/${commentId}`).then(res => res.data),
   
   // Social Feed
-  getFeed: (limit = 20): Promise<SocialFeed> =>
-    api.get(`/social/feed?limit=${limit}`).then(res => res.data),
+  getFeed: (limit = 20, offset = 0): Promise<SocialFeed> =>
+    api.get(`/social/feed?limit=${limit}&offset=${offset}`).then(res => res.data),
 }
 
 export const userApi = {

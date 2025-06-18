@@ -185,7 +185,7 @@ export default function DashboardPage() {
               <BookOpen className="h-8 w-8 text-white" />
             </div>
             <h2 className="text-2xl font-semibold font-serif tracking-tight mb-4">
-              {error ? 'Unable to load dashboard' : 'Welcome to Libraria!'}
+                              {error ? 'Unable to load dashboard' : 'Welcome to Libraria!'}
             </h2>
             <p className="text-sm text-gray-600 mb-6">
               {error 
@@ -193,8 +193,8 @@ export default function DashboardPage() {
                 : 'Start by adding some books to your library to see your personalized dashboard.'
               }
             </p>
-            <div className="inline-flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium">
-              <span>Use the search bar above to find books</span>
+              <div className="inline-flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded text-sm font-medium">
+                <span>Use the search bar above to find books</span>
             </div>
           </div>
         </div>
@@ -222,8 +222,8 @@ export default function DashboardPage() {
         <div className="flex-1 min-w-0">
           <ComponentErrorBoundary componentName="Activity Feed">
             <ActivityFeed
-              onBookClick={openBookModal}
-            />
+          onBookClick={openBookModal}
+        />
           </ComponentErrorBoundary>
         </div>
       </div>
@@ -233,14 +233,14 @@ export default function DashboardPage() {
         <ComponentErrorBoundary componentName="Currently Reading Panel Mobile">
           <CurrentlyReadingPanel
             currentBooks={current_books}
-            onBookClick={openBookModal}
+          onBookClick={openBookModal}
             isMobile={true}
-          />
+        />
         </ComponentErrorBoundary>
-        
+
                   <ComponentErrorBoundary componentName="Activity Feed Mobile">
             <ActivityFeed
-              onBookClick={openBookModal}
+          onBookClick={openBookModal}
               isMobile={true}
             />
           </ComponentErrorBoundary>

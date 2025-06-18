@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import React, { useState, useEffect, useCallback } from 'react'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { socialApi, SocialFeed, Reading } from '@/lib/api'
 import { LoadingSpinner, BookCover } from '@/components/ui'
 import { ActivityCard } from '@/components/social'
@@ -331,16 +331,62 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
 }) => {
   const { data: session } = useSession()
 
-  // Get real social feed data
-  const { data: socialFeed, isLoading: feedLoading, error: feedError } = useQuery<SocialFeed>(
-    ['social-feed'],
-    () => socialApi.getFeed(10), // Limit to 10 items for dashboard
-    {
-      enabled: !!session?.user?.id,
-      refetchOnWindowFocus: false,
-      retry: false,
-    }
+  // Infinite scroll feed data
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: feedLoading,
+    error: feedError
+  } = useInfiniteQuery({
+    queryKey: ['social-feed'],
+    queryFn: ({ pageParam = 0 }) => socialApi.getFeed(20, pageParam),
+    getNextPageParam: (lastPage, allPages) => {
+      // If we got less than 20 items, we've reached the end
+      const totalActivities = lastPage.activities.length + lastPage.recent_reviews.length
+      if (totalActivities < 20) return undefined
+      return allPages.length * 20
+    },
+    enabled: !!session?.user?.id,
+    refetchOnWindowFocus: false,
+    retry: false,
+  })
+
+  // Combine all pages into a single feed
+  const socialFeed = data?.pages.reduce(
+    (acc, page) => ({
+      activities: [...acc.activities, ...page.activities],
+      recent_reviews: [...acc.recent_reviews, ...page.recent_reviews]
+    }),
+    { activities: [], recent_reviews: [] }
   )
+
+  // Infinite scroll handler
+  const handleScroll = useCallback(() => {
+    if (isMobile) return // Skip for mobile
+    
+    const scrollContainer = document.querySelector('[data-scroll-container="activity-feed"]')
+    if (!scrollContainer) return
+
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainer
+    const threshold = 100 // Load more when 100px from bottom
+    
+    if (scrollHeight - scrollTop - clientHeight < threshold && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, isMobile])
+
+  // Add scroll listener
+  useEffect(() => {
+    if (isMobile) return
+    
+    const scrollContainer = document.querySelector('[data-scroll-container="activity-feed"]')
+    if (!scrollContainer) return
+
+    scrollContainer.addEventListener('scroll', handleScroll)
+    return () => scrollContainer.removeEventListener('scroll', handleScroll)
+  }, [handleScroll, isMobile])
 
   return (
     <div className={className}>
@@ -348,7 +394,10 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
         <h2 className="text-lg font-semibold mb-6 text-black">Following</h2>
         
         {/* Scrollable Feed */}
-        <div className={`space-y-4 ${isMobile ? 'max-h-none' : 'max-h-screen overflow-y-auto pr-2'}`}>
+        <div 
+          className={`space-y-4 ${isMobile ? 'max-h-none' : 'max-h-screen overflow-y-auto pr-2'}`}
+          data-scroll-container="activity-feed"
+        >
           {feedError ? (
             <div className="text-center py-12">
               <p className="text-gray-400 text-sm">Unable to load social feed</p>
@@ -433,6 +482,14 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
                 <div className="text-center py-12">
                   <p className="text-gray-400 text-sm">No recent activity</p>
                   <p className="text-gray-500 text-xs mt-1">Follow users to see their reading activity</p>
+                </div>
+              )}
+
+              {/* Infinite scroll loading indicator */}
+              {isFetchingNextPage && (
+                <div className="text-center py-4">
+                  <LoadingSpinner size="sm" />
+                  <p className="text-gray-400 text-xs mt-2">Loading more...</p>
                 </div>
               )}
             </>

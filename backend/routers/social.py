@@ -290,6 +290,7 @@ async def delete_review_comment(
 @router.get("/feed", response_model=SocialFeedResponse)
 async def get_social_feed(
     limit: int = 20,
+    offset: int = 0,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -312,6 +313,7 @@ async def get_social_feed(
             )
         )
         .order_by(desc(UserActivity.created_at))
+        .offset(offset)
         .limit(limit)
     )
     activities = activities_result.scalars().all()
@@ -331,6 +333,7 @@ async def get_social_feed(
             )
         )
         .order_by(desc(Reading.updated_at))
+        .offset(offset)
         .limit(limit)
     )
     reviews = reviews_result.scalars().all()
