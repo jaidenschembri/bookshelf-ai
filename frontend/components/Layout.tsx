@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { BookOpen, Home, Star, Users } from 'lucide-react'
+import { BookOpen, Home, Star } from 'lucide-react'
 import Header from './layout/Header'
 import Footer from './layout/Footer'
 import type { NavigationItem } from './layout/NavigationLinks'
@@ -19,7 +19,6 @@ export default function Layout({ children }: LayoutProps) {
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'My Books', href: '/books', icon: BookOpen },
     { name: 'Discover', href: '/discover', icon: Star },
-    { name: 'Social', href: '/social', icon: Users },
   ]
 
   const handleSignOut = async () => {

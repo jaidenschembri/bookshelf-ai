@@ -5,16 +5,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import Layout from '@/components/Layout'
 import { recommendationApi, socialApi, userApi, bookApi, readingApi, Recommendation, User, Reading, UserPublicProfile } from '@/lib/api'
-import { Brain, Users, BookOpen, UserPlus, Check } from 'lucide-react'
+import { Brain, Users, BookOpen, UserPlus, Check, Search } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useBookModal } from '@/contexts/BookModalContext'
-import { Button, Card, LoadingSpinner } from '@/components/ui'
+import { Button, Card, LoadingSpinner, TabNavigation } from '@/components/ui'
 import { RecommendationCard } from '@/components/features'
+import { UserCard } from '@/components/social'
 
 export default function DiscoverPage() {
   const { data: session } = useSession()
   const queryClient = useQueryClient()
   const { openBookModal } = useBookModal()
+  const [activeTab, setActiveTab] = useState<'books' | 'users'>('books')
+  const [searchQuery, setSearchQuery] = useState('')
   const [followingUsers, setFollowingUsers] = useState<Set<number>>(new Set())
   const [loadingStates, setLoadingStates] = useState<{
     adding: Set<number>
@@ -31,7 +34,7 @@ export default function DiscoverPage() {
     ['recommendations', session?.user?.id],
     () => recommendationApi.get(),
     {
-      enabled: !!session?.user?.id && !!session?.accessToken,
+      enabled: !!session?.user?.id && !!session?.accessToken && activeTab === 'books',
       refetchOnWindowFocus: false,
     }
   )
@@ -45,8 +48,19 @@ export default function DiscoverPage() {
       return users.slice(0, 4) // Limit to 4 suggested users
     },
     {
-      enabled: !!session?.user?.id,
+      enabled: !!session?.user?.id && activeTab === 'books',
       refetchOnWindowFocus: false,
+    }
+  )
+
+  // User search results
+  const { data: searchResults, isLoading: searchLoading } = useQuery<UserPublicProfile[]>(
+    ['user-search', searchQuery],
+    () => userApi.searchUsers(searchQuery),
+    {
+      enabled: searchQuery.length > 2 && activeTab === 'users' && !!session?.user?.id,
+      refetchOnWindowFocus: false,
+      retry: false,
     }
   )
 
@@ -87,7 +101,7 @@ export default function DiscoverPage() {
       return readings.slice(0, 8) // Limit to 8 books
     },
     {
-      enabled: !!session?.user?.id,
+      enabled: !!session?.user?.id && activeTab === 'books',
       refetchOnWindowFocus: false,
     }
   )
@@ -182,40 +196,23 @@ export default function DiscoverPage() {
     }
   )
 
-  const followMutation = useMutation(
-    (userId: number) => socialApi.followUser(userId),
-    {
-      onMutate: (userId) => {
-        setFollowingUsers(prev => new Set(prev).add(userId))
-        setLoadingStates(prev => ({
-          ...prev,
-          following: new Set(prev.following).add(userId)
-        }))
-      },
-      onSuccess: (_, userId) => {
-        queryClient.invalidateQueries(['social'])
-        toast.success('User followed!')
-        setLoadingStates(prev => {
-          const newFollowing = new Set(prev.following)
-          newFollowing.delete(userId)
-          return { ...prev, following: newFollowing }
-        })
-      },
-      onError: (_, userId) => {
-        setFollowingUsers(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(userId)
-          return newSet
-        })
-        toast.error('Failed to follow user')
-        setLoadingStates(prev => {
-          const newFollowing = new Set(prev.following)
-          newFollowing.delete(userId)
-          return { ...prev, following: newFollowing }
-        })
-      },
-    }
-  )
+  const followMutation = useMutation({
+    mutationFn: (userId: number) => socialApi.followUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['user-search'])
+      queryClient.invalidateQueries(['suggested-users'])
+      toast.success('User followed!')
+    },
+  })
+
+  const unfollowMutation = useMutation({
+    mutationFn: (userId: number) => socialApi.unfollowUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['user-search'])
+      queryClient.invalidateQueries(['suggested-users'])
+      toast.success('User unfollowed!')
+    },
+  })
 
   const handleDismiss = (recommendationId: number) => {
     dismissMutation.mutate(recommendationId)
@@ -225,8 +222,12 @@ export default function DiscoverPage() {
     addToLibraryMutation.mutate(recommendation)
   }
 
-  const handleFollowUser = (userId: number) => {
-    followMutation.mutate(userId)
+  const handleFollow = (userId: number, isFollowing: boolean) => {
+    if (isFollowing) {
+      unfollowMutation.mutate(userId)
+    } else {
+      followMutation.mutate(userId)
+    }
   }
 
   const handleBookClick = (book: any) => {
@@ -243,181 +244,269 @@ export default function DiscoverPage() {
             Discover
           </h1>
           <p className="text-sm text-gray-600">
-            Find your next great read through AI recommendations and community discoveries
+            Find your next great read and connect with other readers
           </p>
         </div>
 
-        {/* AI Recommendations Section */}
-        <div className="mb-12">
-          <h2 className="text-lg font-semibold font-serif mb-6">Recommended for you</h2>
-          
-          {recommendationsLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <LoadingSpinner size="lg" />
-            </div>
-          ) : recommendations && recommendations.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {recommendations.slice(0, 2).map((recommendation) => (
-                <RecommendationCard
-                  key={recommendation.id}
-                  recommendation={recommendation}
-                  onBookClick={() => handleBookClick(recommendation.book)}
-                  onAddToLibrary={() => handleAddToLibrary(recommendation)}
-                  onDismiss={() => handleDismiss(recommendation.id)}
-                  isAddingToLibrary={loadingStates.adding.has(recommendation.id)}
-                  isDismissing={loadingStates.dismissing.has(recommendation.id)}
-                  variant="default"
-                />
-              ))}
-            </div>
-          ) : (
-            <Card variant="flat" padding="lg" className="text-center">
-              <Brain className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold font-serif mb-2">No recommendations yet</h3>
-              <p className="text-sm text-gray-600">
-                Add and rate some books to get personalized AI recommendations
-              </p>
-            </Card>
-          )}
+        {/* Tabs */}
+        <div className="mb-8">
+          <TabNavigation
+            options={[
+              { value: 'books', label: 'Books' },
+              { value: 'users', label: 'Users' }
+            ]}
+            activeTab={activeTab}
+            onTabChange={(value) => setActiveTab(value as 'books' | 'users')}
+            spacing="normal"
+          />
         </div>
 
-        {/* People with Similar Taste Section */}
-        <div className="mb-12">
-          <h2 className="text-lg font-semibold font-serif mb-6">People with similar taste</h2>
-          
-          {usersLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <LoadingSpinner size="md" />
-            </div>
-          ) : suggestedUsers && suggestedUsers.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {suggestedUsers.map((user) => (
-                <Card key={user.id} variant="hover" padding="lg" className="flex items-center space-x-4">
-                  {/* User Avatar */}
-                  <div className="flex-shrink-0">
-                    {user.profile_picture_url ? (
-                      <img
-                        src={user.profile_picture_url}
-                        alt={user.name}
-                        className="w-12 h-12 rounded-full object-cover border border-gray-200"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
-                        <Users className="h-6 w-6 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* User Info */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-gray-900 truncate">
-                      {user.name}
-                    </h3>
-                    {user.username && (
-                      <p className="text-xs text-gray-600">@{user.username}</p>
-                    )}
-                    {user.bio && (
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                        {user.bio}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Follow Button */}
-                  <div className="flex-shrink-0">
-                    {followingUsers.has(user.id) ? (
-                      <Button
-                        variant="success"
-                        size="sm"
-                        disabled
-                        icon={<Check className="h-4 w-4" />}
-                      >
-                        Following
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => handleFollowUser(user.id)}
-                        loading={loadingStates.following.has(user.id)}
-                        icon={<UserPlus className="h-4 w-4" />}
-                      >
-                        Follow
-                      </Button>
-                    )}
-                  </div>
+        {/* Books Tab */}
+        {activeTab === 'books' && (
+          <div>
+            {/* AI Recommendations Section */}
+            <div className="mb-12">
+              <h2 className="text-lg font-semibold font-serif mb-6">Recommended for you</h2>
+              
+              {recommendationsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <LoadingSpinner size="lg" />
+                </div>
+              ) : recommendations && recommendations.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {recommendations.slice(0, 2).map((recommendation) => (
+                    <RecommendationCard
+                      key={recommendation.id}
+                      recommendation={recommendation}
+                      onBookClick={() => handleBookClick(recommendation.book)}
+                      onAddToLibrary={() => handleAddToLibrary(recommendation)}
+                      onDismiss={() => handleDismiss(recommendation.id)}
+                      isAddingToLibrary={loadingStates.adding.has(recommendation.id)}
+                      isDismissing={loadingStates.dismissing.has(recommendation.id)}
+                      variant="default"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <Card variant="flat" padding="lg" className="text-center">
+                  <Brain className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold font-serif mb-2">No recommendations yet</h3>
+                  <p className="text-sm text-gray-600">
+                    Add and rate some books to get personalized AI recommendations
+                  </p>
                 </Card>
-              ))}
+              )}
             </div>
-          ) : (
-            <Card variant="flat" padding="lg" className="text-center">
-              <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold font-serif mb-2">No suggested users yet</h3>
-              <p className="text-sm text-gray-600">
-                As more users join and rate books, we'll suggest people with similar taste
-              </p>
-            </Card>
-          )}
-        </div>
 
-        {/* What Others Are Reading Section */}
-        <div className="mb-12">
-          <h2 className="text-lg font-semibold font-serif mb-6">What others are reading</h2>
-          
-          {othersReadingLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <LoadingSpinner size="md" />
-            </div>
-          ) : othersReading && othersReading.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-              {othersReading.map((reading, index) => (
-                <div
-                  key={`${reading.id}-${index}`}
-                  className="cursor-pointer group"
-                  onClick={() => handleBookClick(reading.book)}
-                >
-                  {/* Book Cover */}
-                  <div className="aspect-[3/4] mb-2">
-                    {reading.book.cover_url ? (
-                      <img
-                        src={reading.book.cover_url}
-                        alt={reading.book.title}
-                        className="w-full h-full object-cover rounded border border-gray-200 group-hover:shadow-md transition-shadow"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-100 border border-gray-200 rounded flex items-center justify-center group-hover:shadow-md transition-shadow">
-                        <BookOpen className="h-8 w-8 text-gray-400" />
+            {/* People with Similar Taste Section */}
+            <div className="mb-12">
+              <h2 className="text-lg font-semibold font-serif mb-6">People with similar taste</h2>
+              
+              {usersLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoadingSpinner size="md" />
+                </div>
+              ) : suggestedUsers && suggestedUsers.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {suggestedUsers.map((user) => (
+                    <Card key={user.id} variant="hover" padding="lg" className="flex items-center space-x-4">
+                      {/* User Avatar */}
+                      <div className="flex-shrink-0">
+                        {user.profile_picture_url ? (
+                          <img
+                            src={user.profile_picture_url}
+                            alt={user.username || user.name}
+                            className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
+                            <Users className="h-6 w-6 text-gray-400" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
 
-                  {/* Book Info */}
-                  <div className="text-center">
-                    <h4 className="text-xs font-medium text-gray-900 truncate mb-1">
-                      {reading.book.title}
-                    </h4>
-                    <p className="text-xs text-gray-600 truncate">
-                      {reading.book.author}
-                    </p>
-                    {reading.user && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        by {reading.user.name}
-                      </p>
-                    )}
+                      {/* User Info */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-gray-900 truncate">
+                          {user.username || user.name}
+                        </h3>
+                        {user.username && user.name !== user.username && (
+                          <p className="text-xs text-gray-600">{user.name}</p>
+                        )}
+                        {user.bio && (
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                            {user.bio}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Follow Button */}
+                      <div className="flex-shrink-0">
+                        {followingUsers.has(user.id) ? (
+                          <Button
+                            variant="success"
+                            size="sm"
+                            disabled
+                            icon={<Check className="h-4 w-4" />}
+                          >
+                            Following
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleFollow(user.id, user.is_following)}
+                            loading={loadingStates.following.has(user.id)}
+                            icon={<UserPlus className="h-4 w-4" />}
+                          >
+                            Follow
+                          </Button>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card variant="flat" padding="lg" className="text-center">
+                  <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold font-serif mb-2">No suggested users yet</h3>
+                  <p className="text-sm text-gray-600">
+                    As more users join and rate books, we'll suggest people with similar taste
+                  </p>
+                </Card>
+              )}
+            </div>
+
+            {/* What Others Are Reading Section */}
+            <div className="mb-12">
+              <h2 className="text-lg font-semibold font-serif mb-6">What others are reading</h2>
+              
+              {othersReadingLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoadingSpinner size="md" />
+                </div>
+              ) : othersReading && othersReading.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                  {othersReading.map((reading, index) => (
+                    <div
+                      key={`${reading.id}-${index}`}
+                      className="cursor-pointer group"
+                      onClick={() => handleBookClick(reading.book)}
+                    >
+                      {/* Book Cover */}
+                      <div className="aspect-[3/4] mb-2">
+                        {reading.book.cover_url ? (
+                          <img
+                            src={reading.book.cover_url}
+                            alt={reading.book.title}
+                            className="w-full h-full object-cover rounded border border-gray-200 group-hover:shadow-md transition-shadow"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-100 border border-gray-200 rounded flex items-center justify-center group-hover:shadow-md transition-shadow">
+                            <BookOpen className="h-8 w-8 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Book Info */}
+                      <div className="text-center">
+                        <h4 className="text-xs font-medium text-gray-900 truncate mb-1">
+                          {reading.book.title}
+                        </h4>
+                        <p className="text-xs text-gray-600 truncate">
+                          {reading.book.author}
+                        </p>
+                        {reading.user && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            by {reading.user.username || reading.user.name}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Card variant="flat" padding="lg" className="text-center">
+                  <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold font-serif mb-2">No community activity yet</h3>
+                  <p className="text-sm text-gray-600">
+                    Follow other users to see what they're reading
+                  </p>
+                </Card>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Users Tab */}
+        {activeTab === 'users' && (
+          <div>
+            {/* Search Form */}
+            <div className="border border-gray-200 p-4 rounded mb-8">
+              <form onSubmit={(e) => e.preventDefault()} className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search for users by name or username..."
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                    />
                   </div>
                 </div>
-              ))}
+              </form>
             </div>
-          ) : (
-            <Card variant="flat" padding="lg" className="text-center">
-              <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold font-serif mb-2">No community activity yet</h3>
-              <p className="text-sm text-gray-600">
-                Follow other users to see what they're reading
-              </p>
-            </Card>
-          )}
-        </div>
+
+            {/* Search Results */}
+            {searchQuery.length > 2 && (
+              <div className="space-y-6">
+                <h2 className="text-lg font-semibold font-serif">
+                  Search Results ({searchResults?.length || 0})
+                </h2>
+                
+                {searchLoading ? (
+                  <div className="text-center py-12">
+                    <LoadingSpinner />
+                  </div>
+                ) : searchResults && searchResults.length > 0 ? (
+                  <div className="grid gap-6">
+                    {searchResults.map((user) => (
+                      <UserCard 
+                        key={user.id}
+                        user={user}
+                        onFollow={handleFollow}
+                        isLoading={followMutation.isLoading || unfollowMutation.isLoading}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16">
+                    <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold font-serif mb-2">No users found</h3>
+                    <p className="text-sm text-gray-600">
+                      Try searching with different keywords or check your spelling.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Initial State */}
+            {!searchQuery && (
+              <div className="text-center py-16">
+                <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold font-serif mb-2">
+                  Search for users to follow
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Enter a name or username to find other readers.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </Layout>
   )
