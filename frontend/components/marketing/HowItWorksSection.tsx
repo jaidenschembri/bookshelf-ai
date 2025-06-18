@@ -16,29 +16,29 @@ export interface HowItWorksSectionProps {
 const defaultSteps: Step[] = [
   {
     number: '01',
-    title: 'Sign In',
-    description: 'Create your account securely with Google OAuth authentication'
+    title: 'Create Account',
+    description: 'Sign up with Google and set up your reading profile and goals'
   },
   {
     number: '02',
-    title: 'Add Books',
-    description: 'Search our extensive database and add books you\'ve read or want to read'
+    title: 'Build Your Library',
+    description: 'Add books you\'ve read, are reading, or want to read to your personal library'
   },
   {
     number: '03',
-    title: 'Rate & Review',
-    description: 'Share your thoughts and ratings to help our AI understand your taste'
+    title: 'Connect & Share',
+    description: 'Follow other readers, share reviews, and see what your friends are reading'
   },
   {
     number: '04',
-    title: 'Get Recommendations',
-    description: 'Receive personalized AI-powered book suggestions tailored just for you'
+    title: 'Discover & Explore',
+    description: 'Get book recommendations from your network and AI-powered suggestions'
   }
 ]
 
 const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({
   title = 'How It Works',
-  subtitle = 'Four simple steps to unlock your personalized reading experience',
+  subtitle = 'Join thousands of readers building their digital libraries and discovering great books together',
   steps = defaultSteps,
   className = ''
 }) => {

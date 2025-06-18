@@ -1,5 +1,5 @@
 import React from 'react'
-import { LucideIcon, Brain, TrendingUp, Star } from 'lucide-react'
+import { LucideIcon, Users, BookOpen, TrendingUp, Zap } from 'lucide-react'
 
 export interface Feature {
   icon: LucideIcon
@@ -16,25 +16,30 @@ export interface FeaturesSectionProps {
 
 const defaultFeatures: Feature[] = [
   {
-    icon: Brain,
-    title: 'AI-Powered Recommendations',
-    description: 'Our advanced artificial intelligence analyzes your reading history, preferences, and ratings to suggest books you\'ll absolutely love.'
+    icon: BookOpen,
+    title: 'Personal Library Management',
+    description: 'Organize your books with custom shelves, track reading progress, and maintain a complete record of your literary journey.'
+  },
+  {
+    icon: Users,
+    title: 'Social Reading Community',
+    description: 'Follow friends, share reviews, see what others are reading, and discover books through your social network.'
   },
   {
     icon: TrendingUp,
-    title: 'Reading Progress Tracking',
-    description: 'Set reading goals, monitor your progress with visual charts, and celebrate your literary achievements along the way.'
+    title: 'Reading Goals & Stats',
+    description: 'Set annual reading goals, track your progress, and get insights into your reading habits and preferences.'
   },
   {
-    icon: Star,
-    title: 'Rate & Review System',
-    description: 'Rate books, write detailed reviews, and help improve your personalized recommendations with every interaction.'
+    icon: Zap,
+    title: 'Smart Recommendations',
+    description: 'Get personalized book suggestions powered by AI analysis of your reading history and community trends.'
   }
 ]
 
 const FeaturesSection: React.FC<FeaturesSectionProps> = ({
-  title = 'Powerful Features',
-  subtitle = 'Everything you need to discover, track, and enjoy your reading journey',
+  title = 'Everything You Need',
+  subtitle = 'A complete platform for book lovers to track, share, and discover their next great read',
   features = defaultFeatures,
   className = ''
 }) => {

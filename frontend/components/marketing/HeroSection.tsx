@@ -15,15 +15,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-6xl font-bold font-serif tracking-tight mb-8">
-            Discover Your Next<br />
-            <span className="text-gray-600">Favorite Book</span>
+            Track, Share & Discover<br />
+            <span className="text-gray-600">Your Reading Journey</span>
           </h1>
           
           <div className="max-w-2xl mx-auto mb-12">
             <p className="text-lg text-gray-600 mb-8">
-              Get personalized book recommendations powered by artificial intelligence. 
-              Track your reading progress, rate books, and let our intelligent system 
-              suggest your next great literary adventure.
+              The social book tracker that helps you organize your library, connect with fellow readers, 
+              and discover your next great read through community insights and smart recommendations.
             </p>
             <div className="border-l-4 border-gray-300 pl-6 py-4 bg-gray-50 rounded-r">
               <p className="text-lg italic font-serif text-gray-700">

@@ -89,7 +89,7 @@ export default function HomePage() {
                               <span className="font-serif font-semibold text-xl">Libraria</span>
             </div>
             <p className="text-sm text-gray-600 mb-4">
-              Literature Meets Technology • Discover • Read • Repeat
+              Track • Share • Discover • Connect with Fellow Readers
             </p>
             <p className="text-xs text-gray-500">
                               © 2024 Libraria. All rights reserved.

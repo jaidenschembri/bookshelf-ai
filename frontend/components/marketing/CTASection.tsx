@@ -12,9 +12,9 @@ export interface CTASectionProps {
 }
 
 const CTASection: React.FC<CTASectionProps> = ({
-  title = 'Ready to Start Your Literary Journey?',
-  subtitle = 'Join thousands of readers who have discovered their next favorite books with our AI-powered recommendations.',
-  buttonText = 'Start Reading Smarter',
+  title = 'Ready to Join the Community?',
+  subtitle = 'Connect with fellow book lovers, track your reading progress, and discover your next great read through our social platform.',
+  buttonText = 'Start Your Library',
   buttonIcon: ButtonIcon = Users,
   onButtonClick,
   isDarkTheme = true,
