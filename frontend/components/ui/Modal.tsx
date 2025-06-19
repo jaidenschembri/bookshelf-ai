@@ -36,8 +36,14 @@ const Modal: React.FC<ModalProps> = ({
   }
   
   const modalClasses = cn(
-    'bg-white border border-gray-200 rounded-lg shadow-lg w-full mx-4',
-    sizeClasses[size],
+    // Base modal styles
+    'bg-white border border-gray-200 rounded-lg shadow-lg w-full relative z-10',
+    // Mobile responsive: full screen on very small screens, with margins on larger screens
+    'mx-2 sm:mx-4',
+    // Max height and overflow handling
+    'max-h-[95vh] sm:max-h-[90vh] flex flex-col',
+    // Size classes (only apply on larger screens)
+    `sm:${sizeClasses[size]}`,
     className
   )
   
@@ -61,7 +67,7 @@ const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4">
       {overlay && (
         <div 
           className="absolute inset-0 bg-black bg-opacity-50"
@@ -71,15 +77,15 @@ const Modal: React.FC<ModalProps> = ({
       
       <div
         ref={modalRef}
-        className={cn(modalClasses, 'relative z-10')}
+        className={modalClasses}
         onClick={(e) => e.stopPropagation()}
         {...props}
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
             {title && (
-              <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+              <h2 className="text-lg font-semibold text-gray-900 pr-4">{title}</h2>
             )}
             {showCloseButton && (
               <Button
@@ -87,20 +93,20 @@ const Modal: React.FC<ModalProps> = ({
                 size="sm"
                 onClick={onClose}
                 icon={<X className="h-4 w-4" />}
-                className="ml-auto"
+                className="ml-auto flex-shrink-0"
               />
             )}
           </div>
         )}
         
-        {/* Content */}
-        <div className="p-6">
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {children}
         </div>
         
         {/* Footer */}
         {footer && (
-          <div className="p-6 border-t border-gray-200">
+          <div className="p-4 sm:p-6 border-t border-gray-200 flex-shrink-0">
             {footer}
           </div>
         )}
