@@ -29,13 +29,11 @@ export const BookModalProvider = ({ children }: BookModalProviderProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const [currentBook, setCurrentBook] = useState<Book | null>(null)
   const [currentBookId, setCurrentBookId] = useState<number | undefined>(undefined)
-  const [editMode, setEditMode] = useState<'view' | 'review'>('view')
   const [currentReading, setCurrentReading] = useState<Reading | undefined>(undefined)
 
   const openBookModal = (book: Book | null, bookId?: number) => {
     setCurrentBook(book)
     setCurrentBookId(bookId)
-    setEditMode('view')
     setCurrentReading(undefined)
     setIsOpen(true)
   }
@@ -43,7 +41,6 @@ export const BookModalProvider = ({ children }: BookModalProviderProps) => {
   const openReviewModal = (reading: Reading) => {
     setCurrentBook(reading.book)
     setCurrentBookId(reading.book.id)
-    setEditMode('review')
     setCurrentReading(reading)
     setIsOpen(true)
   }
@@ -52,7 +49,6 @@ export const BookModalProvider = ({ children }: BookModalProviderProps) => {
     setIsOpen(false)
     setCurrentBook(null)
     setCurrentBookId(undefined)
-    setEditMode('view')
     setCurrentReading(undefined)
   }
 
@@ -64,7 +60,6 @@ export const BookModalProvider = ({ children }: BookModalProviderProps) => {
         onClose={closeBookModal}
         book={currentBook}
         bookId={currentBookId}
-        editMode={editMode}
         reading={currentReading}
       />
     </BookModalContext.Provider>

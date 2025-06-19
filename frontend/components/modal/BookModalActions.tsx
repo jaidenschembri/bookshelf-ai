@@ -10,7 +10,6 @@ export interface BookModalActionsProps {
   canAddToLibrary: boolean
   reading?: Reading
   onAddToLibrary: () => void
-  onEditReview: () => void
   className?: string
 }
 
@@ -21,7 +20,6 @@ const BookModalActions: React.FC<BookModalActionsProps> = ({
   canAddToLibrary,
   reading,
   onAddToLibrary,
-  onEditReview,
   className
 }) => {
   return (
@@ -39,20 +37,9 @@ const BookModalActions: React.FC<BookModalActionsProps> = ({
                 <span>Checking Library...</span>
               </Button>
             ) : isInLibrary ? (
-              <div className="flex flex-col gap-3">
-                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-2 rounded text-sm font-medium cursor-default flex items-center justify-center sm:justify-start space-x-2">
-                  <Check className="h-4 w-4 flex-shrink-0" />
-                  <span>In Your Library</span>
-                </div>
-                {reading && (
-                  <Button
-                    variant="primary"
-                    onClick={onEditReview}
-                    className="w-full sm:w-auto"
-                  >
-                    {reading.review ? 'Edit Review' : 'Add Review'}
-                  </Button>
-                )}
+              <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-2 rounded text-sm font-medium cursor-default flex items-center justify-center sm:justify-start space-x-2">
+                <Check className="h-4 w-4 flex-shrink-0" />
+                <span>In Your Library</span>
               </div>
             ) : (
               <Button

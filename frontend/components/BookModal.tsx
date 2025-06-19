@@ -14,11 +14,10 @@ interface BookModalProps {
   onClose: () => void
   book: Book | null
   bookId?: number // For cases where we only have an ID and need to fetch details
-  editMode?: 'view' | 'review' // New prop to control what mode we're in
   reading?: Reading // If we have the reading object, we can edit review directly
 }
 
-export default function BookModal({ isOpen, onClose, book, bookId, editMode = 'view', reading }: BookModalProps) {
+export default function BookModal({ isOpen, onClose, book, bookId, reading }: BookModalProps) {
   // Use the custom hook for all data management
   const {
     currentBook,
@@ -30,24 +29,20 @@ export default function BookModal({ isOpen, onClose, book, bookId, editMode = 'v
     review,
     rating,
     isPublic,
-    isEditingReview,
     setReview,
     setRating,
     setIsPublic,
-    setIsEditingReview,
     addToLibraryMutation,
     updateReadingMutation,
     handleSaveReview,
-    handleEditReview,
     handleCancelReview,
-  } = useBookModalData({ book, bookId, reading, isOpen, editMode })
+    handleStatusChange,
+  } = useBookModalData({ book, bookId, reading, isOpen })
 
   // Use the keyboard hook for modal controls
   const { handleModalClose } = useModalKeyboard({
     isOpen,
-    isEditingReview,
-    onClose,
-    setIsEditingReview
+    onClose
   })
 
   if (!isOpen) return null
@@ -55,15 +50,11 @@ export default function BookModal({ isOpen, onClose, book, bookId, editMode = 'v
   const isLoading = isLoadingBook && (!book || !currentBook)
   const canAddToLibrary = session?.user?.id && !isInLibrary && !addToLibraryMutation.isLoading
 
-  const modalTitle = isEditingReview 
-    ? (userReading?.review ? 'Edit Review' : 'Add Review') 
-    : 'Book Details'
-
   return (
     <Modal
       isOpen={isOpen}
       onClose={handleModalClose}
-      title={modalTitle}
+      title="Book Details"
       size="lg"
     >
       <BookModalStates
@@ -75,7 +66,6 @@ export default function BookModal({ isOpen, onClose, book, bookId, editMode = 'v
         <BookModalContent
           currentBook={currentBook}
           userReading={userReading}
-          isEditingReview={isEditingReview}
           isSignedIn={!!session?.user?.id}
           isInLibrary={isInLibrary}
           isLoadingLibrary={isLoadingLibrary}
@@ -84,13 +74,13 @@ export default function BookModal({ isOpen, onClose, book, bookId, editMode = 'v
           rating={rating}
           isPublic={isPublic}
           isLoadingUpdate={updateReadingMutation.isLoading}
-          onEditReview={handleEditReview}
           onAddToLibrary={() => addToLibraryMutation.mutate()}
           onReviewChange={setReview}
           onRatingChange={setRating}
           onPublicToggle={setIsPublic}
           onSaveReview={handleSaveReview}
           onCancelReview={handleCancelReview}
+          onStatusChange={handleStatusChange}
         />
       )}
     </Modal>

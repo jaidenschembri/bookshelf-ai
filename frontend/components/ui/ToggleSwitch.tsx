@@ -22,22 +22,19 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 }) => {
   const sizeClasses = {
     sm: {
-      switch: 'h-5 w-9',
-      thumb: 'h-3 w-3',
-      translateChecked: 'translate-x-5',
-      translateUnchecked: 'translate-x-1'
+      container: 'w-8 h-4',
+      circle: 'w-3 h-3',
+      translate: 'translate-x-4'
     },
     md: {
-      switch: 'h-6 w-11',
-      thumb: 'h-4 w-4',
-      translateChecked: 'translate-x-6',
-      translateUnchecked: 'translate-x-1'
+      container: 'w-11 h-6',
+      circle: 'w-5 h-5',
+      translate: 'translate-x-5'
     },
     lg: {
-      switch: 'h-7 w-13',
-      thumb: 'h-5 w-5',
-      translateChecked: 'translate-x-7',
-      translateUnchecked: 'translate-x-1'
+      container: 'w-13 h-7',
+      circle: 'w-6 h-6',
+      translate: 'translate-x-6'
     }
   }
 
@@ -66,18 +63,16 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           disabled={disabled}
           className={cn(
             'relative inline-flex items-center rounded-full border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2',
-            sizes.switch,
-            checked 
-              ? 'bg-gray-900 border-gray-900' 
-              : 'bg-gray-200 border-gray-300',
+            sizes.container,
+            checked ? 'bg-gray-600 border-gray-600' : 'bg-gray-200 border-gray-300',
             disabled && 'opacity-50 cursor-not-allowed'
           )}
         >
           <span
             className={cn(
               'inline-block transform rounded-full bg-white transition-transform',
-              sizes.thumb,
-              checked ? sizes.translateChecked : sizes.translateUnchecked
+              sizes.circle,
+              checked ? sizes.translate : 'translate-x-0'
             )}
           />
         </button>
@@ -92,10 +87,8 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
       disabled={disabled}
       className={cn(
         'relative inline-flex items-center rounded-full border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2',
-        sizes.switch,
-        checked 
-          ? 'bg-gray-900 border-gray-900' 
-          : 'bg-gray-200 border-gray-300',
+        sizes.container,
+        checked ? 'bg-gray-600 border-gray-600' : 'bg-gray-200 border-gray-300',
         disabled && 'opacity-50 cursor-not-allowed',
         className
       )}
@@ -103,8 +96,8 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
       <span
         className={cn(
           'inline-block transform rounded-full bg-white transition-transform',
-          sizes.thumb,
-          checked ? sizes.translateChecked : sizes.translateUnchecked
+          sizes.circle,
+          checked ? sizes.translate : 'translate-x-0'
         )}
       />
     </button>

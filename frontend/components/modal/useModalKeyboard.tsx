@@ -2,48 +2,27 @@
 
 import { useEffect } from 'react'
 
-export interface UseModalKeyboardProps {
+interface UseModalKeyboardProps {
   isOpen: boolean
-  isEditingReview: boolean
   onClose: () => void
-  setIsEditingReview: (value: boolean) => void
 }
 
-export function useModalKeyboard({ 
-  isOpen, 
-  isEditingReview, 
-  onClose, 
-  setIsEditingReview 
-}: UseModalKeyboardProps) {
-  // Close modal on escape key
+export function useModalKeyboard({ isOpen, onClose }: UseModalKeyboardProps) {
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        if (isEditingReview) {
-          setIsEditingReview(false)
-        } else {
-          onClose()
-        }
+    if (!isOpen) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose()
       }
     }
 
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'hidden'
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen, onClose, isEditingReview, setIsEditingReview])
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
 
   const handleModalClose = () => {
-    if (isEditingReview) {
-      setIsEditingReview(false)
-    } else {
-      onClose()
-    }
+    onClose()
   }
 
   return {

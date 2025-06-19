@@ -11,10 +11,9 @@ export interface UseBookModalDataProps {
   bookId?: number
   reading?: Reading
   isOpen: boolean
-  editMode?: 'view' | 'review'
 }
 
-export function useBookModalData({ book, bookId, reading, isOpen, editMode = 'view' }: UseBookModalDataProps) {
+export function useBookModalData({ book, bookId, reading, isOpen }: UseBookModalDataProps) {
   const { data: session } = useSession()
   const queryClient = useQueryClient()
 
@@ -22,7 +21,6 @@ export function useBookModalData({ book, bookId, reading, isOpen, editMode = 'vi
   const [review, setReview] = useState('')
   const [rating, setRating] = useState(0)
   const [isPublic, setIsPublic] = useState(false)
-  const [isEditingReview, setIsEditingReview] = useState(editMode === 'review')
 
   // Fetch book details if we only have an ID
   const { data: fetchedBook, isLoading: isLoadingBook } = useQuery(
@@ -99,16 +97,24 @@ export function useBookModalData({ book, bookId, reading, isOpen, editMode = 'vi
         total_pages: currentBook.total_pages,
       })
 
-      await readingApi.create({
+      const createdReading = await readingApi.create({
         book_id: addedBook.id,
         status: 'want_to_read',
       })
 
-      return addedBook
+      return { book: addedBook, reading: createdReading }
     },
     {
-      onSuccess: () => {
+      onSuccess: ({ book, reading }) => {
         toast.success(`Added "${currentBook?.title}" to your library!`)
+        
+        // Optimistically update the query cache
+        queryClient.setQueryData(['user-readings', session?.user?.id], (old: Reading[] | undefined) => {
+          if (!old) return [reading]
+          return [...old, reading]
+        })
+        
+        // Invalidate queries to ensure consistency
         queryClient.invalidateQueries(['user-readings'])
         queryClient.invalidateQueries(['dashboard'])
         queryClient.invalidateQueries(['readings'])
@@ -131,7 +137,6 @@ export function useBookModalData({ book, bookId, reading, isOpen, editMode = 'vi
         queryClient.invalidateQueries(['user-readings'])
         queryClient.invalidateQueries(['dashboard'])
         queryClient.invalidateQueries(['readings'])
-        setIsEditingReview(false)
       },
       onError: (error: any) => {
         toast.error(error.response?.data?.detail || 'Failed to update review')
@@ -147,18 +152,20 @@ export function useBookModalData({ book, bookId, reading, isOpen, editMode = 'vi
     })
   }
 
-  const handleEditReview = () => {
-    setIsEditingReview(true)
-  }
-
   const handleCancelReview = () => {
-    setIsEditingReview(false)
     // Reset to original values
     if (userReading) {
       setReview(userReading.review || '')
       setRating(userReading.rating || 0)
       setIsPublic(userReading.is_review_public || false)
     }
+  }
+
+  const handleStatusChange = (newStatus: string) => {
+    const validStatus = newStatus as 'want_to_read' | 'currently_reading' | 'finished'
+    updateReadingMutation.mutate({
+      status: validStatus
+    })
   }
 
   return {
@@ -176,11 +183,9 @@ export function useBookModalData({ book, bookId, reading, isOpen, editMode = 'vi
     review,
     rating,
     isPublic,
-    isEditingReview,
     setReview,
     setRating,
     setIsPublic,
-    setIsEditingReview,
     
     // Mutations
     addToLibraryMutation,
@@ -188,7 +193,7 @@ export function useBookModalData({ book, bookId, reading, isOpen, editMode = 'vi
     
     // Handlers
     handleSaveReview,
-    handleEditReview,
     handleCancelReview,
+    handleStatusChange,
   }
 } 

@@ -91,8 +91,6 @@ export type { BookModalActionsProps } from '../modal/BookModalActions'
 export type { UseBookModalDataProps } from '../modal/BookModalData'
 export type { BookModalStatesProps, BookModalLoadingProps, BookModalErrorProps } from '../modal/BookModalStates'
 export type { BookModalContentProps } from '../modal/BookModalContent'
-export type { UseModalKeyboardProps } from '../modal/useModalKeyboard'
-
 // Feature Component Types (from individual files)
 export type { BookCardProps } from '../features/BookCard'
 export type { StatCardProps } from '../features/StatCard'
