@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import Image from 'next/image'
 import { BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -30,6 +29,7 @@ const BookCover: React.FC<BookCoverProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(!!src)
   const [hasError, setHasError] = useState(false)
+
   // Size presets
   const sizePresets = {
     sm: { width: 48, height: 64, iconSize: 'h-5 w-5' },
@@ -74,7 +74,7 @@ const BookCover: React.FC<BookCoverProps> = ({
     return (
       <div className={containerClasses} style={{ width: finalWidth, height: finalHeight }}>
         {isLoading && <SkeletonLoader />}
-        <Image
+        <img
           src={src}
           alt={alt}
           width={finalWidth}
@@ -84,9 +84,7 @@ const BookCover: React.FC<BookCoverProps> = ({
             isLoading ? 'opacity-0' : 'opacity-100'
           )}
           style={{ width: `${finalWidth}px`, height: `${finalHeight}px` }}
-          sizes={`${finalWidth}px`}
-          {...(!priority && { loading: lazy ? 'lazy' : 'eager' })}
-          {...(priority && { priority: true })}
+          loading={lazy && !priority ? 'lazy' : 'eager'}
           onLoad={handleImageLoad}
           onError={handleImageError}
         />
