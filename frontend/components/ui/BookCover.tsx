@@ -27,7 +27,6 @@ const BookCover: React.FC<BookCoverProps> = ({
   lazy = true,
   priority = false
 }) => {
-  const [isLoading, setIsLoading] = useState(!!src)
   const [hasError, setHasError] = useState(false)
 
   // Size presets
@@ -49,56 +48,30 @@ const BookCover: React.FC<BookCoverProps> = ({
     className
   )
 
-  // Skeleton loader component
-  const SkeletonLoader = () => (
-    <div 
-      className={cn(
-        'absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center',
-        rounded && 'rounded'
-      )}
-    >
-      <BookOpen className={cn('text-gray-300', preset.iconSize)} />
-    </div>
-  )
-
-  const handleImageLoad = () => {
-    setIsLoading(false)
-  }
-
-  const handleImageError = () => {
-    setIsLoading(false)
-    setHasError(true)
-  }
-
-  if (src && !hasError) {
+  // Show fallback if no src or error occurred
+  if (!src || hasError) {
     return (
-      <div className={containerClasses} style={{ width: finalWidth, height: finalHeight }}>
-        {isLoading && <SkeletonLoader />}
-        <img
-          src={src}
-          alt={alt}
-          width={finalWidth}
-          height={finalHeight}
-          className={cn(
-            'object-cover transition-opacity duration-300',
-            isLoading ? 'opacity-0' : 'opacity-100'
-          )}
-          style={{ width: `${finalWidth}px`, height: `${finalHeight}px` }}
-          loading={lazy && !priority ? 'lazy' : 'eager'}
-          onLoad={handleImageLoad}
-          onError={handleImageError}
-        />
+      <div 
+        className={cn(containerClasses, 'bg-gray-200')}
+        style={{ width: finalWidth, height: finalHeight }}
+      >
+        <BookOpen className={cn('text-gray-400', preset.iconSize)} />
       </div>
     )
   }
 
-  // Fallback placeholder
+  // Show image
   return (
-    <div 
-      className={cn(containerClasses, 'bg-gray-200')}
-      style={{ width: finalWidth, height: finalHeight }}
-    >
-      <BookOpen className={cn('text-gray-400', preset.iconSize)} />
+    <div className={containerClasses} style={{ width: finalWidth, height: finalHeight }}>
+      <img
+        src={src}
+        alt={alt}
+        width={finalWidth}
+        height={finalHeight}
+        className="w-full h-full object-cover"
+        loading={lazy && !priority ? 'lazy' : 'eager'}
+        onError={() => setHasError(true)}
+      />
     </div>
   )
 }
