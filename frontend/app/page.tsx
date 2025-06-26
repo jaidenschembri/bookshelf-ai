@@ -31,8 +31,8 @@ export default function HomePage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-16 h-16 bg-gray-900 rounded flex items-center justify-center">
+              <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="w-16 h-16 bg-blue-600 rounded-xl shadow-lg flex items-center justify-center">
           <BookOpen className="h-8 w-8 text-white animate-pulse" />
         </div>
       </div>
@@ -40,13 +40,13 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <div className="w-10 h-10 bg-gray-900 rounded flex items-center justify-center">
+              <div className="w-12 h-12 bg-blue-600 rounded-xl shadow-lg flex items-center justify-center">
                 <BookOpen className="h-6 w-6 text-white" />
               </div>
               <div className="ml-3">
@@ -56,7 +56,7 @@ export default function HomePage() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => openAuthModal('signin')}
-                className="bg-gray-900 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-800 transition-colors flex items-center space-x-2"
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 shadow-lg flex items-center space-x-2"
               >
                 <span>Sign In</span>
                 <ArrowRight className="h-4 w-4" />
@@ -67,7 +67,7 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <main className="bg-white">
+      <main className="bg-slate-50">
         <HeroSection onGetStarted={() => openAuthModal('signup')} />
 
         {/* Features Section */}
@@ -81,7 +81,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200">
+      <footer className="bg-white border-t border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <div className="flex items-center justify-center mb-4">

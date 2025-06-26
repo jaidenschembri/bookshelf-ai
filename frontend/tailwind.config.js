@@ -8,31 +8,62 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Brutalist black and white palette
+        // Refined minimalist palette - sophisticated neutrals
         primary: {
-          50: '#f8f8f8',
-          100: '#f0f0f0',
-          200: '#e0e0e0',
-          300: '#c0c0c0',
-          400: '#a0a0a0',
-          500: '#808080',
-          600: '#606060',
-          700: '#404040',
-          800: '#202020',
-          900: '#000000',
+          50: '#fafbfc',   // softest background
+          100: '#f4f6f8',  // surface background
+          200: '#e1e7ec',  // subtle borders
+          300: '#d0d9e2',  // light borders
+          400: '#9aa6b2',  // disabled text
+          500: '#6b7785',  // secondary text
+          600: '#4a5763',  // body text
+          700: '#2f3a45',  // primary text
+          800: '#1c252e',  // headings
+          900: '#0f1419',  // darkest text
         },
-        // Accent grays for subtle variations
+        // Warm sophisticated grays
         gray: {
-          50: '#fafafa',
-          100: '#f5f5f5',
-          200: '#e5e5e5',
-          300: '#d4d4d4',
-          400: '#a3a3a3',
-          500: '#737373',
-          600: '#525252',
-          700: '#404040',
-          800: '#262626',
-          900: '#171717',
+          50: '#fafbfc',   // warm background
+          100: '#f5f7fa',  // card background
+          200: '#eaeef2',  // subtle border
+          300: '#d6dde4',  // border
+          400: '#9ca9b4',  // muted text
+          500: '#6b7785',  // secondary text
+          600: '#4a5763',  // text
+          700: '#2f3a45',  // dark text
+          800: '#1c252e',  // darker text
+          900: '#0f1419',  // darkest
+        },
+        // Refined accent colors
+        accent: {
+          emerald: {
+            50: '#f0fdfa',
+            100: '#ccfbf1',
+            500: '#10b981',
+            600: '#059669',
+            700: '#047857',
+          },
+          amber: {
+            50: '#fffbeb',
+            100: '#fef3c7',
+            500: '#f59e0b',
+            600: '#d97706',
+            700: '#b45309',
+          },
+          red: {
+            50: '#fef2f2',
+            100: '#fee2e2',
+            500: '#ef4444',
+            600: '#dc2626',
+            700: '#b91c1c',
+          },
+          blue: {
+            50: '#eff6ff',
+            100: '#dbeafe',
+            500: '#3b82f6',
+            600: '#2563eb',
+            700: '#1d4ed8',
+          },
         },
       },
       fontFamily: {

@@ -27,7 +27,7 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50">
       <Header
         navigationItems={navigation}
         user={session?.user}

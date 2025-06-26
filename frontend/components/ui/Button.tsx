@@ -26,14 +26,14 @@ const Button: React.FC<ButtonProps> = ({
   iconPosition = 'left',
   ...props
 }) => {
-  const baseClasses = 'font-medium transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 rounded'
+  const baseClasses = 'font-medium transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 rounded-md'
   
   const variantClasses = {
-    primary: 'bg-gray-900 text-white hover:bg-gray-800',
-    secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50',
-    ghost: 'bg-transparent text-gray-700 hover:bg-gray-100',
-    danger: 'bg-red-600 text-white hover:bg-red-700',
-    success: 'bg-green-600 text-white hover:bg-green-700'
+    primary: 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg',
+    secondary: 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50 shadow-md',
+    ghost: 'bg-transparent text-gray-600 hover:bg-blue-50 hover:text-blue-600',
+    danger: 'bg-red-500 text-white hover:bg-red-600 shadow-lg',
+    success: 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg'
   }
   
   const sizeClasses = {

@@ -146,7 +146,8 @@ const GroupedActivityCard: React.FC<GroupedActivityCardProps> = ({
       {remainingCount > 0 && (
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-3"
+          className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 mb-3 focus:outline-none"
+          style={{ border: 'none', outline: 'none' }}
         >
           {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           {isExpanded ? 'Show less' : `Show ${remainingCount} more`}
@@ -310,7 +311,8 @@ const FeedReviewCard: React.FC<FeedReviewCardProps> = ({
               {reading.review.length > 200 && (
                 <button
                   onClick={() => setIsReviewExpanded(!isReviewExpanded)}
-                  className="text-xs text-gray-500 hover:text-gray-700 mt-1 font-medium"
+                  className="text-xs text-slate-500 hover:text-slate-700 mt-1 font-medium focus:outline-none"
+                  style={{ border: 'none', outline: 'none' }}
                 >
                   {isReviewExpanded ? 'Show less' : 'Read more'}
                 </button>

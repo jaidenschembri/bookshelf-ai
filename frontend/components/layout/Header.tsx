@@ -33,7 +33,7 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <nav className={`bg-white border-b border-gray-200 ${className}`}>
+      <nav className={`bg-white border-b border-slate-200 shadow-md backdrop-blur-sm ${className}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Desktop Header */}
           <div className="hidden lg:flex items-center justify-between h-16">
@@ -83,7 +83,7 @@ const Header: React.FC<HeaderProps> = ({
               {/* Menu Button */}
               <button
                 onClick={handleMobileMenuToggle}
-                className="p-2 text-gray-600 hover:text-black transition-colors duration-200 flex-shrink-0"
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-all duration-200 flex-shrink-0"
               >
                 {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
