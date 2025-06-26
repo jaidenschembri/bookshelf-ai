@@ -107,7 +107,7 @@ const GroupedActivityCard: React.FC<GroupedActivityCardProps> = ({
         <div className="flex-shrink-0 cursor-pointer" 
              onClick={() => onBookClick(null, showFirstBook.activity_data.book_id)}>
           <BookCover
-            key={`main-cover-${showFirstBook.id}-${showFirstBook.activity_data.book_id}`}
+            key={`main-cover-${showFirstBook.activity_data?.book_id || 'main'}`}
             src={showFirstBook.activity_data.book_cover_url}
             alt={showFirstBook.activity_data.book_title}
             width={48}
@@ -131,7 +131,7 @@ const GroupedActivityCard: React.FC<GroupedActivityCardProps> = ({
             <div className="flex items-center gap-1 mt-2">
               {[...Array(5)].map((_, i) => (
                 <Star
-                  key={`main-star-${showFirstBook.id}-${i}`}
+                  key={`main-star-${i}`}
                   className={`h-3 w-3 ${
                     i < showFirstBook.activity_data.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
                   }`}
@@ -159,11 +159,11 @@ const GroupedActivityCard: React.FC<GroupedActivityCardProps> = ({
       {isExpanded && remainingCount > 0 && (
         <div className="space-y-3 pl-4 border-l-2 border-gray-100">
           {activities.slice(1).map((activity, index) => (
-            <div key={`${activity.id}-${activity.activity_data.book_id}-${index}`} className="flex gap-3">
+            <div key={`activity-${index}-${activity.activity_data?.book_id || index}`} className="flex gap-3">
               <div className="flex-shrink-0 cursor-pointer" 
                    onClick={() => onBookClick(null, activity.activity_data.book_id)}>
                 <BookCover
-                  key={`expanded-cover-${activity.id}-${activity.activity_data.book_id}`}
+                  key={`cover-${index}-${activity.activity_data?.book_id || index}`}
                   src={activity.activity_data.book_cover_url}
                   alt={activity.activity_data.book_title}
                   width={32}
@@ -187,7 +187,7 @@ const GroupedActivityCard: React.FC<GroupedActivityCardProps> = ({
                   <div className="flex items-center gap-1 mt-1">
                     {[...Array(5)].map((_, i) => (
                       <Star
-                        key={`star-${activity.id}-${i}`}
+                        key={`star-${index}-${i}`}
                         className={`h-2 w-2 ${
                           i < activity.activity_data.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
                         }`}
@@ -268,7 +268,7 @@ const FeedReviewCard: React.FC<FeedReviewCardProps> = ({
       <div className="flex gap-3">
         <div className="flex-shrink-0 cursor-pointer" onClick={() => onBookClick(reading.book, reading.book.id)}>
           <BookCover
-            key={`review-cover-${reading.id}-${reading.book.id}`}
+            key={`review-cover-${reading.book?.id || reading.id || 'review'}`}
             src={reading.book.cover_url}
             alt={reading.book.title}
             width={48}
@@ -293,7 +293,7 @@ const FeedReviewCard: React.FC<FeedReviewCardProps> = ({
             <div className="flex items-center gap-1 mt-2">
               {[...Array(5)].map((_, i) => (
                 <Star
-                  key={`review-star-${reading.id}-${i}`}
+                  key={`review-star-${i}`}
                   className={`h-3 w-3 ${
                     i < reading.rating! ? 'text-yellow-400 fill-current' : 'text-gray-300'
                   }`}
