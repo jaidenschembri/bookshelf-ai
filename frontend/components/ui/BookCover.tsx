@@ -28,6 +28,11 @@ const BookCover: React.FC<BookCoverProps> = ({
   priority = false
 }) => {
   const [hasError, setHasError] = useState(false)
+  
+  // Reset error state when src changes
+  React.useEffect(() => {
+    setHasError(false)
+  }, [src])
 
   // Size presets
   const sizePresets = {
