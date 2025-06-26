@@ -23,7 +23,7 @@ const Badge: React.FC<BadgeProps> = ({
   rating,
   ...props
 }) => {
-  const baseClasses = 'inline-flex items-center font-medium text-xs rounded-full px-2 py-1'
+  const baseClasses = 'inline-flex items-center font-medium text-xs rounded-full px-2 py-1 transition-all duration-200 ring-1 ring-inset'
   
   const sizeClasses = {
     sm: 'text-xs px-2 py-0.5',
@@ -32,12 +32,12 @@ const Badge: React.FC<BadgeProps> = ({
   }
   
   const colorClasses = {
-    black: 'bg-gray-900 text-white',
-    red: 'bg-red-100 text-red-800',
-    green: 'bg-green-100 text-green-800',
-    blue: 'bg-blue-100 text-blue-800',
-    yellow: 'bg-yellow-100 text-yellow-800',
-    gray: 'bg-gray-100 text-gray-700'
+    black: 'bg-slate-900 text-white ring-slate-700/50',
+    red: 'bg-red-50 text-red-700 ring-red-200/60 hover:bg-red-100',
+    green: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60 hover:bg-emerald-100',
+    blue: 'bg-blue-50 text-blue-700 ring-blue-200/60 hover:bg-blue-100',
+    yellow: 'bg-amber-50 text-amber-700 ring-amber-200/60 hover:bg-amber-100',
+    gray: 'bg-slate-100 text-slate-700 ring-slate-200/60 hover:bg-slate-200'
   }
   
   const badgeClasses = cn(

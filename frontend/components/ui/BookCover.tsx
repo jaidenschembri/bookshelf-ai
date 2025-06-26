@@ -42,9 +42,10 @@ const BookCover: React.FC<BookCoverProps> = ({
   const finalHeight = height || preset.height
 
   const containerClasses = cn(
-    'border border-gray-200 flex items-center justify-center overflow-hidden relative',
-    rounded && 'rounded',
-    shadow && 'shadow-lg',
+    'border border-slate-200/60 flex items-center justify-center overflow-hidden relative transition-all duration-300',
+    rounded && 'rounded-lg',
+    shadow && 'shadow-lg hover:shadow-xl',
+    'ring-1 ring-slate-200/30 hover:ring-slate-300/50',
     className
   )
 
@@ -52,23 +53,23 @@ const BookCover: React.FC<BookCoverProps> = ({
   if (!src || hasError) {
     return (
       <div 
-        className={cn(containerClasses, 'bg-gray-200')}
+        className={cn(containerClasses, 'bg-gradient-to-br from-slate-100 to-slate-200')}
         style={{ width: finalWidth, height: finalHeight }}
       >
-        <BookOpen className={cn('text-gray-400', preset.iconSize)} />
+        <BookOpen className={cn('text-slate-400', preset.iconSize)} />
       </div>
     )
   }
 
   // Show image
-  return (
+      return (
     <div className={containerClasses} style={{ width: finalWidth, height: finalHeight }}>
       <img
         src={src}
         alt={alt}
         width={finalWidth}
         height={finalHeight}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
         loading={lazy && !priority ? 'lazy' : 'eager'}
         onError={() => setHasError(true)}
       />

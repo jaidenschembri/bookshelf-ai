@@ -179,25 +179,25 @@ export default function DashboardPage() {
   if (error || !dashboard) {
     return (
       <Layout>
-        <div className="text-center py-16">
-          <div className="max-w-md mx-auto">
-            <div className="w-16 h-16 bg-blue-600 rounded-xl shadow-lg flex items-center justify-center mx-auto mb-6">
-              <BookOpen className="h-8 w-8 text-white" />
-            </div>
-            <h2 className="text-2xl font-semibold font-serif tracking-tight mb-4 text-gray-800">
-                              {error ? 'Unable to load dashboard' : 'Welcome to Libraria!'}
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              {error 
-                ? 'We encountered an issue loading your dashboard. Please try again.' 
-                : 'Start by adding some books to your library to see your personalized dashboard.'
-              }
-            </p>
-              <div className="inline-flex items-center space-x-2 bg-gray-100 text-gray-600 px-4 py-2 rounded-md text-sm font-medium">
-                <span>Use the search bar above to find books</span>
+                <div className="text-center py-20">
+            <div className="max-w-lg mx-auto component-spacing">
+              <div className="w-20 h-20 bg-blue-600 rounded-xl shadow-lg flex items-center justify-center mx-auto mb-8">
+                <BookOpen className="h-10 w-10 text-white" />
+              </div>
+              <h2 className="text-headline mb-6">
+                                {error ? 'Unable to load dashboard' : 'Welcome to Libraria!'}
+              </h2>
+              <p className="text-body mb-8">
+                {error 
+                  ? 'We encountered an issue loading your dashboard. Please try again.' 
+                  : 'Start by adding some books to your library to see your personalized dashboard.'
+                }
+              </p>
+                <div className="inline-flex items-center space-x-3 bg-slate-100 text-slate-600 px-6 py-4 rounded-xl text-caption font-medium">
+                  <span>Use the search bar above to find books</span>
+              </div>
             </div>
           </div>
-        </div>
       </Layout>
     )
   }

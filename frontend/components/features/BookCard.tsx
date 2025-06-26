@@ -109,9 +109,9 @@ const BookCard: React.FC<BookCardProps> = ({
   const renderBasicInfo = () => (
     <div className={cn('mb-2', isDetailed ? 'text-center sm:text-left mb-4 sm:mb-0' : '')}>
       <h3 className={cn(
-        'font-serif font-medium text-gray-900 transition-colors',
-        isCompact ? 'text-sm' : isDetailed ? 'text-lg' : 'text-base',
-        handleBookClick ? 'hover:underline cursor-pointer' : '',
+        'font-serif font-medium text-slate-800 transition-colors',
+        isCompact ? 'text-sm leading-tight' : isDetailed ? 'text-title' : 'text-base leading-snug',
+        handleBookClick ? 'hover:text-slate-900 cursor-pointer' : '',
         isDetailed ? 'mb-1' : 'truncate'
       )}>
         {handleBookClick ? (
@@ -126,8 +126,8 @@ const BookCard: React.FC<BookCardProps> = ({
         )}
       </h3>
       <p className={cn(
-        'text-gray-600',
-        isCompact ? 'text-xs text-gray-500' : isDetailed ? 'text-sm mb-3' : 'text-xs text-gray-500'
+        'text-slate-500',
+        isCompact ? 'text-caption' : isDetailed ? 'text-caption mb-3' : 'text-caption'
       )}>
         by {book.author}
       </p>

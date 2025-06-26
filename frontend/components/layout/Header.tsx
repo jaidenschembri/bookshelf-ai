@@ -33,7 +33,7 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <nav className={`bg-white border-b border-slate-200 shadow-md backdrop-blur-sm ${className}`}>
+      <nav className={`bg-white/95 border-b border-slate-200/60 shadow-lg backdrop-blur-md supports-[backdrop-filter]:bg-white/75 ${className}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Desktop Header */}
           <div className="hidden lg:flex items-center justify-between h-16">
@@ -83,7 +83,7 @@ const Header: React.FC<HeaderProps> = ({
               {/* Menu Button */}
               <button
                 onClick={handleMobileMenuToggle}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-all duration-200 flex-shrink-0"
+                className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100/80 rounded-lg transition-all duration-200 flex-shrink-0 hover:scale-105"
               >
                 {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>

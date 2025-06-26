@@ -42,15 +42,15 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+      <header className="bg-white border-b border-slate-200 shadow-sm">
+        <div className="content-container">
+          <div className="flex justify-between items-center py-8">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-blue-600 rounded-xl shadow-lg flex items-center justify-center">
                 <BookOpen className="h-6 w-6 text-white" />
               </div>
-              <div className="ml-3">
-                <span className="text-xl font-semibold font-serif tracking-tight">Libraria</span>
+              <div className="ml-4">
+                <span className="text-xl font-semibold font-serif tracking-tight text-slate-800">Libraria</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -81,17 +81,17 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <BookOpen className="h-6 w-6 mr-3 text-gray-600" />
-                              <span className="font-serif font-semibold text-xl">Libraria</span>
+      <footer className="bg-white border-t border-slate-200 shadow-sm">
+        <div className="content-container py-16">
+          <div className="text-center component-spacing">
+            <div className="flex items-center justify-center mb-6">
+              <BookOpen className="h-6 w-6 mr-3 text-slate-500" />
+                              <span className="font-serif font-semibold text-xl text-slate-700">Libraria</span>
             </div>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-body mb-6">
               Track • Share • Discover • Connect with Fellow Readers
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-caption text-slate-400">
                               © 2024 Libraria. All rights reserved.
             </p>
           </div>

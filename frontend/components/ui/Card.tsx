@@ -22,14 +22,14 @@ const Card: React.FC<CardProps> = ({
   onClick,
   ...props
 }) => {
-  const baseClasses = 'bg-white border border-slate-200 rounded-xl transition-all duration-200'
+  const baseClasses = 'bg-white border border-slate-200/60 rounded-xl transition-all duration-300 backdrop-blur-sm'
   
   const variantClasses = {
-    default: 'shadow-md',
-    flat: 'border-slate-200 shadow-sm',
-    hover: 'hover:border-slate-300 hover:shadow-lg hover:-translate-y-1',
-    compact: 'border-slate-200 shadow-md',
-    featured: 'border-slate-300 shadow-lg'
+    default: 'shadow-sm hover:shadow-md hover:-translate-y-0.5',
+    flat: 'border-slate-200/40 shadow-none hover:shadow-sm',
+    hover: 'hover:border-slate-300/80 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02]',
+    compact: 'border-slate-200/60 shadow-sm hover:shadow-md',
+    featured: 'border-slate-300/80 shadow-lg ring-1 ring-slate-200/50 hover:shadow-xl hover:-translate-y-1'
   }
   
   const paddingClasses = {
@@ -39,7 +39,7 @@ const Card: React.FC<CardProps> = ({
     lg: 'p-8'
   }
   
-  const clickableClasses = clickable ? 'cursor-pointer hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20' : ''
+  const clickableClasses = clickable ? 'cursor-pointer hover:bg-slate-50/50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300/50' : ''
   
   const cardClasses = cn(
     baseClasses,
